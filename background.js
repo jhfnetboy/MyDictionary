@@ -3,7 +3,10 @@
  * 负责模型加载、翻译推理和跨脚本通信
  */
 
-import { pipeline } from '@xenova/transformers';
+import { pipeline, env } from '@xenova/transformers';
+
+// 配置 Transformers.js 使用本地 WASM 文件
+env.backends.onnx.wasm.wasmPaths = chrome.runtime.getURL('transformers/');
 
 // 模型管理器
 class ModelManager {
@@ -29,7 +32,7 @@ class ModelManager {
    * 初始化: 加载配置文件
    */
   async initialize() {
-    console.log('🦊 MyDictionary - 初始化中...');
+    console.log('🦝 MyDictionary - 初始化中...');
 
     try {
       // 加载模型配置
@@ -38,12 +41,22 @@ class ModelManager {
       console.log('✅ 配置文件加载成功', this.config);
 
       // 检查用户设置
-      const settings = await chrome.storage.local.get('userSettings');
-      if (!settings.userSettings) {
+      const storage = await chrome.storage.local.get(['userSettings', 'uiLanguage']);
+
+      // 如果没有 uiLanguage 设置,使用配置文件中的默认值
+      if (!storage.uiLanguage) {
+        console.log('🌐 设置默认界面语言:', this.config.settings.uiLanguage);
+        await chrome.storage.local.set({
+          uiLanguage: this.config.settings.uiLanguage || 'en'
+        });
+      }
+
+      if (!storage.userSettings) {
         // 首次安装,设置默认值
         await chrome.storage.local.set({
           userSettings: this.config.settings
         });
+        console.log('⚙️ 已设置默认配置');
       }
 
       console.log('✅ ModelManager 初始化完成');
@@ -139,25 +152,34 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === 'install') {
     console.log('🎉 MyDictionary 首次安装!');
 
+    // 清空之前的设置,确保使用默认值
+    await chrome.storage.local.clear();
+    console.log('🧹 已清空旧设置');
+
     // 初始化配置
     await modelManager.initialize();
 
     // 创建右键菜单
-    chrome.contextMenus.create({
-      id: 'mydictionary-translate',
-      title: '🦊 翻译 "%s"',
-      contexts: ['selection']
-    });
+    await createContextMenus();
 
     console.log('✅ 插件初始化完成');
   } else if (details.reason === 'update') {
     console.log('🔄 MyDictionary 已更新到新版本');
+
+    // 强制重置界面语言为英文(修复之前的中文默认值bug)
+    await chrome.storage.local.set({ uiLanguage: 'en' });
+    console.log('🌐 界面语言已重置为英文');
+
     await modelManager.initialize();
+    await createContextMenus();
   }
 });
 
 // Service Worker 启动时初始化
-modelManager.initialize();
+(async () => {
+  await modelManager.initialize();
+  await createContextMenus();
+})();
 
 /**
  * 监听来自 Content Script 的消息
@@ -183,6 +205,11 @@ async function handleMessage(request, sender, sendResponse) {
 
       case 'downloadModel':
         await handleDownloadModel(request, sendResponse);
+        break;
+
+      case 'updateContextMenus':
+        await createContextMenus();
+        sendResponse({ success: true });
         break;
 
       default:
@@ -331,29 +358,87 @@ async function handleDownloadModel(request, sendResponse) {
 /**
  * 右键菜单点击处理
  */
-chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId === 'mydictionary-translate') {
-    // 向当前页面发送消息,打开侧边栏并翻译选中文本
-    chrome.tabs.sendMessage(tab.id, {
-      action: 'openSidebar',
-      text: info.selectionText
-    });
-  }
-});
+if (chrome.contextMenus) {
+  chrome.contextMenus.onClicked.addListener((info, tab) => {
+    if (info.menuItemId === 'mydictionary-translate') {
+      // 向当前页面发送消息,打开侧边栏并翻译选中文本
+      chrome.tabs.sendMessage(tab.id, {
+        action: 'openSidebar',
+        text: info.selectionText
+      });
+    }
+  });
+}
 
 /**
  * 快捷键命令处理
  */
-chrome.commands.onCommand.addListener((command) => {
-  if (command === 'toggle-sidebar') {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0]) {
-        chrome.tabs.sendMessage(tabs[0].id, {
-          action: 'toggleSidebar'
-        });
-      }
-    });
-  }
-});
+if (chrome.commands) {
+  chrome.commands.onCommand.addListener((command) => {
+    console.log('⌨️ 快捷键触发:', command);
 
-console.log('🦊 MyDictionary Background Service Worker 已启动');
+    if (command === 'toggle-sidebar') {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs[0]) {
+          console.log('📤 发送 toggleSidebar 消息到 tab:', tabs[0].id);
+          chrome.tabs.sendMessage(tabs[0].id, {
+            action: 'toggleSidebar'
+          }).catch(err => {
+            console.error('❌ 发送消息失败:', err);
+          });
+        } else {
+          console.warn('⚠️ 没有活跃的标签页');
+        }
+      });
+    }
+  });
+} else {
+  console.warn('⚠️ chrome.commands API 不可用');
+}
+
+/**
+ * 创建右键菜单
+ */
+async function createContextMenus() {
+  if (!chrome.contextMenus) {
+    console.warn('⚠️ contextMenus API 不可用');
+    return;
+  }
+
+  try {
+    // 获取界面语言设置
+    const settings = await chrome.storage.local.get(['uiLanguage']);
+    const lang = settings.uiLanguage || 'en';
+
+    // 加载 i18n 文本
+    const i18nResponse = await fetch(chrome.runtime.getURL('src/config/i18n.json'));
+    const i18n = await i18nResponse.json();
+    const t = i18n[lang];
+
+    // 清除现有菜单,避免重复
+    await chrome.contextMenus.removeAll();
+
+    // 使用 Promise 包装,捕获重复 ID 错误
+    return new Promise((resolve) => {
+      chrome.contextMenus.create({
+        id: 'mydictionary-translate',
+        title: t.contextMenu.openSidebar,
+        contexts: ['selection']
+      }, () => {
+        if (chrome.runtime.lastError) {
+          console.warn('⚠️ 菜单创建警告:', chrome.runtime.lastError.message);
+        } else {
+          console.log('✅ 右键菜单已创建');
+        }
+        resolve();
+      });
+    });
+  } catch (error) {
+    console.error('❌ 创建右键菜单失败:', error);
+  }
+}
+
+// 启动时创建右键菜单
+createContextMenus();
+
+console.log('🦝 MyDictionary Background Service Worker 已启动');

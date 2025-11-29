@@ -14,7 +14,7 @@ MyDictionary 是一个 Chrome 插件,利用本地运行的 AI 模型提供智能
 - 自动检测语言:中文→英文,英文→中文
 
 ### 2. 侧边栏深度查询 (Sidebar Panel)
-- 快捷键 `Ctrl+Shift+F` (Mac: `Cmd+Shift+F`) 呼出右侧滑动面板
+- 快捷键 `Ctrl+Shift+D` (Mac: `Cmd+Shift+D`) 呼出右侧滑动面板
 - 显示选中文本的翻译(中英互译)
 - 提供扩展功能按钮:
   - **近义词列表**: 基于上下文的同义词推荐
@@ -65,7 +65,7 @@ my-dictionary-plugin/
 
 ### Flow 2: 侧边栏深度查询 (Sidebar Deep Dive)
 ```
-用户选中文本 + 按下 Ctrl+Shift+F
+用户选中文本 + 按下 Ctrl+Shift+D
     ↓
 右侧滑出侧边栏面板
     ↓

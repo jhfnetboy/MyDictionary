@@ -398,6 +398,7 @@
   },
 
   "settings": {
+    "uiLanguage": "en",
     "defaultSourceLanguage": "auto",
     "defaultTargetLanguage": "zh",
     "preferredLanguages": ["zh", "en"],
