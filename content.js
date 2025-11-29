@@ -136,11 +136,16 @@ class UIManager {
 
     this.sidebar.innerHTML = `
       <div class="mydictionary-header">
-        <span class="mydictionary-title">🦝 ${getText('sidebar.title', 'MyDictionary')}</span>
-        <button class="mydictionary-lang-switch" id="mydictionary-lang-switch-btn" title="Switch Language">
-          ${getText('sidebar.languageSwitch', this.currentLang === 'en' ? '中文' : 'English')}
-        </button>
-        <button class="mydictionary-close" id="mydictionary-close-btn">✕</button>
+        <div class="mydictionary-header-left">
+          <img src="${chrome.runtime.getURL('assets/logo-64.png')}" alt="MyDictionary" class="mydictionary-logo" />
+          <span class="mydictionary-title">${getText('sidebar.title', 'MyDictionary')}</span>
+        </div>
+        <div class="mydictionary-header-right">
+          <button class="mydictionary-lang-switch" id="mydictionary-lang-switch-btn" title="Switch Language">
+            ${getText('sidebar.languageSwitch', this.currentLang === 'en' ? '中文' : 'English')}
+          </button>
+          <button class="mydictionary-close" id="mydictionary-close-btn">✕</button>
+        </div>
       </div>
 
       <div class="mydictionary-content">
@@ -179,15 +184,20 @@ class UIManager {
       </div>
 
       <div class="mydictionary-footer">
-        <span class="mydictionary-version">v${version}</span>
-        <span class="mydictionary-timestamp" title="${buildTime}">
-          ${new Date().toLocaleString(this.currentLang === 'zh' ? 'zh-CN' : 'en-US', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })}
-        </span>
+        <div class="mydictionary-footer-info">
+          <span class="mydictionary-version">v${version}</span>
+          <span class="mydictionary-timestamp" title="${buildTime}">
+            ${new Date().toLocaleString(this.currentLang === 'zh' ? 'zh-CN' : 'en-US', {
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </span>
+        </div>
+        <button class="mydictionary-settings-btn" id="mydictionary-settings-btn" title="${getText('sidebar.settings', 'Settings')}">
+          ⚙️ ${getText('sidebar.settings', 'Settings')}
+        </button>
       </div>
     `;
 
@@ -209,6 +219,10 @@ class UIManager {
     // 语言切换按钮
     const langSwitchBtn = this.sidebar.querySelector('#mydictionary-lang-switch-btn');
     langSwitchBtn.addEventListener('click', () => this.switchLanguage());
+
+    // 设置按钮
+    const settingsBtn = this.sidebar.querySelector('#mydictionary-settings-btn');
+    settingsBtn.addEventListener('click', () => this.showSettings());
 
     // 翻译按钮
     const translateBtn = this.sidebar.querySelector('#mydictionary-translate-btn');
@@ -407,6 +421,71 @@ class UIManager {
       status.textContent = '';
       status.className = 'mydictionary-status';
     }, 3000);
+  }
+
+  /**
+   * 显示设置面板
+   */
+  showSettings() {
+    const output = this.sidebar.querySelector('#mydictionary-output');
+    const shortcutKey = navigator.platform.includes('Mac') ? 'Cmd+Shift+D' : 'Ctrl+Shift+D';
+
+    output.innerHTML = `
+      <div class="mydictionary-settings-panel">
+        <h3>⚙️ ${this.t('sidebar.settings')}</h3>
+
+        <div class="mydictionary-settings-section">
+          <h4>🌐 ${this.t('sidebar.interfaceLanguage') || 'Interface Language'}</h4>
+          <p>${this.t('sidebar.currentLanguage') || 'Current'}: <strong>${this.currentLang === 'en' ? 'English' : '中文'}</strong></p>
+          <p>${this.t('sidebar.clickHeaderToSwitch') || 'Click the language button in header to switch'}</p>
+        </div>
+
+        <div class="mydictionary-settings-section">
+          <h4>⌨️ ${this.t('sidebar.shortcuts') || 'Keyboard Shortcuts'}</h4>
+          <p><strong>${shortcutKey}</strong> - ${this.t('sidebar.toggleSidebar') || 'Toggle sidebar'}</p>
+          <p><strong>Ctrl/Cmd+Enter</strong> - ${this.t('sidebar.translateShortcut') || 'Translate (in textarea)'}</p>
+        </div>
+
+        <div class="mydictionary-settings-section">
+          <h4>📦 ${this.t('sidebar.modelManagement') || 'Model Management'}</h4>
+          <p>${this.t('sidebar.modelInfo') || 'Models are downloaded automatically when needed'}</p>
+          <button class="mydictionary-btn-secondary" id="mydictionary-clear-models-btn">
+            🗑️ ${this.t('sidebar.clearModels') || 'Clear all models'}
+          </button>
+        </div>
+
+        <div class="mydictionary-settings-section">
+          <h4>ℹ️ ${this.t('sidebar.about') || 'About'}</h4>
+          <p>MyDictionary v0.1.0</p>
+          <p>${this.t('sidebar.madeWith') || 'Made with'} ❤️ ${this.t('sidebar.by') || 'by'} Jason</p>
+          <p>
+            <a href="https://github.com/jhfnetboy/MyDictionary" target="_blank" style="color: #667eea;">
+              GitHub
+            </a>
+          </p>
+        </div>
+
+        <button class="mydictionary-btn-primary" id="mydictionary-close-settings-btn">
+          ${this.t('sidebar.close') || 'Close'}
+        </button>
+      </div>
+    `;
+
+    // 绑定关闭按钮
+    const closeBtn = output.querySelector('#mydictionary-close-settings-btn');
+    closeBtn.addEventListener('click', () => {
+      output.innerHTML = `<div class="mydictionary-placeholder">${this.t('sidebar.result')}...</div>`;
+    });
+
+    // 绑定清除模型按钮
+    const clearModelsBtn = output.querySelector('#mydictionary-clear-models-btn');
+    clearModelsBtn.addEventListener('click', async () => {
+      const confirmed = confirm(this.t('sidebar.confirmClearModels') || 'Clear all downloaded models? This will free up disk space but models will need to be re-downloaded when used.');
+      if (confirmed) {
+        await chrome.storage.local.remove('installedModels');
+        this.showStatus('✅ ' + (this.t('sidebar.modelsCleared') || 'Models cleared'), 'success');
+      }
+    });
   }
 
   /**

@@ -441,4 +441,40 @@ async function createContextMenus() {
 // 启动时创建右键菜单
 createContextMenus();
 
+/**
+ * 监听扩展图标点击事件
+ */
+if (chrome.action) {
+  chrome.action.onClicked.addListener((tab) => {
+    console.log('🖱️ 扩展图标被点击, tab:', tab.id);
+
+    // 发送消息到 content script，切换侧边栏
+    chrome.tabs.sendMessage(tab.id, {
+      action: 'toggleSidebar'
+    }).catch(err => {
+      console.error('❌ 发送 toggleSidebar 消息失败:', err);
+      // 如果 content script 未注入，尝试注入
+      if (err.message.includes('Could not establish connection')) {
+        console.log('💉 尝试注入 content script...');
+        chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: ['content.js']
+        }).then(() => {
+          console.log('✅ Content script 注入成功');
+          // 重试发送消息
+          setTimeout(() => {
+            chrome.tabs.sendMessage(tab.id, {
+              action: 'toggleSidebar'
+            }).catch(e => console.error('❌ 重试失败:', e));
+          }, 100);
+        }).catch(e => {
+          console.error('❌ 注入 content script 失败:', e);
+        });
+      }
+    });
+  });
+} else {
+  console.warn('⚠️ chrome.action API 不可用');
+}
+
 console.log('🦝 MyDictionary Background Service Worker 已启动');
