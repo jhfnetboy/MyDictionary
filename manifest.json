@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
   "name": "MyDictionary",
-  "version": "0.1.2",
-  "description": "🦊 智能本地 AI 词典 - 翻译 · 近义词 · 例句 · 学术写作",
+  "version": "0.1.3",
+  "description": "Smart local AI dictionary - Translation, Synonyms, Examples, Academic Writing | 智能本地 AI 词典 - 翻译·近义词·例句·学术写作",
   "author": "Jason",
+  "homepage_url": "https://github.com/yourusername/MyDictionary",
 
   "icons": {
     "16": "assets/icons/icon-16.png",

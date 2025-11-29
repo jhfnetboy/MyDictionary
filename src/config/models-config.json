@@ -113,24 +113,55 @@
     },
 
     "synonyms": {
-      "id": "synonyms",
-      "name": "近义词模型",
-      "description": "基于上下文的英文近义词推荐",
-      "modelPath": "Xenova/distilbert-base-uncased",
-      "type": "fill-mask",
-      "tier": "EXTENDED",
-      "size": 65,
-      "sizeUnit": "MB",
-      "required": false,
-      "autoLoad": false,
-      "capabilities": [
-        "synonym_suggestion",
-        "context_aware_replacement"
-      ],
-      "supportedLanguages": 1,
-      "primaryLanguage": "en",
-      "downloadPriority": 3,
-      "sharedModel": true
+      "bert": {
+        "id": "synonyms-bert",
+        "name": "BERT 同义词模型",
+        "description": "基于深度学习的语义相似度同义词推荐",
+        "modelPath": "Xenova/paraphrase-MiniLM-L6-v2",
+        "type": "feature-extraction",
+        "tier": "EXTENDED",
+        "size": 90,
+        "sizeUnit": "MB",
+        "required": false,
+        "autoLoad": false,
+        "quality": 5,
+        "speed": 3,
+        "capabilities": [
+          "semantic_similarity",
+          "synonym_suggestion",
+          "paraphrase_detection"
+        ],
+        "supportedLanguages": 1,
+        "primaryLanguage": "en",
+        "downloadPriority": 3,
+        "note": "使用句子嵌入计算语义相似度,能处理任何词汇"
+      },
+      "wordnet": {
+        "id": "synonyms-wordnet",
+        "name": "WordNet 词典",
+        "description": "普林斯顿大学 WordNet 词汇数据库,15.5万词",
+        "dataPath": "wordnet-db",
+        "type": "lexical-database",
+        "tier": "EXTENDED",
+        "size": 25,
+        "sizeUnit": "MB",
+        "required": false,
+        "autoLoad": false,
+        "quality": 5,
+        "speed": 5,
+        "capabilities": [
+          "synonym_lookup",
+          "antonym_lookup",
+          "hypernym_lookup",
+          "hyponym_lookup"
+        ],
+        "totalWords": 155000,
+        "totalSynsets": 117000,
+        "supportedLanguages": 1,
+        "primaryLanguage": "en",
+        "downloadPriority": 3,
+        "note": "基于词典查询,速度极快但需要词在词典中"
+      }
     },
 
     "examples": {
@@ -453,6 +484,22 @@
     "translationCacheSize": 1000,
     "enablePerformanceMetrics": true,
     "enableAcademicMode": false,
-    "installationType": "DEFAULT"
+    "installationType": "DEFAULT",
+    "synonymEngine": "bert"
+  },
+
+  "synonymEngines": {
+    "bert": {
+      "name": "BERT 模型(推荐)",
+      "description": "AI 驱动,语义理解,能处理任何词汇",
+      "pros": ["高质量", "任意词汇", "语义相似"],
+      "cons": ["需下载90MB", "稍慢(~200ms)"]
+    },
+    "wordnet": {
+      "name": "WordNet 词典",
+      "description": "15.5万词词典,速度极快",
+      "pros": ["极快(<10ms)", "高准确", "离线"],
+      "cons": ["仅词典内词汇", "不理解语义"]
+    }
   }
 }

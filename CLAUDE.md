@@ -26,7 +26,7 @@ MyDictionary 是一个 Chrome 插件,利用本地运行的 AI 模型提供智能
 - **AI 库**: `@huggingface/transformers` (Transformers.js)
 - **推荐模型**:
   - Translation: `Xenova/nllb-200-distilled-600M` (多语言翻译,支持中英互译)
-  - Fill-Mask: `Xenova/distilbert-base-uncased` (相近词替换)
+  - Synonyms: Local WordNet JSON Database (同义词推荐,完全离线)
   - Sentence Embedding: `Xenova/all-MiniLM-L6-v2` (例句检索)
 
 ## Project Architecture
@@ -38,6 +38,8 @@ my-dictionary-plugin/
 ├── background.js           // Service Worker: 模型加载和推理核心逻辑
 ├── content.js              // Content Script: 监听选词、管理UI
 ├── popup.html/.js          // 插件设置界面
+├── data/
+│   └── synonyms-db.json    // 本地同义词数据库 (WordNet 精选数据)
 ├── ui/
 │   ├── sidebar.html        // 右侧滑动面板
 │   ├── sidebar.css         // 侧边栏样式
@@ -118,11 +120,46 @@ class UIManager {
 }
 ```
 
-### 3. 模型加载策略
+### 3. 同义词查询策略 (本地 WordNet JSON)
+```javascript
+// background.js - Service Worker
+import synonymsDB from './data/synonyms-db.json' assert { type: 'json' };
+
+/**
+ * 使用本地同义词数据库获取同义词
+ * - 完全离线,无需网络
+ * - 查询速度 <10ms
+ * - 基于 WordNet 精选数据
+ */
+async function getSynonymsFromWordNet(word) {
+  const queryWord = word.toLowerCase();
+  const synonymsList = synonymsDB[queryWord];
+
+  if (!synonymsList || synonymsList.length === 0) {
+    return [];
+  }
+
+  // 返回前8个同义词,按相关度递减评分
+  return synonymsList.slice(0, 8).map((syn, index) => ({
+    word: syn,
+    score: (1.0 - index * 0.05).toFixed(2),
+    confidence: '100%'
+  }));
+}
+```
+
+**扩展 WordNet 数据库**:
+- 当前版本: 包含 50+ 常用词及其同义词
+- 完整版本: 可从 GitHub 下载完整 WordNet JSON (155,000 词)
+  - 仓库: https://github.com/x-englishwordnet/json
+  - 文件: oewn-2024.json.zip
+  - 提取同义词关系后放入 `data/synonyms-db.json`
+- 未来计划: 添加 BERT 语义相似度引擎作为补充
+
+### 4. 模型加载策略
 ```javascript
 // background.js - Service Worker
 let translationPipeline;
-let fillMaskPipeline;
 let similarityPipeline;
 
 async function loadModels() {
@@ -132,12 +169,8 @@ async function loadModels() {
     'Xenova/nllb-200-distilled-600M'
   );
 
-  // 后台加载可选模型
+  // 后台加载例句检索模型
   setTimeout(async () => {
-    fillMaskPipeline = await pipeline(
-      'fill-mask',
-      'Xenova/distilbert-base-uncased'
-    );
     similarityPipeline = await pipeline(
       'feature-extraction',
       'Xenova/all-MiniLM-L6-v2'
@@ -146,7 +179,7 @@ async function loadModels() {
 }
 ```
 
-### 4. 跨脚本通信协议
+### 5. 跨脚本通信协议
 ```javascript
 // Content Script → Service Worker
 chrome.runtime.sendMessage({
@@ -177,7 +210,7 @@ chrome.runtime.sendMessage({
 }
 ```
 
-### 5. 侧边栏滑动动画
+### 6. 侧边栏滑动动画
 ```css
 /* sidebar.css */
 #my-dictionary-sidebar {
