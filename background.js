@@ -5,8 +5,67 @@
 
 import { pipeline, env } from '@xenova/transformers';
 
+// 修复 "global is not defined" 错误 (某些库期望 global 变量存在)
+if (typeof global === 'undefined') {
+  globalThis.global = globalThis;
+}
+
 // 配置 Transformers.js 使用本地 WASM 文件
-env.backends.onnx.wasm.wasmPaths = chrome.runtime.getURL('transformers/');
+// 注意: 必须在 chrome.runtime 就绪后才能调用 getURL
+if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL) {
+  env.backends.onnx.wasm.wasmPaths = chrome.runtime.getURL('transformers/');
+}
+
+// 禁用多线程以避免 Service Worker 中的 Atomics.wait 错误
+env.backends.onnx.wasm.numThreads = 1;
+
+// M2M100 语言代码映射（简洁版，不需要脚本后缀）
+const M2M100_LANG_CODES = {
+  'en': 'en',
+  'zh': 'zh',
+  'ja': 'ja',
+  'ko': 'ko',
+  'fr': 'fr',
+  'de': 'de',
+  'es': 'es',
+  'ru': 'ru',
+  'ar': 'ar',
+  'pt': 'pt',
+  'it': 'it',
+  'vi': 'vi',
+  'id': 'id',
+  'th': 'th',
+  'nl': 'nl',
+  'pl': 'pl',
+  'tr': 'tr',
+  'hi': 'hi',
+  'sv': 'sv',
+  'cs': 'cs'
+};
+
+// NLLB 语言代码映射（带脚本后缀）
+const NLLB_LANG_CODES = {
+  'en': 'eng_Latn',
+  'zh': 'zho_Hans',
+  'ja': 'jpn_Jpan',
+  'ko': 'kor_Hang',
+  'fr': 'fra_Latn',
+  'de': 'deu_Latn',
+  'es': 'spa_Latn',
+  'ru': 'rus_Cyrl',
+  'ar': 'arb_Arab',
+  'pt': 'por_Latn',
+  'it': 'ita_Latn',
+  'vi': 'vie_Latn',
+  'id': 'ind_Latn',
+  'th': 'tha_Thai',
+  'nl': 'nld_Latn',
+  'pl': 'pol_Latn',
+  'tr': 'tur_Latn',
+  'hi': 'hin_Deva',
+  'sv': 'swe_Latn',
+  'cs': 'ces_Latn'
+};
 
 // 模型管理器
 class ModelManager {
@@ -16,6 +75,8 @@ class ModelManager {
       synonyms: null,     // 近义词模型
       examples: null      // 例句模型
     };
+
+    this.currentModelId = null; // 当前加载的模型 ID
 
     this.loadingStates = {
       'translation-en-zh': false,
@@ -78,6 +139,42 @@ class ModelManager {
     this.loadingStates[modelId] = true;
 
     try {
+      // 如果当前有加载的模型且不是目标模型，先清理
+      if (this.models.translation && this.currentModelId !== modelId) {
+        console.log(`🗑️ 开始卸载旧模型: ${this.currentModelId}`);
+
+        // 显式清除模型引用
+        const oldModel = this.models.translation;
+        this.models.translation = null;
+        const oldModelId = this.currentModelId;
+        this.currentModelId = null;
+
+        // 如果模型有 dispose 或 cleanup 方法，调用它
+        if (oldModel && typeof oldModel.dispose === 'function') {
+          try {
+            await oldModel.dispose();
+            console.log('✅ 旧模型已调用 dispose()');
+          } catch (e) {
+            console.warn('⚠️ dispose() 调用失败:', e);
+          }
+        }
+
+        // 强制垃圾回收（如果可用）
+        if (global && global.gc) {
+          try {
+            global.gc();
+            console.log('✅ 触发垃圾回收');
+          } catch (e) {
+            console.warn('⚠️ 垃圾回收失败:', e);
+          }
+        }
+
+        // 增加等待时间，确保资源完全释放（从 100ms 增加到 500ms）
+        console.log(`⏳ 等待 500ms 让资源释放...`);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log(`✅ 旧模型 ${oldModelId} 清理完成`);
+      }
+
       let modelPath;
 
       // 根据模型 ID 获取模型路径
@@ -85,13 +182,22 @@ class ModelManager {
         modelPath = this.config.models.dedicatedTranslation['en-zh'].modelPath;
       } else if (modelId === 'translation-zh-en') {
         modelPath = this.config.models.dedicatedTranslation['zh-en'].modelPath;
+      } else if (modelId === 'translation-universal-fast') {
+        modelPath = this.config.models.universalTranslation.fast.modelPath;
+      } else if (modelId === 'translation-universal-balanced') {
+        modelPath = this.config.models.universalTranslation.balanced.modelPath;
+      } else if (modelId === 'translation-universal-quality') {
+        modelPath = this.config.models.universalTranslation.quality.modelPath;
       } else if (modelId === 'translation-universal') {
-        modelPath = this.config.models.universalTranslation.modelPath;
+        // 向后兼容：默认使用快速模型
+        modelPath = this.config.models.universalTranslation.fast.modelPath;
+        modelId = 'translation-universal-fast';
+        console.log('⚠️ 使用旧 ID translation-universal，自动切换到 translation-universal-fast');
       } else {
         throw new Error(`未知的模型 ID: ${modelId}`);
       }
 
-      console.log(`📦 开始加载模型: ${modelPath}`);
+      console.log(`📦 开始加载模型: ${modelPath} (ID: ${modelId})`);
 
       // 使用 Hugging Face Hub 官方方式加载模型
       const model = await pipeline('translation', modelPath, {
@@ -111,6 +217,7 @@ class ModelManager {
       });
 
       this.models.translation = model;
+      this.currentModelId = modelId;  // 记录当前模型 ID
       this.loadingStates[modelId] = false;
 
       console.log(`✅ 模型加载完成: ${modelId}`);
@@ -176,54 +283,76 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 });
 
 // Service Worker 启动时初始化
+// 使用 self.addEventListener('activate') 确保 Service Worker 完全就绪
+self.addEventListener('activate', async (event) => {
+  console.log('🚀 Service Worker 激活');
+  event.waitUntil(
+    (async () => {
+      // 确保 WASM 路径已配置
+      if (!env.backends.onnx.wasm.wasmPaths) {
+        env.backends.onnx.wasm.wasmPaths = chrome.runtime.getURL('transformers/');
+        console.log('📦 WASM 路径已配置:', env.backends.onnx.wasm.wasmPaths);
+      }
+
+      await modelManager.initialize();
+      await createContextMenus();
+    })()
+  );
+});
+
+// 也在启动时尝试初始化（兼容性）
 (async () => {
-  await modelManager.initialize();
-  await createContextMenus();
+  try {
+    await modelManager.initialize();
+    await createContextMenus();
+  } catch (error) {
+    console.warn('⚠️ 启动时初始化失败，将在 activate 事件中重试:', error);
+  }
 })();
 
 /**
  * 监听来自 Content Script 的消息
  */
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  // 必须返回 true 以支持异步 sendResponse
-  handleMessage(request, sender, sendResponse);
-  return true;
-});
-
-async function handleMessage(request, sender, sendResponse) {
   console.log('📨 收到消息:', request.action);
 
-  try {
-    switch (request.action) {
-      case 'translate':
-        await handleTranslation(request, sendResponse);
-        break;
-
-      case 'checkModelStatus':
-        await handleCheckModelStatus(request, sendResponse);
-        break;
-
-      case 'downloadModel':
-        await handleDownloadModel(request, sendResponse);
-        break;
-
-      case 'updateContextMenus':
-        await createContextMenus();
-        sendResponse({ success: true });
-        break;
-
-      default:
-        sendResponse({
-          success: false,
-          error: `未知的操作: ${request.action}`
-        });
-    }
-  } catch (error) {
+  // 使用 Promise 包装异步处理，确保 sendResponse 只被调用一次
+  handleMessage(request, sender, sendResponse).catch(error => {
     console.error('❌ 消息处理失败:', error);
     sendResponse({
       success: false,
       error: error.message
     });
+  });
+
+  // 返回 true 表示将异步调用 sendResponse
+  return true;
+});
+
+async function handleMessage(request, sender, sendResponse) {
+  switch (request.action) {
+    case 'translate':
+      await handleTranslation(request, sendResponse);
+      break;
+
+    case 'checkModelStatus':
+      await handleCheckModelStatus(request, sendResponse);
+      break;
+
+    case 'downloadModel':
+      await handleDownloadModel(request, sendResponse);
+      break;
+
+    case 'updateContextMenus':
+      await createContextMenus();
+      sendResponse({ success: true });
+      break;
+
+    default:
+      sendResponse({
+        success: false,
+        error: `未知的操作: ${request.action}`
+      });
   }
 }
 
@@ -243,8 +372,8 @@ async function handleTranslation(request, sendResponse) {
   } else if (sourceLang === 'zh' && targetLang === 'en') {
     modelId = 'translation-zh-en';
   } else {
-    // 其他语言对使用通用模型
-    modelId = 'translation-universal';
+    // 其他语言对使用通用模型（默认使用快速版本）
+    modelId = 'translation-universal-fast';
   }
 
   // 检查模型是否已安装
@@ -264,12 +393,17 @@ async function handleTranslation(request, sendResponse) {
     return;
   }
 
-  // 加载模型(如果未加载)
-  if (!modelManager.models.translation) {
-    console.log('📦 首次使用,加载模型...');
+  // 加载模型(如果未加载或需要切换模型)
+  const needsModelLoad = !modelManager.models.translation || modelManager.currentModelId !== modelId;
+  console.log(`🔍 模型检查: 当前=${modelManager.currentModelId}, 需要=${modelId}, 需要加载=${needsModelLoad}`);
+
+  if (needsModelLoad) {
+    console.log(`📦 ${modelManager.models.translation ? '切换' : '加载'}模型: ${modelId}`);
     try {
       await modelManager.loadTranslationModel(modelId);
+      console.log(`✅ 模型就绪: ${modelManager.currentModelId}`);
     } catch (error) {
+      console.error(`❌ 模型加载失败:`, error);
       sendResponse({
         success: false,
         error: 'MODEL_LOAD_FAILED',
@@ -277,34 +411,170 @@ async function handleTranslation(request, sendResponse) {
       });
       return;
     }
+  } else {
+    console.log(`✅ 使用已加载的模型: ${modelManager.currentModelId}`);
   }
 
   // 执行翻译
   try {
     const startTime = performance.now();
 
-    const result = await modelManager.models.translation(text, {
-      // 注意: Helsinki-NLP/opus-mt 模型不需要指定 src_lang/tgt_lang
-      // 模型本身就是特定语言对的
-      max_length: 512
-    });
+    // 根据输入长度动态调整 max_length
+    const inputLength = text.length;
+    const estimatedOutputLength = Math.max(inputLength * 3, 50); // 中文通常比英文短
+    const maxLength = Math.min(estimatedOutputLength, 512);
+
+    // 根据模型类型设置参数
+    const translationOptions = {
+      max_length: maxLength,
+      num_beams: 1,  // 减少 beam search，提升速度
+      early_stopping: true,
+      repetition_penalty: 1.2,  // 防止重复生成
+      no_repeat_ngram_size: 3,  // 禁止重复的 3-gram
+      do_sample: false,  // 使用贪婪解码，更稳定
+      temperature: 1.0
+    };
+
+    console.log(`⚙️ 翻译参数: max_length=${maxLength}, input_length=${inputLength}`);
+
+    // 根据模型类型设置语言代码
+    if (modelId === 'translation-universal-fast') {
+      // M2M100 使用简单的语言代码
+      const srcCode = M2M100_LANG_CODES[sourceLang];
+      const tgtCode = M2M100_LANG_CODES[targetLang];
+
+      if (!srcCode || !tgtCode) {
+        throw new Error(`M2M100 不支持的语言对: ${sourceLang} → ${targetLang}`);
+      }
+
+      translationOptions.src_lang = srcCode;
+      translationOptions.tgt_lang = tgtCode;
+      console.log(`🚀 使用 M2M100 快速模型: ${srcCode} → ${tgtCode}`);
+    } else if (modelId === 'translation-universal-balanced' || modelId === 'translation-universal-quality') {
+      // NLLB 使用带脚本的语言代码
+      const srcCode = NLLB_LANG_CODES[sourceLang];
+      const tgtCode = NLLB_LANG_CODES[targetLang];
+
+      if (!srcCode || !tgtCode) {
+        throw new Error(`NLLB 不支持的语言对: ${sourceLang} → ${targetLang}`);
+      }
+
+      translationOptions.src_lang = srcCode;
+      translationOptions.tgt_lang = tgtCode;
+      console.log(`🌐 使用 NLLB 模型: ${srcCode} → ${tgtCode}`);
+    } else if (modelId === 'translation-universal') {
+      // 向后兼容旧版本（应该已在加载时转换为 fast）
+      const srcCode = M2M100_LANG_CODES[sourceLang];
+      const tgtCode = M2M100_LANG_CODES[targetLang];
+
+      if (!srcCode || !tgtCode) {
+        throw new Error(`不支持的语言对: ${sourceLang} → ${targetLang}`);
+      }
+
+      translationOptions.src_lang = srcCode;
+      translationOptions.tgt_lang = tgtCode;
+      console.log(`🌐 使用通用模型: ${srcCode} → ${tgtCode}`);
+    }
+
+    const result = await modelManager.models.translation(text, translationOptions);
 
     const endTime = performance.now();
     const latency = (endTime - startTime).toFixed(2);
 
     console.log(`✅ 翻译完成 (耗时: ${latency}ms)`);
-    console.log(`📝 译文: ${result[0].translation_text}`);
+    console.log(`📝 原始结果:`, result);
 
-    sendResponse({
+    // 确保只取第一个结果
+    let translatedText;
+    if (Array.isArray(result)) {
+      translatedText = result[0]?.translation_text || result[0];
+      console.log(`📝 从数组提取: ${translatedText}`);
+    } else if (result.translation_text) {
+      translatedText = result.translation_text;
+      console.log(`📝 从对象提取: ${translatedText}`);
+    } else {
+      translatedText = String(result);
+      console.log(`📝 直接转换: ${translatedText}`);
+    }
+
+    // 清理可能的重复文本（某些模型会重复输出）
+    if (translatedText) {
+      // 方法1: 检查是否有连续重复的单词
+      const words = translatedText.split(/[\s\n]+/);
+      if (words.length > 2) {
+        // 找出第一个重复的位置
+        let firstRepeatIndex = -1;
+        for (let i = 0; i < words.length - 1; i++) {
+          let repeatCount = 1;
+          for (let j = i + 1; j < words.length; j++) {
+            if (words[j] === words[i]) {
+              repeatCount++;
+            } else {
+              break;
+            }
+          }
+          if (repeatCount >= 3) {
+            firstRepeatIndex = i;
+            break;
+          }
+        }
+
+        if (firstRepeatIndex > 0) {
+          console.log(`⚠️ 检测到重复单词，截断至第一次重复前`);
+          translatedText = words.slice(0, firstRepeatIndex).join(' ');
+        }
+
+        // 方法2: 检查前后半部分是否相同
+        if (translatedText && words.length > 4) {
+          const halfLength = Math.floor(words.length / 2);
+          const firstHalf = words.slice(0, halfLength).join(' ');
+          const secondHalf = words.slice(halfLength, halfLength * 2).join(' ');
+
+          if (firstHalf === secondHalf) {
+            console.log(`⚠️ 检测到对称重复文本，使用前半部分`);
+            translatedText = firstHalf;
+          }
+        }
+      }
+
+      // 清理尾部可能的不完整单词/字符
+      translatedText = translatedText.trim();
+
+      // 方法3: 检测翻译结果是否包含原始文本（某些模型会在翻译前加上原文）
+      // 例如: "Synopsis de la série\n系列摘要" → "系列摘要"
+      if (translatedText && translatedText.includes(text)) {
+        console.log('⚠️ 翻译结果包含原文，尝试分离');
+        // 按换行符分割
+        const parts = translatedText.split(/[\n\r]+/);
+        if (parts.length > 1) {
+          // 找到不等于原文的部分
+          const cleanedParts = parts.filter(part => part.trim() !== text.trim());
+          if (cleanedParts.length > 0) {
+            translatedText = cleanedParts.join('\n');
+            console.log('✅ 清理后:', translatedText);
+          }
+        }
+      }
+
+      // 方法4: 如果翻译结果和原文完全相同（模型未翻译），标记为失败
+      if (translatedText === text) {
+        console.warn('⚠️ 翻译结果与原文相同，可能是模型未能翻译');
+      }
+    }
+
+    const responseData = {
       success: true,
       data: {
-        translation: result[0].translation_text,
+        translation: translatedText,
         sourceLang,
         targetLang,
         modelId,
         latency: parseFloat(latency)
       }
-    });
+    };
+
+    console.log('📤 发送翻译响应:', responseData);
+    sendResponse(responseData);
   } catch (error) {
     console.error('❌ 翻译失败:', error);
     sendResponse({
@@ -360,11 +630,15 @@ async function handleDownloadModel(request, sendResponse) {
  */
 if (chrome.contextMenus) {
   chrome.contextMenus.onClicked.addListener((info, tab) => {
-    if (info.menuItemId === 'mydictionary-translate') {
+    // 修复：使用新的菜单 ID
+    if (info.menuItemId === '0-mydictionary-translate') {
+      console.log('🖱️ 右键菜单点击，选中文本:', info.selectionText);
       // 向当前页面发送消息,打开侧边栏并翻译选中文本
       chrome.tabs.sendMessage(tab.id, {
         action: 'openSidebar',
         text: info.selectionText
+      }).catch(error => {
+        console.error('❌ 发送消息失败:', error);
       });
     }
   });
@@ -419,10 +693,11 @@ async function createContextMenus() {
     await chrome.contextMenus.removeAll();
 
     // 使用 Promise 包装,捕获重复 ID 错误
+    // 注意: 使用数字前缀让菜单在字典序中排在前面
     return new Promise((resolve) => {
       chrome.contextMenus.create({
-        id: 'mydictionary-translate',
-        title: t.contextMenu.openSidebar,
+        id: '0-mydictionary-translate',  // 数字 0 开头，让菜单排在前面
+        title: `🦊 ${t.contextMenu.openSidebar}`,  // 添加图标更醒目
         contexts: ['selection']
       }, () => {
         if (chrome.runtime.lastError) {
@@ -446,7 +721,34 @@ createContextMenus();
  */
 if (chrome.action) {
   chrome.action.onClicked.addListener((tab) => {
-    console.log('🖱️ 扩展图标被点击, tab:', tab.id);
+    console.log('🖱️ 扩展图标被点击, tab:', tab.id, tab.url);
+
+    // 检查是否是特殊页面
+    if (tab.url && (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('edge://'))) {
+      console.warn('⚠️ 无法在浏览器内部页面使用');
+
+      // 获取页面类型
+      let pageType = 'browser internal page';
+      if (tab.url.startsWith('chrome://extensions')) {
+        pageType = 'chrome://extensions/';
+      } else if (tab.url.startsWith('chrome://')) {
+        pageType = 'chrome:// system page';
+      } else if (tab.url.startsWith('edge://')) {
+        pageType = 'edge:// system page';
+      } else if (tab.url.startsWith('chrome-extension://')) {
+        pageType = 'extension page';
+      }
+
+      // 通过 chrome.notifications API 显示通知
+      chrome.notifications.create({
+        type: 'basic',
+        iconUrl: 'assets/icons/icon-128.png',
+        title: 'MyDictionary',
+        message: `Cannot use on ${pageType}. Please visit a regular webpage (e.g., https://google.com)`,
+        priority: 1
+      });
+      return;
+    }
 
     // 发送消息到 content script，切换侧边栏
     chrome.tabs.sendMessage(tab.id, {
@@ -456,19 +758,31 @@ if (chrome.action) {
       // 如果 content script 未注入，尝试注入
       if (err.message.includes('Could not establish connection')) {
         console.log('💉 尝试注入 content script...');
-        chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          files: ['content.js']
-        }).then(() => {
-          console.log('✅ Content script 注入成功');
-          // 重试发送消息
+
+        // 同时注入 CSS 和 JS
+        Promise.all([
+          chrome.scripting.insertCSS({
+            target: { tabId: tab.id },
+            files: ['src/ui/sidebar.css']
+          }),
+          chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            files: ['content.js']
+          })
+        ]).then(() => {
+          console.log('✅ Content script 和 CSS 注入成功');
+          // 增加延迟以确保 content script 完全初始化
           setTimeout(() => {
             chrome.tabs.sendMessage(tab.id, {
               action: 'toggleSidebar'
             }).catch(e => console.error('❌ 重试失败:', e));
-          }, 100);
+          }, 300);
         }).catch(e => {
-          console.error('❌ 注入 content script 失败:', e);
+          console.error('❌ 注入失败:', e);
+          // 如果是权限问题，记录更详细的信息
+          if (e.message.includes('Cannot access')) {
+            console.warn('⚠️ 该页面不允许注入 content script，请访问普通网页（如 https://google.com）');
+          }
         });
       }
     });

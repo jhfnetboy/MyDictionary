@@ -8,7 +8,7 @@
         "id": "translation-en-zh",
         "name": "英译中专用模型",
         "description": "高质量英文到中文翻译,支持近义词和例句",
-        "modelPath": "Helsinki-NLP/opus-mt-en-zh",
+        "modelPath": "Xenova/opus-mt-en-zh",
         "type": "translation",
         "tier": "DEDICATED",
         "size": 300,
@@ -28,7 +28,7 @@
         "id": "translation-zh-en",
         "name": "中译英专用模型",
         "description": "高质量中文到英文翻译,支持近义词和例句",
-        "modelPath": "Helsinki-NLP/opus-mt-zh-en",
+        "modelPath": "Xenova/opus-mt-zh-en",
         "type": "translation",
         "tier": "DEDICATED",
         "size": 300,
@@ -47,23 +47,69 @@
     },
 
     "universalTranslation": {
-      "id": "translation-universal",
-      "name": "通用多语言翻译模型",
-      "description": "支持 200 种语言互译的多语言翻译模型",
-      "modelPath": "Xenova/nllb-200-distilled-600M",
-      "type": "translation",
-      "tier": "UNIVERSAL",
-      "size": 600,
-      "sizeUnit": "MB",
-      "required": false,
-      "autoLoad": true,
-      "quality": 4,
-      "capabilities": [
-        "translation",
-        "language_detection"
-      ],
-      "supportedLanguages": 200,
-      "downloadPriority": 2
+      "fast": {
+        "id": "translation-universal-fast",
+        "name": "M2M100 快速翻译模型",
+        "description": "支持 100 种语言互译，速度最快（推荐）",
+        "modelPath": "Xenova/m2m100_418M",
+        "type": "translation",
+        "tier": "UNIVERSAL_FAST",
+        "size": 418,
+        "sizeUnit": "MB",
+        "required": false,
+        "autoLoad": true,
+        "quality": 4,
+        "speed": 5,
+        "capabilities": [
+          "translation",
+          "language_detection"
+        ],
+        "supportedLanguages": 100,
+        "downloadPriority": 2,
+        "note": "最快的多语言模型，比 NLLB-600M 快 2-3 倍"
+      },
+      "balanced": {
+        "id": "translation-universal-balanced",
+        "name": "NLLB-600M 平衡模型",
+        "description": "支持 200 种语言互译，速度与质量平衡",
+        "modelPath": "Xenova/nllb-200-distilled-600M",
+        "type": "translation",
+        "tier": "UNIVERSAL_BALANCED",
+        "size": 600,
+        "sizeUnit": "MB",
+        "required": false,
+        "autoLoad": false,
+        "quality": 4,
+        "speed": 3,
+        "capabilities": [
+          "translation",
+          "language_detection"
+        ],
+        "supportedLanguages": 200,
+        "downloadPriority": 3,
+        "note": "速度较慢但支持更多语言"
+      },
+      "quality": {
+        "id": "translation-universal-quality",
+        "name": "NLLB-1.3B 高质量模型",
+        "description": "支持 200 种语言互译，最高质量（较慢）",
+        "modelPath": "Xenova/nllb-200-1.3B",
+        "type": "translation",
+        "tier": "UNIVERSAL_QUALITY",
+        "size": 1300,
+        "sizeUnit": "MB",
+        "required": false,
+        "autoLoad": false,
+        "quality": 5,
+        "speed": 1,
+        "capabilities": [
+          "translation",
+          "language_detection"
+        ],
+        "supportedLanguages": 200,
+        "downloadPriority": 4,
+        "note": "翻译质量最高但速度最慢，适合学术/专业翻译"
+      }
     },
 
     "synonyms": {
