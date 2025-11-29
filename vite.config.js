@@ -45,6 +45,11 @@ export default defineConfig({
           src: 'assets/icons/*',
           dest: 'assets/icons',
         },
+        // 复制 logo
+        {
+          src: 'assets/logo-64.png',
+          dest: 'assets',
+        },
         // 关键:复制 Transformers.js 的 ONNX/WASM 运行时文件
         {
           src: 'node_modules/@xenova/transformers/dist/*.wasm',

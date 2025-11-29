@@ -17,8 +17,7 @@
       "48": "assets/icons/icon-48.png",
       "128": "assets/icons/icon-128.png"
     },
-    "default_title": "MyDictionary",
-    "default_popup": "src/ui/popup.html"
+    "default_title": "MyDictionary - Click to open sidebar"
   },
 
   "background": {
@@ -38,7 +37,8 @@
   "permissions": [
     "storage",
     "activeTab",
-    "contextMenus"
+    "contextMenus",
+    "scripting"
   ],
 
   "commands": {
@@ -57,7 +57,9 @@
         "src/ui/*.html",
         "src/ui/*.css",
         "src/ui/*.js",
-        "assets/*",
+        "src/config/*.json",
+        "assets/*.png",
+        "assets/icons/*.png",
         "transformers/*.wasm",
         "transformers/*.mjs",
         "transformers/*.js"
