@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "MyDictionary",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "🦊 智能本地 AI 词典 - 翻译 · 近义词 · 例句 · 学术写作",
   "author": "Jason",
 
@@ -38,7 +38,8 @@
     "storage",
     "activeTab",
     "contextMenus",
-    "scripting"
+    "scripting",
+    "notifications"
   ],
 
   "commands": {

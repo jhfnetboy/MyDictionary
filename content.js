@@ -3,6 +3,13 @@
  * 负责网页交互和 UI 管理
  */
 
+// 防止重复注入
+if (window.myDictionaryLoaded) {
+  console.warn('⚠️ MyDictionary Content Script 已存在，跳过重复加载');
+  throw new Error('MyDictionary already loaded');
+}
+window.myDictionaryLoaded = true;
+
 console.log('🦝 MyDictionary Content Script 已加载');
 
 // UI 管理器
@@ -12,6 +19,7 @@ class UIManager {
     this.sidebarVisible = false;
     this.i18n = null;
     this.currentLang = 'en'; // 默认英文
+    this.isTranslating = false; // 防止重复翻译
     this.loadLanguage();
   }
 
@@ -153,8 +161,14 @@ class UIManager {
           <label>${getText('sidebar.sourceLanguage', 'Source Language')}</label>
           <select id="mydictionary-source-lang">
             <option value="auto">🌐 ${getText('sidebar.autoDetect', 'Auto Detect')}</option>
-            <option value="en">🇺🇸 ${getText('sidebar.english', 'English')}</option>
-            <option value="zh">🇨🇳 ${getText('sidebar.chinese', 'Chinese')}</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="fr">🇫🇷 Français</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="ru">🇷🇺 Русский</option>
           </select>
 
           <textarea
@@ -171,12 +185,27 @@ class UIManager {
         <div class="mydictionary-output-section">
           <label>${getText('sidebar.targetLanguage', 'Target Language')}</label>
           <select id="mydictionary-target-lang">
-            <option value="zh">🇨🇳 ${getText('sidebar.chinese', 'Chinese')}</option>
-            <option value="en">🇺🇸 ${getText('sidebar.english', 'English')}</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="fr">🇫🇷 Français</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="ru">🇷🇺 Русский</option>
           </select>
 
           <div id="mydictionary-output" class="mydictionary-output">
             <div class="mydictionary-placeholder">${getText('sidebar.result', 'Translation Result')}...</div>
+          </div>
+
+          <div class="mydictionary-feature-buttons" id="mydictionary-feature-buttons" style="display: none;">
+            <button class="mydictionary-feature-btn" id="mydictionary-synonyms-btn" title="Get synonyms for selected word">
+              📚 ${getText('sidebar.synonyms', 'Synonyms')}
+            </button>
+            <button class="mydictionary-feature-btn" id="mydictionary-examples-btn" title="Get example sentences">
+              💡 ${getText('sidebar.examples', 'Examples')}
+            </button>
           </div>
         </div>
 
@@ -212,6 +241,14 @@ class UIManager {
    * 绑定事件
    */
   bindEvents() {
+    // 防止重复绑定事件（标记已绑定）
+    if (this.sidebar.dataset.eventsBound === 'true') {
+      console.log('⚠️ 事件已绑定，跳过重复绑定');
+      return;
+    }
+
+    console.log('🔗 绑定侧边栏事件');
+
     // 关闭按钮
     const closeBtn = this.sidebar.querySelector('#mydictionary-close-btn');
     closeBtn.addEventListener('click', () => this.hideSidebar());
@@ -235,6 +272,9 @@ class UIManager {
         this.handleTranslate();
       }
     });
+
+    // 标记已绑定
+    this.sidebar.dataset.eventsBound = 'true';
 
     // 点击外部关闭
     document.addEventListener('click', (e) => {
@@ -338,6 +378,14 @@ class UIManager {
    * 处理翻译请求
    */
   async handleTranslate() {
+    // 防止重复翻译
+    if (this.isTranslating) {
+      console.warn('⏳ 翻译进行中，忽略重复请求');
+      return;
+    }
+
+    console.log('🚀 handleTranslate 被调用');
+
     const input = this.sidebar.querySelector('#mydictionary-input');
     const output = this.sidebar.querySelector('#mydictionary-output');
     const status = this.sidebar.querySelector('#mydictionary-status');
@@ -350,6 +398,14 @@ class UIManager {
       return;
     }
 
+    console.log('🔒 设置 isTranslating = true');
+    this.isTranslating = true;
+
+    // 禁用翻译按钮
+    const translateBtn = this.sidebar.querySelector('#mydictionary-translate-btn');
+    translateBtn.disabled = true;
+    translateBtn.textContent = this.t('sidebar.translating') || 'Translating...';
+
     let sourceLang = sourceLangSelect.value;
     const targetLang = targetLangSelect.value;
 
@@ -359,39 +415,116 @@ class UIManager {
       console.log('🔍 检测到语言:', sourceLang);
     }
 
-    // 显示加载状态
-    output.innerHTML = `<div class="mydictionary-loading">${this.t('sidebar.translating')}</div>`;
+    // 显示明显的加载动画
+    output.innerHTML = `
+      <div class="mydictionary-loading-container">
+        <div class="mydictionary-spinner"></div>
+        <p>${this.t('sidebar.translating') || 'Translating...'}</p>
+      </div>
+    `;
     this.showStatus(this.t('sidebar.translating'), 'info');
 
     try {
-      // 发送翻译请求到 Background Script
-      const response = await chrome.runtime.sendMessage({
+      // 设置超时（30秒）
+      console.log('📤 发送翻译请求:', { text: text.substring(0, 30), sourceLang, targetLang });
+
+      const translationPromise = chrome.runtime.sendMessage({
         action: 'translate',
         text,
         sourceLang,
         targetLang
       });
 
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Translation timeout. Please try again.')), 30000)
+      );
+
+      const response = await Promise.race([translationPromise, timeoutPromise]);
+
+      console.log('📨 收到翻译响应:', JSON.stringify(response).substring(0, 200));
+
+      if (!response) {
+        throw new Error('No response received from background script');
+      }
+
       if (response.success) {
+        console.log('✅ 翻译成功，准备显示结果');
+
         // 显示翻译结果
+        const translationText = response.data?.translation || 'No translation';
+        const latency = response.data?.latency || 0;
+        const modelId = response.data?.modelId || 'unknown';
+
+        console.log('📝 翻译结果:', translationText);
+
         output.innerHTML = `
-          <div class="mydictionary-translation">${response.data.translation}</div>
+          <div class="mydictionary-translation">${translationText}</div>
           <div class="mydictionary-meta">
-            <span>⏱️ ${response.data.latency}ms</span>
-            <span>📦 ${response.data.modelId}</span>
+            <span>⏱️ ${latency}ms</span>
+            <span>📦 ${modelId}</span>
           </div>
         `;
-        this.showStatus(`✅ ${this.t('messages.downloadComplete')}`, 'success');
+        this.showStatus(`✅ Translation complete`, 'success');
+
+        // 显示功能按钮（仅英文支持同义词和例句）
+        const featureButtons = this.sidebar.querySelector('#mydictionary-feature-buttons');
+        if (featureButtons) {
+          if (response.data.targetLang === 'en' || response.data.sourceLang === 'en') {
+            featureButtons.style.display = 'flex';
+          } else {
+            featureButtons.style.display = 'none';
+          }
+        }
       } else if (response.error === 'MODEL_NOT_INSTALLED') {
+        console.log('⚠️ 模型未安装');
         // 模型未安装,提示用户下载
         this.showModelNotInstalledDialog(response.requiredModel);
       } else {
-        throw new Error(response.message || response.error);
+        // 改进错误对象的序列化
+        const errorDetail = typeof response.error === 'object'
+          ? JSON.stringify(response.error)
+          : String(response.error);
+        console.error('❌ 翻译失败:', errorDetail);
+        throw new Error(response.message || errorDetail || 'Translation failed');
       }
     } catch (error) {
+      // 改进错误消息的提取
       console.error('❌ 翻译失败:', error);
-      output.innerHTML = `<div class="mydictionary-error">${this.t('messages.translationError')}</div>`;
-      this.showStatus(`❌ ${error.message}`, 'error');
+      let errorMsg = 'Unknown error';
+
+      if (error.message) {
+        errorMsg = error.message;
+      } else if (typeof error === 'object') {
+        errorMsg = JSON.stringify(error);
+      } else {
+        errorMsg = String(error);
+      }
+      output.innerHTML = `
+        <div class="mydictionary-error-container">
+          <div class="mydictionary-error-icon">⚠️</div>
+          <h4>${this.t('messages.translationError') || 'Translation Error'}</h4>
+          <p class="mydictionary-error-message">${errorMsg}</p>
+          <button class="mydictionary-btn-secondary" id="mydictionary-retry-btn">
+            🔄 Retry
+          </button>
+        </div>
+      `;
+      this.showStatus(`❌ ${errorMsg}`, 'error');
+
+      // 绑定重试按钮
+      const retryBtn = output.querySelector('#mydictionary-retry-btn');
+      if (retryBtn) {
+        retryBtn.addEventListener('click', () => this.handleTranslate());
+      }
+    } finally {
+      // 无论成功或失败，都重置翻译标志和按钮状态
+      console.log('🔓 重置 isTranslating = false');
+      this.isTranslating = false;
+      const translateBtn = this.sidebar.querySelector('#mydictionary-translate-btn');
+      if (translateBtn) {
+        translateBtn.disabled = false;
+        translateBtn.textContent = this.t('sidebar.translateButton') || 'Translate';
+      }
     }
   }
 
@@ -426,9 +559,37 @@ class UIManager {
   /**
    * 显示设置面板
    */
-  showSettings() {
+  async showSettings() {
     const output = this.sidebar.querySelector('#mydictionary-output');
     const shortcutKey = navigator.platform.includes('Mac') ? 'Cmd+Shift+D' : 'Ctrl+Shift+D';
+
+    // 获取已安装的模型列表
+    const storage = await chrome.storage.local.get(['installedModels']);
+    const installedModels = storage.installedModels || {};
+    const modelCount = Object.keys(installedModels).length;
+
+    // 生成模型列表 HTML
+    let modelListHTML = '';
+    if (modelCount > 0) {
+      modelListHTML = `
+        <div class="mydictionary-model-list" style="margin: 16px 0; padding: 12px; background: white; border-radius: 6px; border: 1px solid #e0e0e0;">
+          <h5 style="font-size: 13px; color: #667eea; margin-bottom: 10px;">Downloaded Models (${modelCount}):</h5>
+          <div style="font-size: 12px; color: #666; line-height: 1.8;">
+            ${Object.entries(installedModels).map(([id, info]) => {
+              const modelName = id.replace('translation-', '').replace('-', ' → ').toUpperCase();
+              const downloadDate = new Date(info.timestamp).toLocaleDateString();
+              return `<div>• <strong>${modelName}</strong> <span style="color: #999;">(${downloadDate})</span></div>`;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    } else {
+      modelListHTML = `
+        <div style="margin: 16px 0; padding: 12px; background: #f9f9f9; border-radius: 6px; border-left: 3px solid #ffa500;">
+          <p style="font-size: 12px; color: #666; margin: 0;">No models downloaded yet. Models will be downloaded automatically when you use translation.</p>
+        </div>
+      `;
+    }
 
     output.innerHTML = `
       <div class="mydictionary-settings-panel">
@@ -449,9 +610,14 @@ class UIManager {
         <div class="mydictionary-settings-section">
           <h4>📦 ${this.t('sidebar.modelManagement') || 'Model Management'}</h4>
           <p>${this.t('sidebar.modelInfo') || 'Models are downloaded automatically when needed'}</p>
+
+          ${modelListHTML}
+
+          ${modelCount > 0 ? `
           <button class="mydictionary-btn-secondary" id="mydictionary-clear-models-btn">
             🗑️ ${this.t('sidebar.clearModels') || 'Clear all models'}
           </button>
+          ` : ''}
         </div>
 
         <div class="mydictionary-settings-section">
@@ -477,15 +643,19 @@ class UIManager {
       output.innerHTML = `<div class="mydictionary-placeholder">${this.t('sidebar.result')}...</div>`;
     });
 
-    // 绑定清除模型按钮
+    // 绑定清除模型按钮（仅当有模型时才存在）
     const clearModelsBtn = output.querySelector('#mydictionary-clear-models-btn');
-    clearModelsBtn.addEventListener('click', async () => {
-      const confirmed = confirm(this.t('sidebar.confirmClearModels') || 'Clear all downloaded models? This will free up disk space but models will need to be re-downloaded when used.');
-      if (confirmed) {
-        await chrome.storage.local.remove('installedModels');
-        this.showStatus('✅ ' + (this.t('sidebar.modelsCleared') || 'Models cleared'), 'success');
-      }
-    });
+    if (clearModelsBtn) {
+      clearModelsBtn.addEventListener('click', async () => {
+        const confirmed = confirm(this.t('sidebar.confirmClearModels') || 'Clear all downloaded models? This will free up disk space but models will need to be re-downloaded when used.');
+        if (confirmed) {
+          await chrome.storage.local.remove('installedModels');
+          this.showStatus('✅ ' + (this.t('sidebar.modelsCleared') || 'Models cleared'), 'success');
+          // 重新显示设置面板以更新模型列表
+          await this.showSettings();
+        }
+      });
+    }
   }
 
   /**
@@ -493,16 +663,23 @@ class UIManager {
    */
   showModelNotInstalledDialog(modelInfo) {
     const output = this.sidebar.querySelector('#mydictionary-output');
+
+    // 使用带 fallback 的文本获取
+    const getText = (key, fallback) => {
+      const text = this.t(key);
+      return text === key ? fallback : text;
+    };
+
     output.innerHTML = `
       <div class="mydictionary-model-dialog">
-        <h3>⚠️ ${this.t('messages.modelNotInstalled')}</h3>
+        <h3>⚠️ ${getText('messages.modelNotInstalled', 'Model not installed')}</h3>
         <p><strong>${modelInfo.name}</strong></p>
-        <p>Size: ${modelInfo.size}MB</p>
+        <p>${getText('messages.modelSize', 'Size')}: ${modelInfo.size}MB</p>
         <button id="mydictionary-download-model-btn" class="mydictionary-btn-primary">
-          ${this.t('popup.download')}
+          📥 ${getText('popup.download', 'Download')}
         </button>
         <button id="mydictionary-cancel-btn" class="mydictionary-btn-secondary">
-          ${this.t('sidebar.close')}
+          ${getText('sidebar.close', 'Close')}
         </button>
       </div>
     `;

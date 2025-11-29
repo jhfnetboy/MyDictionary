@@ -448,3 +448,120 @@
 .mydictionary-settings-section a:hover {
   text-decoration: underline;
 }
+
+/* Feature buttons */
+.mydictionary-feature-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px 0;
+  border-top: 1px solid #e0e0e0;
+}
+
+.mydictionary-feature-btn {
+  flex: 1;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mydictionary-feature-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.mydictionary-feature-btn:active {
+  transform: translateY(0);
+}
+
+.mydictionary-feature-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Loading container */
+.mydictionary-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  min-height: 150px;
+}
+
+.mydictionary-loading-container p {
+  margin-top: 16px;
+  color: #667eea;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Spinner animation */
+.mydictionary-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: mydictionary-spin 1s linear infinite;
+}
+
+@keyframes mydictionary-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Disabled button state */
+.mydictionary-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #aaa 0%, #888 100%);
+}
+
+.mydictionary-btn-primary:disabled:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+/* Error container */
+.mydictionary-error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+  text-align: center;
+}
+
+.mydictionary-error-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  animation: mydictionary-shake 0.5s;
+}
+
+.mydictionary-error-container h4 {
+  color: #e74c3c;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.mydictionary-error-message {
+  color: #666;
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+  max-width: 300px;
+}
+
+@keyframes mydictionary-shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
