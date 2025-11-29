@@ -1,0 +1,411 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-29",
+
+  "models": {
+    "dedicatedTranslation": {
+      "en-zh": {
+        "id": "translation-en-zh",
+        "name": "英译中专用模型",
+        "description": "高质量英文到中文翻译,支持近义词和例句",
+        "modelPath": "Helsinki-NLP/opus-mt-en-zh",
+        "type": "translation",
+        "tier": "DEDICATED",
+        "size": 300,
+        "sizeUnit": "MB",
+        "required": false,
+        "autoLoad": true,
+        "quality": 5,
+        "capabilities": [
+          "translation",
+          "synonyms",
+          "examples"
+        ],
+        "languagePair": ["en", "zh"],
+        "downloadPriority": 1
+      },
+      "zh-en": {
+        "id": "translation-zh-en",
+        "name": "中译英专用模型",
+        "description": "高质量中文到英文翻译,支持近义词和例句",
+        "modelPath": "Helsinki-NLP/opus-mt-zh-en",
+        "type": "translation",
+        "tier": "DEDICATED",
+        "size": 300,
+        "sizeUnit": "MB",
+        "required": false,
+        "autoLoad": true,
+        "quality": 5,
+        "capabilities": [
+          "translation",
+          "synonyms",
+          "examples"
+        ],
+        "languagePair": ["zh", "en"],
+        "downloadPriority": 1
+      }
+    },
+
+    "universalTranslation": {
+      "id": "translation-universal",
+      "name": "通用多语言翻译模型",
+      "description": "支持 200 种语言互译的多语言翻译模型",
+      "modelPath": "Xenova/nllb-200-distilled-600M",
+      "type": "translation",
+      "tier": "UNIVERSAL",
+      "size": 600,
+      "sizeUnit": "MB",
+      "required": false,
+      "autoLoad": true,
+      "quality": 4,
+      "capabilities": [
+        "translation",
+        "language_detection"
+      ],
+      "supportedLanguages": 200,
+      "downloadPriority": 2
+    },
+
+    "synonyms": {
+      "id": "synonyms",
+      "name": "近义词模型",
+      "description": "基于上下文的英文近义词推荐",
+      "modelPath": "Xenova/distilbert-base-uncased",
+      "type": "fill-mask",
+      "tier": "EXTENDED",
+      "size": 65,
+      "sizeUnit": "MB",
+      "required": false,
+      "autoLoad": false,
+      "capabilities": [
+        "synonym_suggestion",
+        "context_aware_replacement"
+      ],
+      "supportedLanguages": 1,
+      "primaryLanguage": "en",
+      "downloadPriority": 3,
+      "sharedModel": true
+    },
+
+    "examples": {
+      "id": "examples",
+      "name": "例句模型",
+      "description": "检索真实使用场景的例句",
+      "modelPath": "Xenova/all-MiniLM-L6-v2",
+      "type": "feature-extraction",
+      "tier": "EXTENDED",
+      "size": 23,
+      "sizeUnit": "MB",
+      "required": false,
+      "autoLoad": false,
+      "capabilities": [
+        "sentence_similarity",
+        "example_retrieval"
+      ],
+      "supportedLanguages": 1,
+      "primaryLanguage": "en",
+      "downloadPriority": 4,
+      "sharedModel": true
+    },
+
+    "academicWriting": {
+      "phrasebank": {
+        "id": "academic-phrasebank",
+        "name": "学术短语库",
+        "description": "20,000+ 学术论文常用表达,涵盖论文所有部分",
+        "dataPath": "assets/academic-phrasebank.json",
+        "type": "dataset",
+        "tier": "ACADEMIC",
+        "size": 8,
+        "sizeUnit": "MB",
+        "required": false,
+        "autoLoad": true,
+        "capabilities": [
+          "academic_phrases",
+          "paper_writing_assistance"
+        ],
+        "categories": [
+          "introduction",
+          "methods",
+          "results",
+          "discussion",
+          "conclusion",
+          "literature_review"
+        ],
+        "totalPhrases": 20000,
+        "downloadPriority": 5
+      },
+      "scibert": {
+        "id": "academic-scibert",
+        "name": "SciBERT 学术模型",
+        "description": "基于 114万篇学术论文训练的专业模型",
+        "modelPath": "allenai/scibert_scivocab_uncased",
+        "type": "fill-mask",
+        "tier": "ACADEMIC_ADVANCED",
+        "size": 440,
+        "sizeUnit": "MB",
+        "required": false,
+        "autoLoad": false,
+        "quality": 5,
+        "capabilities": [
+          "academic_synonym_suggestion",
+          "scientific_term_understanding",
+          "context_aware_replacement"
+        ],
+        "trainingData": "1.14M scholarly papers",
+        "supportedLanguages": 1,
+        "primaryLanguage": "en",
+        "downloadPriority": 6,
+        "note": "需要转换为 ONNX 格式才能使用"
+      }
+    }
+  },
+
+  "languages": {
+    "zh": {
+      "name": "中文",
+      "nativeName": "中文",
+      "code": "zho_Hans",
+      "flag": "🇨🇳",
+      "direction": "ltr",
+      "featured": true,
+      "supportedFeatures": ["translation"]
+    },
+    "en": {
+      "name": "English",
+      "nativeName": "English",
+      "code": "eng_Latn",
+      "flag": "🇺🇸",
+      "direction": "ltr",
+      "featured": true,
+      "supportedFeatures": ["translation", "synonyms", "examples"]
+    },
+    "ja": {
+      "name": "日本語",
+      "nativeName": "日本語",
+      "code": "jpn_Jpan",
+      "flag": "🇯🇵",
+      "direction": "ltr",
+      "featured": true,
+      "supportedFeatures": ["translation"]
+    },
+    "ko": {
+      "name": "한국어",
+      "nativeName": "한국어",
+      "code": "kor_Hang",
+      "flag": "🇰🇷",
+      "direction": "ltr",
+      "featured": true,
+      "supportedFeatures": ["translation"]
+    },
+    "fr": {
+      "name": "Français",
+      "nativeName": "Français",
+      "code": "fra_Latn",
+      "flag": "🇫🇷",
+      "direction": "ltr",
+      "featured": true,
+      "supportedFeatures": ["translation"]
+    },
+    "de": {
+      "name": "Deutsch",
+      "nativeName": "Deutsch",
+      "code": "deu_Latn",
+      "flag": "🇩🇪",
+      "direction": "ltr",
+      "featured": true,
+      "supportedFeatures": ["translation"]
+    },
+    "es": {
+      "name": "Español",
+      "nativeName": "Español",
+      "code": "spa_Latn",
+      "flag": "🇪🇸",
+      "direction": "ltr",
+      "featured": true,
+      "supportedFeatures": ["translation"]
+    },
+    "th": {
+      "name": "ไทย",
+      "nativeName": "ไทย",
+      "code": "tha_Thai",
+      "flag": "🇹🇭",
+      "direction": "ltr",
+      "featured": true,
+      "supportedFeatures": ["translation"]
+    },
+    "ru": {
+      "name": "Русский",
+      "nativeName": "Русский",
+      "code": "rus_Cyrl",
+      "flag": "🇷🇺",
+      "direction": "ltr",
+      "featured": true,
+      "supportedFeatures": ["translation"]
+    },
+    "ar": {
+      "name": "العربية",
+      "nativeName": "العربية",
+      "code": "arb_Arab",
+      "flag": "🇸🇦",
+      "direction": "rtl",
+      "featured": true,
+      "supportedFeatures": ["translation"]
+    },
+    "pt": {
+      "name": "Português",
+      "nativeName": "Português",
+      "code": "por_Latn",
+      "flag": "🇵🇹",
+      "direction": "ltr",
+      "featured": true,
+      "supportedFeatures": ["translation"]
+    },
+    "it": {
+      "name": "Italiano",
+      "nativeName": "Italiano",
+      "code": "ita_Latn",
+      "flag": "🇮🇹",
+      "direction": "ltr",
+      "featured": true,
+      "supportedFeatures": ["translation"]
+    },
+    "vi": {
+      "name": "Tiếng Việt",
+      "nativeName": "Tiếng Việt",
+      "code": "vie_Latn",
+      "flag": "🇻🇳",
+      "direction": "ltr",
+      "featured": true,
+      "supportedFeatures": ["translation"]
+    },
+    "id": {
+      "name": "Indonesia",
+      "nativeName": "Bahasa Indonesia",
+      "code": "ind_Latn",
+      "flag": "🇮🇩",
+      "direction": "ltr",
+      "featured": true,
+      "supportedFeatures": ["translation"]
+    },
+    "nl": {
+      "name": "Nederlands",
+      "nativeName": "Nederlands",
+      "code": "nld_Latn",
+      "flag": "🇳🇱",
+      "direction": "ltr",
+      "featured": false,
+      "supportedFeatures": ["translation"]
+    },
+    "pl": {
+      "name": "Polski",
+      "nativeName": "Polski",
+      "code": "pol_Latn",
+      "flag": "🇵🇱",
+      "direction": "ltr",
+      "featured": false,
+      "supportedFeatures": ["translation"]
+    },
+    "tr": {
+      "name": "Türkçe",
+      "nativeName": "Türkçe",
+      "code": "tur_Latn",
+      "flag": "🇹🇷",
+      "direction": "ltr",
+      "featured": false,
+      "supportedFeatures": ["translation"]
+    },
+    "hi": {
+      "name": "हिन्दी",
+      "nativeName": "हिन्दी",
+      "code": "hin_Deva",
+      "flag": "🇮🇳",
+      "direction": "ltr",
+      "featured": false,
+      "supportedFeatures": ["translation"]
+    },
+    "sv": {
+      "name": "Svenska",
+      "nativeName": "Svenska",
+      "code": "swe_Latn",
+      "flag": "🇸🇪",
+      "direction": "ltr",
+      "featured": false,
+      "supportedFeatures": ["translation"]
+    },
+    "cs": {
+      "name": "Čeština",
+      "nativeName": "Čeština",
+      "code": "ces_Latn",
+      "flag": "🇨🇿",
+      "direction": "ltr",
+      "featured": false,
+      "supportedFeatures": ["translation"]
+    }
+  },
+
+  "installationPresets": {
+    "DEFAULT": {
+      "name": "默认安装(推荐)",
+      "description": "仅必需的专用翻译模型,其他按需下载",
+      "size": 300,
+      "models": [
+        "translation-en-zh"
+      ],
+      "note": "首次使用时自动下载,其他模型在使用时提示下载"
+    },
+    "FULL": {
+      "name": "完整安装",
+      "description": "所有模型,离线使用",
+      "size": 1776,
+      "models": [
+        "translation-en-zh",
+        "translation-zh-en",
+        "translation-universal",
+        "synonyms",
+        "examples",
+        "academic-phrasebank"
+      ]
+    },
+    "ACADEMIC": {
+      "name": "学术写作专版",
+      "description": "专用翻译 + 学术功能",
+      "size": 1144,
+      "models": [
+        "translation-en-zh",
+        "translation-zh-en",
+        "synonyms",
+        "examples",
+        "academic-phrasebank",
+        "academic-scibert"
+      ]
+    }
+  },
+
+  "downloadStrategy": {
+    "description": "按需下载策略",
+    "rules": {
+      "translation-en-zh": "必需,首次启动自动下载",
+      "translation-zh-en": "用户首次使用中译英时提示下载",
+      "translation-universal": "用户翻译非英中语言时提示下载",
+      "synonyms": "用户首次点击[近义词]按钮时提示下载",
+      "examples": "用户首次点击[例句]按钮时提示下载",
+      "academic-phrasebank": "用户首次切换到学术模式时自动下载(仅8MB)",
+      "academic-scibert": "用户在学术模式设置中手动启用"
+    },
+    "downloadMethod": "huggingface_hub",
+    "cachePath": "browser_cache"
+  },
+
+  "settings": {
+    "defaultSourceLanguage": "auto",
+    "defaultTargetLanguage": "zh",
+    "preferredLanguages": ["zh", "en"],
+    "primaryLanguagePair": ["en", "zh"],
+    "modelLoadTimeout": 180000,
+    "translationCacheSize": 1000,
+    "enablePerformanceMetrics": true,
+    "enableAcademicMode": false,
+    "installationType": "DEFAULT"
+  }
+}

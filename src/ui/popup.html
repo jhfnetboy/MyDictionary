@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyDictionary</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 320px;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      font-size: 48px;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .version {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 12px;
+      background: white;
+      color: #667eea;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .info {
+      font-size: 12px;
+      line-height: 1.6;
+      opacity: 0.9;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      padding-top: 16px;
+      margin-top: 16px;
+    }
+
+    .info p {
+      margin-bottom: 8px;
+    }
+
+    .info strong {
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">🦊</div>
+    <h1>MyDictionary</h1>
+    <div class="version">v0.1.0</div>
+  </div>
+
+  <div class="actions">
+    <button id="open-sidebar-btn">📖 打开翻译面板</button>
+    <button id="settings-btn">⚙️ 设置</button>
+  </div>
+
+  <div class="info">
+    <p><strong>快捷键:</strong> Ctrl+Shift+F</p>
+    <p><strong>使用方式:</strong></p>
+    <p>• 选中文本 + 快捷键</p>
+    <p>• 右键菜单 → 翻译</p>
+    <p>• 点击工具栏图标</p>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,305 @@
+/**
+ * MyDictionary - Sidebar Styles
+ */
+
+.mydictionary-sidebar {
+  position: fixed;
+  top: 0;
+  right: -420px; /* 初始隐藏 */
+  width: 400px;
+  height: 100vh;
+  background: #ffffff;
+  box-shadow: -2px 0 16px rgba(0, 0, 0, 0.1);
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2147483647; /* 最大 z-index */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+.mydictionary-sidebar.show {
+  right: 0;
+}
+
+/* Header */
+.mydictionary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.mydictionary-title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.mydictionary-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.mydictionary-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Content */
+.mydictionary-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.mydictionary-input-section,
+.mydictionary-output-section {
+  margin-bottom: 20px;
+}
+
+.mydictionary-content label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.mydictionary-content select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 12px;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.mydictionary-content select:hover {
+  border-color: #667eea;
+}
+
+.mydictionary-content select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+#mydictionary-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
+}
+
+#mydictionary-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.mydictionary-btn-primary {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.mydictionary-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.mydictionary-btn-primary:active {
+  transform: translateY(0);
+}
+
+.mydictionary-btn-secondary {
+  padding: 10px 16px;
+  background: #f5f5f5;
+  color: #666;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-left: 8px;
+}
+
+.mydictionary-btn-secondary:hover {
+  background: #e0e0e0;
+}
+
+.mydictionary-output {
+  min-height: 100px;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: #f9f9f9;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.mydictionary-placeholder {
+  color: #999;
+  font-style: italic;
+}
+
+.mydictionary-translation {
+  color: #333;
+  font-size: 16px;
+  line-height: 1.8;
+  margin-bottom: 12px;
+}
+
+.mydictionary-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #666;
+  padding-top: 12px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.mydictionary-loading {
+  text-align: center;
+  color: #667eea;
+  font-weight: 500;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.mydictionary-error {
+  color: #f44336;
+  font-weight: 500;
+}
+
+.mydictionary-status {
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-top: 12px;
+  text-align: center;
+}
+
+.mydictionary-status-info {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.mydictionary-status-success {
+  background: #e8f5e9;
+  color: #388e3c;
+}
+
+.mydictionary-status-warning {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.mydictionary-status-error {
+  background: #ffebee;
+  color: #d32f2f;
+}
+
+/* Model Dialog */
+.mydictionary-model-dialog {
+  text-align: center;
+  padding: 20px;
+}
+
+.mydictionary-model-dialog h3 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.mydictionary-model-dialog p {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+
+.mydictionary-model-dialog button {
+  margin-top: 16px;
+}
+
+/* 深色模式支持 (可选) */
+@media (prefers-color-scheme: dark) {
+  .mydictionary-sidebar {
+    background: #1e1e1e;
+    color: #e0e0e0;
+  }
+
+  .mydictionary-content label {
+    color: #e0e0e0;
+  }
+
+  #mydictionary-input,
+  .mydictionary-content select {
+    background: #2d2d2d;
+    border-color: #404040;
+    color: #e0e0e0;
+  }
+
+  .mydictionary-output {
+    background: #2d2d2d;
+    border-color: #404040;
+  }
+
+  .mydictionary-translation {
+    color: #e0e0e0;
+  }
+
+  .mydictionary-header {
+    border-bottom-color: #404040;
+  }
+}
+
+/* 滚动条样式 */
+.mydictionary-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.mydictionary-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.mydictionary-content::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.mydictionary-content::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
