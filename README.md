@@ -1,8 +1,12 @@
-# 🦊 MyDictionary
+# 🦝 MyDictionary
+
+> [English](#english) | [中文](#中文)
 
 <div align="center">
 
 ![Logo](./assets/logo.png)
+
+**Local AI Dictionary · Translation · Synonyms · Examples · Academic Writing**
 
 **智能本地 AI 词典 · 翻译 · 近义词 · 例句 · 学术写作**
 
@@ -14,14 +18,16 @@
 
 ---
 
-## ✨ 特性
+## English
 
-- 🔒 **完全本地化** - 所有 AI 推理在本地完成,无数据上传,保护隐私
-- 🌐 **智能翻译** - 支持 200 种语言互译,主要语言对使用专用高质量模型
-- 📚 **近义词推荐** - 基于上下文的智能同义词建议
-- 💬 **例句展示** - 真实使用场景的例句参考
-- 🎓 **学术写作** - 20,000+ 学术常用表达,助力论文写作
-- ⚡ **按需下载** - 默认仅 300MB,其他模型按需下载
+### ✨ Features
+
+- 🔒 **Fully Local** - All AI processing runs locally, no data upload, privacy protected
+- 🌐 **Smart Translation** - 200 languages support, dedicated high-quality models for major language pairs
+- 📚 **Synonym Suggestions** - Context-aware intelligent synonym recommendations
+- 💬 **Example Sentences** - Real-world usage examples
+- 🎓 **Academic Writing** - 20,000+ academic phrases to boost your research papers
+- ⚡ **On-Demand Download** - Only 300MB by default, other models downloaded as needed
 
 ## 🚀 快速开始
 
@@ -116,12 +122,12 @@ pnpm install
 - [模型策略](./HYBRID_MODEL_STRATEGY.md)
 - [学术写作模型](./ACADEMIC_WRITING_MODELS.md)
 
-## 🎨 Logo 设计
+### 🎨 Logo Design
 
-MyDictionary 的 Logo 采用 **狐狸 🦊** 形象,象征:
-- 🧠 **聪明智慧** - 本地 AI 智能翻译
-- 📚 **博学多识** - 支持 200 种语言
-- 🎓 **学术严谨** - 专业的学术写作辅助
+MyDictionary's logo features a **Raccoon 🦝** holding a dictionary, symbolizing:
+- 🧠 **Smart & Clever** - Local AI-powered intelligent translation
+- 📚 **Well-Read** - Supporting 200 languages
+- 🎓 **Academic Excellence** - Professional academic writing assistance
 
 ## 🔧 开发
 
@@ -167,19 +173,26 @@ pnpm run package
 
 MIT License - 详见 [LICENSE](LICENSE) 文件
 
-## 🙏 致谢
+### 🙏 Acknowledgements
 
-- [Transformers.js](https://huggingface.co/docs/transformers.js) - 浏览器端运行 AI 模型
-- [Helsinki-NLP](https://huggingface.co/Helsinki-NLP) - 高质量翻译模型
-- [AllenAI](https://allenai.org/) - SciBERT 学术模型
-- [Academic Phrasebank](https://www.phrasebank.manchester.ac.uk/) - 学术短语库
+- [Transformers.js](https://huggingface.co/docs/transformers.js) by Hugging Face - Run AI models in the browser
+- [Helsinki-NLP/opus-mt-en-zh](https://huggingface.co/Helsinki-NLP/opus-mt-en-zh) - English to Chinese translation model
+- [Helsinki-NLP/opus-mt-zh-en](https://huggingface.co/Helsinki-NLP/opus-mt-zh-en) - Chinese to English translation model
+- [facebook/nllb-200-distilled-600M](https://huggingface.co/facebook/nllb-200-distilled-600M) - Universal multilingual translation (200 languages)
+- [distilbert-base-uncased](https://huggingface.co/distilbert-base-uncased) - Synonym suggestions
+- [all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) - Sentence embeddings for example retrieval
+- [AllenAI SciBERT](https://huggingface.co/allenai/scibert_scivocab_uncased) - Academic writing model
+- [Academic Phrasebank](https://www.phrasebank.manchester.ac.uk/) - University of Manchester - Academic phrases database
 
 ---
 
-<div align="center">
+## 中文
 
-**用 🦊 的智慧,让翻译更简单**
+### ✨ 特性
 
-Made with ❤️ by Jason
-
-</div>
+- 🔒 **完全本地化** - 所有 AI 推理在本地完成,无数据上传,保护隐私
+- 🌐 **智能翻译** - 支持 200 种语言互译,主要语言对使用专用高质量模型
+- 📚 **近义词推荐** - 基于上下文的智能同义词建议
+- 💬 **例句展示** - 真实使用场景的例句参考
+- 🎓 **学术写作** - 20,000+ 学术常用表达,助力论文写作
+- ⚡ **按需下载** - 默认仅 300MB,其他模型按需下载
