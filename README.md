@@ -55,7 +55,7 @@ pnpm install
 3. Sidebar slides in from the right with translation
 
 **Method 2: Keyboard Shortcut**
-1. Select text + `Ctrl+Shift+F` (Mac: `Cmd+Shift+F`)
+1. Select text + `Ctrl+Shift+D` (Mac: `Cmd+Shift+D`)
 2. Sidebar appears automatically
 
 **Method 3: Click Extension Icon**
@@ -238,7 +238,7 @@ pnpm install
 3. 右侧滑出面板显示翻译
 
 **方式 2: 快捷键**
-1. 选中文本 + `Ctrl+Shift+F` (Mac: `Cmd+Shift+F`)
+1. 选中文本 + `Ctrl+Shift+D` (Mac: `Cmd+Shift+D`)
 2. 侧边栏自动出现
 
 **方式 3: 点击插件图标**

@@ -30,11 +30,30 @@
   border-bottom: 1px solid #e0e0e0;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
+  gap: 8px;
 }
 
 .mydictionary-title {
   font-size: 18px;
   font-weight: 600;
+  flex: 1;
+}
+
+.mydictionary-lang-switch {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.mydictionary-lang-switch:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .mydictionary-close {
@@ -51,6 +70,7 @@
   justify-content: center;
   border-radius: 4px;
   transition: background 0.2s;
+  flex-shrink: 0;
 }
 
 .mydictionary-close:hover {
@@ -302,4 +322,26 @@
 
 .mydictionary-content::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+/* Footer */
+.mydictionary-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 20px;
+  border-top: 1px solid #e0e0e0;
+  background: #f5f5f5;
+  font-size: 11px;
+  color: #999;
+}
+
+.mydictionary-version {
+  font-weight: 600;
+  color: #667eea;
+}
+
+.mydictionary-timestamp {
+  font-family: 'Courier New', monospace;
+  cursor: help;
 }

@@ -1,0 +1,100 @@
+{
+  "en": {
+    "appName": "MyDictionary",
+    "contextMenu": {
+      "translateToZh": "Translate to Chinese",
+      "translateToEn": "Translate to English",
+      "openSidebar": "Open Dictionary Panel"
+    },
+    "sidebar": {
+      "title": "MyDictionary",
+      "inputPlaceholder": "Enter text to translate...",
+      "translateButton": "Translate",
+      "translating": "Translating...",
+      "result": "Translation Result",
+      "synonyms": "Synonyms",
+      "examples": "Examples",
+      "close": "Close",
+      "languageSwitch": "中文",
+      "sourceLanguage": "Source Language",
+      "targetLanguage": "Target Language",
+      "autoDetect": "Auto Detect",
+      "english": "English",
+      "chinese": "Chinese"
+    },
+    "popup": {
+      "title": "MyDictionary Settings",
+      "openSidebar": "Open Sidebar",
+      "settings": "Settings",
+      "shortcut": "Shortcut:",
+      "usage": "Usage:",
+      "usage1": "• Select text + shortcut",
+      "usage2": "• Right-click menu → Translate",
+      "usage3": "• Click toolbar icon",
+      "defaultLanguagePair": "Default Language Pair",
+      "interfaceLanguage": "Interface Language",
+      "modelManagement": "Model Management",
+      "downloadedModels": "Downloaded Models",
+      "availableModels": "Available Models",
+      "download": "Download",
+      "delete": "Delete"
+    },
+    "messages": {
+      "modelNotInstalled": "Model not installed",
+      "downloadPrompt": "Download now?",
+      "downloading": "Downloading...",
+      "downloadComplete": "Download complete!",
+      "translationError": "Translation error",
+      "noTextSelected": "No text selected"
+    }
+  },
+  "zh": {
+    "appName": "我的词典",
+    "contextMenu": {
+      "translateToZh": "翻译成中文",
+      "translateToEn": "翻译成英文",
+      "openSidebar": "打开词典面板"
+    },
+    "sidebar": {
+      "title": "我的词典",
+      "inputPlaceholder": "输入要翻译的文本...",
+      "translateButton": "翻译",
+      "translating": "翻译中...",
+      "result": "翻译结果",
+      "synonyms": "近义词",
+      "examples": "例句",
+      "close": "关闭",
+      "languageSwitch": "English",
+      "sourceLanguage": "源语言",
+      "targetLanguage": "目标语言",
+      "autoDetect": "自动检测",
+      "english": "英语",
+      "chinese": "中文"
+    },
+    "popup": {
+      "title": "我的词典设置",
+      "openSidebar": "打开翻译面板",
+      "settings": "设置",
+      "shortcut": "快捷键:",
+      "usage": "使用方式:",
+      "usage1": "• 选中文本 + 快捷键",
+      "usage2": "• 右键菜单 → 翻译",
+      "usage3": "• 点击工具栏图标",
+      "defaultLanguagePair": "默认语言对",
+      "interfaceLanguage": "界面语言",
+      "modelManagement": "模型管理",
+      "downloadedModels": "已下载模型",
+      "availableModels": "可用模型",
+      "download": "下载",
+      "delete": "删除"
+    },
+    "messages": {
+      "modelNotInstalled": "模型未安装",
+      "downloadPrompt": "立即下载?",
+      "downloading": "下载中...",
+      "downloadComplete": "下载完成!",
+      "translationError": "翻译错误",
+      "noTextSelected": "未选中文本"
+    }
+  }
+}

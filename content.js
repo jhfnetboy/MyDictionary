@@ -3,13 +3,96 @@
  * 负责网页交互和 UI 管理
  */
 
-console.log('🦊 MyDictionary Content Script 已加载');
+console.log('🦝 MyDictionary Content Script 已加载');
 
 // UI 管理器
 class UIManager {
   constructor() {
     this.sidebar = null;
     this.sidebarVisible = false;
+    this.i18n = null;
+    this.currentLang = 'en'; // 默认英文
+    this.loadLanguage();
+  }
+
+  /**
+   * 加载语言配置
+   */
+  async loadLanguage() {
+    try {
+      // 从 storage 获取用户设置的语言
+      const settings = await chrome.storage.local.get(['uiLanguage']);
+      console.log('📦 Storage 中的语言设置:', settings);
+
+      this.currentLang = settings.uiLanguage || 'en';
+      console.log('🌐 当前界面语言:', this.currentLang);
+
+      // 加载 i18n 配置文件
+      const response = await fetch(chrome.runtime.getURL('src/config/i18n.json'));
+      this.i18n = await response.json();
+
+      console.log('✅ 语言配置加载完成:', this.currentLang);
+    } catch (error) {
+      console.error('❌ 语言配置加载失败:', error);
+      // 使用默认配置
+      this.currentLang = 'en';
+    }
+  }
+
+  /**
+   * 获取翻译文本
+   */
+  t(key) {
+    if (!this.i18n) {
+      console.warn('⚠️ i18n 未加载, 返回 key:', key);
+      return key;
+    }
+
+    const keys = key.split('.');
+    let value = this.i18n[this.currentLang];
+
+    for (const k of keys) {
+      value = value?.[k];
+      if (!value) {
+        console.warn('⚠️ 找不到翻译 key:', key, 'lang:', this.currentLang);
+        return key;
+      }
+    }
+
+    return value;
+  }
+
+  /**
+   * 切换语言
+   */
+  async switchLanguage() {
+    this.currentLang = this.currentLang === 'en' ? 'zh' : 'en';
+
+    // 保存到 storage
+    await chrome.storage.local.set({ uiLanguage: this.currentLang });
+
+    // 重新创建侧边栏
+    if (this.sidebar) {
+      const wasVisible = this.sidebarVisible;
+      const inputText = this.sidebar.querySelector('#mydictionary-input')?.value || '';
+
+      this.sidebar.remove();
+      this.sidebar = null;
+      this.sidebarVisible = false;
+
+      if (wasVisible) {
+        this.createSidebar();
+        if (inputText) {
+          this.sidebar.querySelector('#mydictionary-input').value = inputText;
+        }
+        this.showSidebar();
+      }
+    }
+
+    // 通知 background 更新右键菜单
+    chrome.runtime.sendMessage({ action: 'updateContextMenus' });
+
+    console.log('🌐 语言已切换为:', this.currentLang);
   }
 
   /**
@@ -18,54 +101,98 @@ class UIManager {
   createSidebar() {
     if (this.sidebar) return;
 
+    console.log('🎨 开始创建侧边栏 HTML...');
+    console.log('🌐 当前语言:', this.currentLang, 'i18n 已加载:', !!this.i18n);
+
     // 创建侧边栏容器
     this.sidebar = document.createElement('div');
     this.sidebar.id = 'mydictionary-sidebar';
     this.sidebar.className = 'mydictionary-sidebar';
 
+    // 添加 inline styles 确保显示正确
+    this.sidebar.style.cssText = `
+      position: fixed !important;
+      top: 0 !important;
+      right: -420px !important;
+      width: 400px !important;
+      height: 100vh !important;
+      background: #ffffff !important;
+      box-shadow: -2px 0 16px rgba(0, 0, 0, 0.1) !important;
+      transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      z-index: 2147483647 !important;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif !important;
+      display: flex !important;
+      flex-direction: column !important;
+    `;
+
+    const buildTime = new Date().toISOString();
+    const version = '0.1.0';
+
+    // 使用默认文本（如果 i18n 未加载）
+    const getText = (key, fallback) => {
+      const text = this.t(key);
+      return text === key ? fallback : text;
+    };
+
     this.sidebar.innerHTML = `
       <div class="mydictionary-header">
-        <span class="mydictionary-title">🦊 MyDictionary</span>
+        <span class="mydictionary-title">🦝 ${getText('sidebar.title', 'MyDictionary')}</span>
+        <button class="mydictionary-lang-switch" id="mydictionary-lang-switch-btn" title="Switch Language">
+          ${getText('sidebar.languageSwitch', this.currentLang === 'en' ? '中文' : 'English')}
+        </button>
         <button class="mydictionary-close" id="mydictionary-close-btn">✕</button>
       </div>
 
       <div class="mydictionary-content">
         <div class="mydictionary-input-section">
-          <label>从</label>
+          <label>${getText('sidebar.sourceLanguage', 'Source Language')}</label>
           <select id="mydictionary-source-lang">
-            <option value="auto">🌐 自动检测</option>
-            <option value="en">🇺🇸 English</option>
-            <option value="zh">🇨🇳 中文</option>
+            <option value="auto">🌐 ${getText('sidebar.autoDetect', 'Auto Detect')}</option>
+            <option value="en">🇺🇸 ${getText('sidebar.english', 'English')}</option>
+            <option value="zh">🇨🇳 ${getText('sidebar.chinese', 'Chinese')}</option>
           </select>
 
           <textarea
             id="mydictionary-input"
-            placeholder="在此输入文本..."
+            placeholder="${getText('sidebar.inputPlaceholder', 'Enter text to translate...')}"
             rows="4"
           ></textarea>
 
           <button id="mydictionary-translate-btn" class="mydictionary-btn-primary">
-            翻译
+            ${getText('sidebar.translateButton', 'Translate')}
           </button>
         </div>
 
         <div class="mydictionary-output-section">
-          <label>翻译为</label>
+          <label>${getText('sidebar.targetLanguage', 'Target Language')}</label>
           <select id="mydictionary-target-lang">
-            <option value="zh">🇨🇳 中文</option>
-            <option value="en">🇺🇸 English</option>
+            <option value="zh">🇨🇳 ${getText('sidebar.chinese', 'Chinese')}</option>
+            <option value="en">🇺🇸 ${getText('sidebar.english', 'English')}</option>
           </select>
 
           <div id="mydictionary-output" class="mydictionary-output">
-            <div class="mydictionary-placeholder">翻译结果将显示在这里...</div>
+            <div class="mydictionary-placeholder">${getText('sidebar.result', 'Translation Result')}...</div>
           </div>
         </div>
 
         <div id="mydictionary-status" class="mydictionary-status"></div>
       </div>
+
+      <div class="mydictionary-footer">
+        <span class="mydictionary-version">v${version}</span>
+        <span class="mydictionary-timestamp" title="${buildTime}">
+          ${new Date().toLocaleString(this.currentLang === 'zh' ? 'zh-CN' : 'en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })}
+        </span>
+      </div>
     `;
 
     document.body.appendChild(this.sidebar);
+    console.log('✅ 侧边栏已添加到 body, element:', this.sidebar);
 
     // 绑定事件
     this.bindEvents();
@@ -78,6 +205,10 @@ class UIManager {
     // 关闭按钮
     const closeBtn = this.sidebar.querySelector('#mydictionary-close-btn');
     closeBtn.addEventListener('click', () => this.hideSidebar());
+
+    // 语言切换按钮
+    const langSwitchBtn = this.sidebar.querySelector('#mydictionary-lang-switch-btn');
+    langSwitchBtn.addEventListener('click', () => this.switchLanguage());
 
     // 翻译按钮
     const translateBtn = this.sidebar.querySelector('#mydictionary-translate-btn');
@@ -110,25 +241,60 @@ class UIManager {
   /**
    * 显示侧边栏
    */
-  showSidebar(text = '') {
+  async showSidebar(text = '') {
+    console.log('🎯 showSidebar 被调用, text:', text?.substring(0, 30));
+
+    // 等待语言配置加载完成
+    if (!this.i18n) {
+      console.log('⏳ i18n 未加载,开始加载...');
+      await this.loadLanguage();
+    }
+
+    console.log('✅ i18n 已就绪, currentLang:', this.currentLang);
+
     if (!this.sidebar) {
+      console.log('📝 创建侧边栏...');
       this.createSidebar();
+      console.log('✅ 侧边栏已创建, element:', this.sidebar);
+    }
+
+    // 确保侧边栏在 DOM 中
+    if (!document.body.contains(this.sidebar)) {
+      console.warn('⚠️ 侧边栏不在 DOM 中,重新添加');
+      document.body.appendChild(this.sidebar);
     }
 
     // 填充文本(如果有)
     if (text) {
       const input = this.sidebar.querySelector('#mydictionary-input');
-      input.value = text;
-
-      // 自动翻译
-      setTimeout(() => this.handleTranslate(), 100);
+      if (input) {
+        input.value = text;
+        // 自动翻译
+        setTimeout(() => this.handleTranslate(), 100);
+      }
     }
 
-    // 添加显示类触发动画
-    setTimeout(() => {
+    // 强制重排,然后通过修改 inline style 显示侧边栏
+    console.log('🎬 准备显示侧边栏...');
+    this.sidebar.offsetHeight; // 强制重排
+
+    // 使用 inline style 直接修改 right 属性
+    requestAnimationFrame(() => {
+      this.sidebar.style.right = '0px';
       this.sidebar.classList.add('show');
       this.sidebarVisible = true;
-    }, 10);
+
+      console.log('✨ 侧边栏应该可见了!');
+      console.log('📍 当前状态:', {
+        classList: Array.from(this.sidebar.classList),
+        computedRight: window.getComputedStyle(this.sidebar).right,
+        inlineRight: this.sidebar.style.right,
+        position: window.getComputedStyle(this.sidebar).position,
+        zIndex: window.getComputedStyle(this.sidebar).zIndex,
+        display: window.getComputedStyle(this.sidebar).display,
+        visibility: window.getComputedStyle(this.sidebar).visibility
+      });
+    });
   }
 
   /**
@@ -137,18 +303,20 @@ class UIManager {
   hideSidebar() {
     if (!this.sidebar) return;
 
+    this.sidebar.style.right = '-420px';
     this.sidebar.classList.remove('show');
     this.sidebarVisible = false;
+    console.log('👋 侧边栏已隐藏');
   }
 
   /**
    * 切换侧边栏显示/隐藏
    */
-  toggleSidebar() {
+  async toggleSidebar() {
     if (this.sidebarVisible) {
       this.hideSidebar();
     } else {
-      this.showSidebar();
+      await this.showSidebar();
     }
   }
 
@@ -164,7 +332,7 @@ class UIManager {
 
     const text = input.value.trim();
     if (!text) {
-      this.showStatus('请输入要翻译的文本', 'warning');
+      this.showStatus(this.t('messages.noTextSelected'), 'warning');
       return;
     }
 
@@ -178,8 +346,8 @@ class UIManager {
     }
 
     // 显示加载状态
-    output.innerHTML = '<div class="mydictionary-loading">翻译中...</div>';
-    this.showStatus('正在翻译...', 'info');
+    output.innerHTML = `<div class="mydictionary-loading">${this.t('sidebar.translating')}</div>`;
+    this.showStatus(this.t('sidebar.translating'), 'info');
 
     try {
       // 发送翻译请求到 Background Script
@@ -199,7 +367,7 @@ class UIManager {
             <span>📦 ${response.data.modelId}</span>
           </div>
         `;
-        this.showStatus('✅ 翻译完成', 'success');
+        this.showStatus(`✅ ${this.t('messages.downloadComplete')}`, 'success');
       } else if (response.error === 'MODEL_NOT_INSTALLED') {
         // 模型未安装,提示用户下载
         this.showModelNotInstalledDialog(response.requiredModel);
@@ -208,7 +376,7 @@ class UIManager {
       }
     } catch (error) {
       console.error('❌ 翻译失败:', error);
-      output.innerHTML = '<div class="mydictionary-error">翻译失败,请重试</div>';
+      output.innerHTML = `<div class="mydictionary-error">${this.t('messages.translationError')}</div>`;
       this.showStatus(`❌ ${error.message}`, 'error');
     }
   }
@@ -248,14 +416,14 @@ class UIManager {
     const output = this.sidebar.querySelector('#mydictionary-output');
     output.innerHTML = `
       <div class="mydictionary-model-dialog">
-        <h3>⚠️ 模型未安装</h3>
-        <p>需要下载 <strong>${modelInfo.name}</strong> 才能使用此功能</p>
-        <p>大小: ${modelInfo.size}MB</p>
+        <h3>⚠️ ${this.t('messages.modelNotInstalled')}</h3>
+        <p><strong>${modelInfo.name}</strong></p>
+        <p>Size: ${modelInfo.size}MB</p>
         <button id="mydictionary-download-model-btn" class="mydictionary-btn-primary">
-          立即下载
+          ${this.t('popup.download')}
         </button>
         <button id="mydictionary-cancel-btn" class="mydictionary-btn-secondary">
-          稍后提醒
+          ${this.t('sidebar.close')}
         </button>
       </div>
     `;
@@ -263,8 +431,8 @@ class UIManager {
     // 绑定下载按钮事件
     const downloadBtn = output.querySelector('#mydictionary-download-model-btn');
     downloadBtn.addEventListener('click', async () => {
-      this.showStatus('正在下载模型...', 'info');
-      output.innerHTML = '<div class="mydictionary-loading">正在下载模型,请稍候...</div>';
+      this.showStatus(this.t('messages.downloading'), 'info');
+      output.innerHTML = `<div class="mydictionary-loading">${this.t('messages.downloading')}</div>`;
 
       try {
         const response = await chrome.runtime.sendMessage({
@@ -273,20 +441,20 @@ class UIManager {
         });
 
         if (response.success) {
-          this.showStatus('✅ 模型下载完成,可以开始翻译了!', 'success');
-          output.innerHTML = '<div class="mydictionary-placeholder">翻译结果将显示在这里...</div>';
+          this.showStatus(`✅ ${this.t('messages.downloadComplete')}`, 'success');
+          output.innerHTML = `<div class="mydictionary-placeholder">${this.t('sidebar.result')}...</div>`;
         } else {
           throw new Error(response.message);
         }
       } catch (error) {
-        this.showStatus(`❌ 下载失败: ${error.message}`, 'error');
-        output.innerHTML = '<div class="mydictionary-error">下载失败,请重试</div>';
+        this.showStatus(`❌ ${this.t('messages.translationError')}: ${error.message}`, 'error');
+        output.innerHTML = `<div class="mydictionary-error">${this.t('messages.translationError')}</div>`;
       }
     });
 
     const cancelBtn = output.querySelector('#mydictionary-cancel-btn');
     cancelBtn.addEventListener('click', () => {
-      output.innerHTML = '<div class="mydictionary-placeholder">翻译结果将显示在这里...</div>';
+      output.innerHTML = `<div class="mydictionary-placeholder">${this.t('sidebar.result')}...</div>`;
     });
   }
 }
@@ -300,21 +468,30 @@ const uiManager = new UIManager();
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log('📨 Content 收到消息:', request.action);
 
-  switch (request.action) {
-    case 'openSidebar':
-      uiManager.showSidebar(request.text);
-      break;
+  // 使用异步处理
+  (async () => {
+    try {
+      switch (request.action) {
+        case 'openSidebar':
+          await uiManager.showSidebar(request.text);
+          break;
 
-    case 'toggleSidebar':
-      uiManager.toggleSidebar();
-      break;
+        case 'toggleSidebar':
+          await uiManager.toggleSidebar();
+          break;
 
-    default:
-      console.log('未知的操作:', request.action);
-  }
+        default:
+          console.log('未知的操作:', request.action);
+      }
 
-  sendResponse({ success: true });
-  return true;
+      sendResponse({ success: true });
+    } catch (error) {
+      console.error('❌ 消息处理失败:', error);
+      sendResponse({ success: false, error: error.message });
+    }
+  })();
+
+  return true; // 保持消息通道开启
 });
 
 /**

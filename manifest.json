@@ -38,21 +38,16 @@
   "permissions": [
     "storage",
     "activeTab",
-    "scripting",
     "contextMenus"
-  ],
-
-  "host_permissions": [
-    "<all_urls>"
   ],
 
   "commands": {
     "toggle-sidebar": {
       "suggested_key": {
-        "default": "Ctrl+Shift+F",
-        "mac": "Command+Shift+F"
+        "default": "Ctrl+Shift+D",
+        "mac": "Command+Shift+D"
       },
-      "description": "打开/关闭翻译侧边栏"
+      "description": "Toggle MyDictionary Sidebar"
     }
   },
 
@@ -62,7 +57,10 @@
         "src/ui/*.html",
         "src/ui/*.css",
         "src/ui/*.js",
-        "assets/*"
+        "assets/*",
+        "transformers/*.wasm",
+        "transformers/*.mjs",
+        "transformers/*.js"
       ],
       "matches": ["<all_urls>"]
     }

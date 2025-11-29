@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,6 +22,26 @@
     .header {
       text-align: center;
       margin-bottom: 20px;
+      position: relative;
+    }
+
+    .lang-switch {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .lang-switch:hover {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.5);
     }
 
     .logo {
@@ -47,7 +67,7 @@
       margin-bottom: 20px;
     }
 
-    button {
+    button:not(.lang-switch) {
       padding: 12px;
       background: white;
       color: #667eea;
@@ -59,7 +79,7 @@
       transition: transform 0.2s, box-shadow 0.2s;
     }
 
-    button:hover {
+    button:not(.lang-switch):hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
@@ -84,22 +104,23 @@
 </head>
 <body>
   <div class="header">
-    <div class="logo">🦊</div>
-    <h1>MyDictionary</h1>
+    <button class="lang-switch" id="lang-switch-btn">中文</button>
+    <div class="logo">🦝</div>
+    <h1 id="app-title">MyDictionary</h1>
     <div class="version">v0.1.0</div>
   </div>
 
   <div class="actions">
-    <button id="open-sidebar-btn">📖 打开翻译面板</button>
-    <button id="settings-btn">⚙️ 设置</button>
+    <button id="open-sidebar-btn">📖 <span id="btn-open-sidebar">Open Sidebar</span></button>
+    <button id="settings-btn">⚙️ <span id="btn-settings">Settings</span></button>
   </div>
 
   <div class="info">
-    <p><strong>快捷键:</strong> Ctrl+Shift+F</p>
-    <p><strong>使用方式:</strong></p>
-    <p>• 选中文本 + 快捷键</p>
-    <p>• 右键菜单 → 翻译</p>
-    <p>• 点击工具栏图标</p>
+    <p><strong id="label-shortcut">Shortcut:</strong> Ctrl+Shift+D (Mac: Cmd+Shift+D)</p>
+    <p><strong id="label-usage">Usage:</strong></p>
+    <p id="usage-1">• Select text + shortcut</p>
+    <p id="usage-2">• Right-click menu → Translate</p>
+    <p id="usage-3">• Click toolbar icon</p>
   </div>
 
   <script src="popup.js"></script>
