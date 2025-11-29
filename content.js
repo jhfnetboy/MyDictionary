@@ -20,6 +20,7 @@ class UIManager {
     this.i18n = null;
     this.currentLang = 'en'; // 默认英文
     this.isTranslating = false; // 防止重复翻译
+    this.lastTranslation = null; // 保存最后一次翻译的详细信息
     this.loadLanguage();
   }
 
@@ -273,6 +274,18 @@ class UIManager {
       }
     });
 
+    // 同义词按钮
+    const synonymsBtn = this.sidebar.querySelector('#mydictionary-synonyms-btn');
+    if (synonymsBtn) {
+      synonymsBtn.addEventListener('click', () => this.handleGetSynonyms());
+    }
+
+    // 例句按钮
+    const examplesBtn = this.sidebar.querySelector('#mydictionary-examples-btn');
+    if (examplesBtn) {
+      examplesBtn.addEventListener('click', () => this.handleGetExamples());
+    }
+
     // 标记已绑定
     this.sidebar.dataset.eventsBound = 'true';
 
@@ -456,6 +469,16 @@ class UIManager {
         const modelId = response.data?.modelId || 'unknown';
 
         console.log('📝 翻译结果:', translationText);
+
+        // 保存翻译详情，供同义词和例句功能使用
+        this.lastTranslation = {
+          sourceText: text,
+          sourceLang,
+          targetLang,
+          translation: translationText,
+          timestamp: Date.now()
+        };
+        console.log('💾 已保存翻译详情:', this.lastTranslation);
 
         output.innerHTML = `
           <div class="mydictionary-translation">${translationText}</div>
@@ -765,5 +788,244 @@ document.addEventListener('mouseup', () => {
     }
   }, 300);
 });
+
+/**
+ * 处理获取同义词
+ */
+UIManager.prototype.handleGetSynonyms = async function() {
+  console.log('📚 同义词按钮被点击');
+
+  const output = this.sidebar.querySelector('#mydictionary-output');
+  const input = this.sidebar.querySelector('#mydictionary-input');
+
+  let sourceText, targetWord, context;
+
+  // 优先使用保存的翻译详情中的原文（英文）
+  if (this.lastTranslation && this.lastTranslation.sourceText) {
+    sourceText = this.lastTranslation.sourceText;
+    console.log('✅ 使用保存的原文:', sourceText);
+  } else if (input && input.value.trim()) {
+    // 如果没有保存的翻译，使用输入框的文本
+    sourceText = input.value.trim();
+    console.log('⚠️ 使用输入框文本:', sourceText);
+  } else {
+    // 既没有保存的翻译也没有输入
+    output.innerHTML = `
+      <div class="mydictionary-error-container">
+        <div class="mydictionary-error-icon">⚠️</div>
+        <h4>No Text Available</h4>
+        <p class="mydictionary-error-message">Please translate some text or enter text first.</p>
+      </div>
+    `;
+    return;
+  }
+
+  // 直接使用输入的文本作为查询词汇
+  // 支持单个词或短语，自动清理空格
+  targetWord = sourceText.trim();
+
+  // 如果是多个词，只取第一个词
+  const words = targetWord.split(/\s+/);
+  if (words.length > 1) {
+    targetWord = words[0];
+    console.log(`⚠️ 检测到多个词，只查询第一个词: ${targetWord}`);
+  }
+
+  context = targetWord; // 同义词查询不需要上下文
+  console.log(`📚 查询同义词: ${targetWord}`);
+
+  console.log(`📚 获取单词 "${targetWord}" 的同义词`);
+  console.log(`📝 上下文: ${context}`);
+
+  // 显示加载状态
+  output.innerHTML = `
+    <div class="mydictionary-loading-container">
+      <div class="mydictionary-spinner"></div>
+      <p>Finding synonyms...</p>
+    </div>
+  `;
+
+  try {
+    const response = await chrome.runtime.sendMessage({
+      action: 'getSynonyms',
+      word: targetWord,
+      context: context
+    });
+
+    if (response.success) {
+      const { synonyms, latency } = response.data;
+
+      console.log('📊 同义词数据:', synonyms);
+      console.log('📊 同义词数量:', synonyms.length);
+
+      // 检查是否有同义词
+      if (!synonyms || synonyms.length === 0) {
+        output.innerHTML = `
+          <div class="mydictionary-synonyms-result">
+            <h3>📚 Synonyms for "<span class="highlight">${targetWord}</span>"</h3>
+            <p class="mydictionary-no-results">❌ No synonyms found in local database.</p>
+            <p class="mydictionary-tip">💡 Our curated synonym database contains 50+ common words. The word "${targetWord}" may be:
+              <ul style="margin: 8px 0; padding-left: 20px;">
+                <li>Not in our database yet</li>
+                <li>A proper noun or specialized term</li>
+                <li>Misspelled</li>
+              </ul>
+            </p>
+            <div class="mydictionary-meta">
+              <span>⏱️ ${latency}ms</span>
+              <span>📖 Local Synonym Database</span>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // 显示同义词列表
+      const synonymsList = synonyms.map(s =>
+        `<li class="mydictionary-synonym-item">
+          <span class="mydictionary-synonym-word">${s.word}</span>
+          <span class="mydictionary-synonym-score">${s.confidence}</span>
+        </li>`
+      ).join('');
+
+      output.innerHTML = `
+        <div class="mydictionary-synonyms-result">
+          <h3>📚 Synonyms for "<span class="highlight">${targetWord}</span>"</h3>
+          <ul class="mydictionary-synonyms-list">
+            ${synonymsList}
+          </ul>
+          <div class="mydictionary-meta">
+            <span>⏱️ ${latency}ms</span>
+            <span>📖 WordNet Dictionary</span>
+            <span>📊 ${synonyms.length} results</span>
+          </div>
+        </div>
+      `;
+    } else {
+      throw new Error(response.error || 'Failed to get synonyms');
+    }
+  } catch (error) {
+    console.error('❌ 同义词获取失败:', error);
+    output.innerHTML = `
+      <div class="mydictionary-error-container">
+        <div class="mydictionary-error-icon">⚠️</div>
+        <h4>Synonyms Error</h4>
+        <p class="mydictionary-error-message">${error.message}</p>
+      </div>
+    `;
+  }
+};
+
+/**
+ * 处理获取例句
+ */
+UIManager.prototype.handleGetExamples = async function() {
+  console.log('💡 例句按钮被点击');
+
+  const output = this.sidebar.querySelector('#mydictionary-output');
+  const input = this.sidebar.querySelector('#mydictionary-input');
+
+  let sourceText, targetWord;
+
+  // 优先使用保存的翻译详情中的原文（英文）
+  if (this.lastTranslation && this.lastTranslation.sourceText) {
+    sourceText = this.lastTranslation.sourceText;
+    console.log('✅ 使用保存的原文:', sourceText);
+  } else if (input && input.value.trim()) {
+    // 如果没有保存的翻译，使用输入框的文本
+    sourceText = input.value.trim();
+    console.log('⚠️ 使用输入框文本:', sourceText);
+  } else {
+    // 既没有保存的翻译也没有输入
+    output.innerHTML = `
+      <div class="mydictionary-error-container">
+        <div class="mydictionary-error-icon">⚠️</div>
+        <h4>No Text Available</h4>
+        <p class="mydictionary-error-message">Please translate some text or enter text first.</p>
+      </div>
+    `;
+    return;
+  }
+
+  // 智能提取目标词汇 (与 handleGetSynonyms 相同的逻辑)
+  let markedWordMatch;
+
+  markedWordMatch = sourceText.match(/"([^"]+)"/);
+  if (markedWordMatch) {
+    targetWord = markedWordMatch[1].trim();
+    console.log('✅ 检测到双引号标记:', targetWord);
+  } else {
+    markedWordMatch = sourceText.match(/\[([^\]]+)\]/);
+    if (markedWordMatch) {
+      targetWord = markedWordMatch[1].trim();
+      console.log('✅ 检测到方括号标记:', targetWord);
+    }
+  }
+
+  if (!targetWord) {
+    const words = sourceText.split(/\s+/);
+    targetWord = words.length === 1 ? words[0] : words[0];
+    if (words.length > 1) {
+      console.log('⚠️ 未标记目标词，使用第一个词:', targetWord);
+      console.log('💡 提示: 使用 "word" 或 [word] 标记目标词汇');
+    }
+  }
+
+  console.log(`💡 获取单词 "${targetWord}" 的例句`);
+
+  // 显示加载状态
+  output.innerHTML = `
+    <div class="mydictionary-loading-container">
+      <div class="mydictionary-spinner"></div>
+      <p>Finding examples...</p>
+    </div>
+  `;
+
+  try {
+    const response = await chrome.runtime.sendMessage({
+      action: 'getExamples',
+      word: targetWord
+    });
+
+    if (response.success) {
+      const { examples, latency } = response.data;
+
+      // 显示例句列表
+      const examplesList = examples.map(ex =>
+        `<li class="mydictionary-example-item">
+          <p class="mydictionary-example-sentence">${ex.sentence}</p>
+          <div class="mydictionary-example-meta">
+            <span class="mydictionary-example-source">${ex.source}</span>
+            <span class="mydictionary-example-relevance">${ex.relevance}</span>
+          </div>
+        </li>`
+      ).join('');
+
+      output.innerHTML = `
+        <div class="mydictionary-examples-result">
+          <h3>💡 Examples for "<span class="highlight">${targetWord}</span>"</h3>
+          <ul class="mydictionary-examples-list">
+            ${examplesList}
+          </ul>
+          <div class="mydictionary-meta">
+            <span>⏱️ ${latency}ms</span>
+            <span>📦 all-MiniLM-L6-v2</span>
+          </div>
+        </div>
+      `;
+    } else {
+      throw new Error(response.error || 'Failed to get examples');
+    }
+  } catch (error) {
+    console.error('❌ 例句获取失败:', error);
+    output.innerHTML = `
+      <div class="mydictionary-error-container">
+        <div class="mydictionary-error-icon">⚠️</div>
+        <h4>Examples Error</h4>
+        <p class="mydictionary-error-message">${error.message}</p>
+      </div>
+    `;
+  }
+};
 
 console.log('✅ MyDictionary Content Script 初始化完成');

@@ -565,3 +565,201 @@
   10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
   20%, 40%, 60%, 80% { transform: translateX(5px); }
 }
+
+/* Synonyms Result */
+.mydictionary-synonyms-result h3,
+.mydictionary-examples-result h3 {
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #667eea;
+}
+
+.mydictionary-synonyms-result .highlight,
+.mydictionary-examples-result .highlight {
+  color: #667eea;
+  font-weight: 700;
+}
+
+.mydictionary-synonyms-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.mydictionary-synonym-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.mydictionary-synonym-item:hover {
+  border-color: #667eea;
+  background: #f8f9ff;
+  transform: translateX(4px);
+}
+
+.mydictionary-synonym-word {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.mydictionary-synonym-score {
+  font-size: 12px;
+  color: #999;
+  padding: 4px 8px;
+  background: #f5f5f5;
+  border-radius: 12px;
+}
+
+/* Examples Result */
+.mydictionary-examples-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.mydictionary-example-item {
+  padding: 16px;
+  margin-bottom: 12px;
+  background: white;
+  border-left: 3px solid #667eea;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
+}
+
+.mydictionary-example-item:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.mydictionary-example-sentence {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.mydictionary-example-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #999;
+}
+
+.mydictionary-example-source {
+  font-style: italic;
+}
+
+.mydictionary-example-relevance {
+  font-weight: 600;
+  color: #667eea;
+}
+
+/* Info/Usage Guide Container */
+.mydictionary-info-container {
+  padding: 24px;
+  background: linear-gradient(135deg, #f8f9ff 0%, #fff5f5 100%);
+  border-radius: 12px;
+  margin: 16px;
+}
+
+.mydictionary-info-icon {
+  font-size: 48px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.mydictionary-info-container h4 {
+  font-size: 18px;
+  color: #333;
+  margin: 0 0 16px 0;
+  text-align: center;
+  font-weight: 600;
+}
+
+.mydictionary-usage-guide {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.mydictionary-usage-title {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 12px 0;
+  font-weight: 500;
+}
+
+.mydictionary-usage-example {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.mydictionary-usage-method {
+  background: #f8f9ff;
+  border-left: 3px solid #667eea;
+  padding: 12px;
+  border-radius: 4px;
+}
+
+.mydictionary-usage-method strong {
+  display: block;
+  color: #667eea;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.mydictionary-usage-method code {
+  display: block;
+  background: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  font-size: 12px;
+  color: #333;
+  border: 1px solid #e0e0e0;
+  margin-top: 4px;
+}
+
+.mydictionary-usage-note {
+  background: #fff3cd;
+  border-left: 3px solid #ffc107;
+  padding: 10px 12px;
+  margin: 12px 0;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #856404;
+}
+
+.mydictionary-usage-current {
+  font-size: 13px;
+  color: #666;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #ddd;
+}
+
+.mydictionary-usage-current code {
+  background: #f5f5f5;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  font-size: 12px;
+  color: #e74c3c;
+  display: inline-block;
+  margin-top: 4px;
+}
