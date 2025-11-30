@@ -19,10 +19,10 @@ BASE_URL = "https://www.phrasebank.manchester.ac.uk"
 # 论文各部分的 URL
 SECTIONS = {
     "introduction": f"{BASE_URL}/introducing-work/",
-    "methods": f"{BASE_URL}/methods/",
-    "results": f"{BASE_URL}/results/",
-    "discussion": f"{BASE_URL}/discussion/",
-    "conclusion": f"{BASE_URL}/conclusion/",
+    "methods": f"{BASE_URL}/describing-methods/",
+    "results": f"{BASE_URL}/reporting-results/",
+    "discussion": f"{BASE_URL}/discussing-findings/",
+    "conclusion": f"{BASE_URL}/writing-conclusions/",
 }
 
 def scrape_section(url: str, section_name: str) -> List[Dict]:
@@ -209,7 +209,7 @@ def main():
 
     # 保存到文件
     output_file = "../data/manchester-phrasebank-full.json"
-    save_to_json(data, output_file)
+    save_to_json(data, output_file.replace('../', ''))
 
     print("\n" + "=" * 60)
     print("✅ Scraping completed!")

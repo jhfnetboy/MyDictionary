@@ -1,0 +1,611 @@
+{
+  "version": "1.0.0",
+  "source": "University of Manchester Academic Phrasebank + Custom Collection",
+  "totalPhrases": 120,
+  "lastUpdated": "2024-11-30",
+  "sections": {
+    "introduction": {
+      "describing_background": [
+        {
+          "id": "intro_bg_001",
+          "phrase": "In recent years, there has been increasing interest in...",
+          "usage": "描述研究背景 / Describing research background",
+          "frequency": "very_high",
+          "academicScore": 95,
+          "examples": [
+            "In recent years, there has been increasing interest in the application of AI in education."
+          ],
+          "variants": [
+            "Over the past decade, growing attention has been paid to...",
+            "Recently, there has been a surge of interest in..."
+          ]
+        },
+        {
+          "id": "intro_bg_002",
+          "phrase": "A growing body of research suggests that...",
+          "usage": "引用研究趋势 / Citing research trends",
+          "frequency": "high",
+          "academicScore": 92,
+          "examples": [
+            "A growing body of research suggests that social media influences adolescent behavior."
+          ],
+          "variants": [
+            "An increasing number of studies have shown that...",
+            "Accumulating evidence indicates that..."
+          ]
+        },
+        {
+          "id": "intro_bg_003",
+          "phrase": "One of the most significant current discussions in... is...",
+          "usage": "引出研究主题 / Introducing research topic",
+          "frequency": "high",
+          "academicScore": 90,
+          "examples": [
+            "One of the most significant current discussions in neuroscience is the role of neuroplasticity."
+          ],
+          "variants": [
+            "A key debate in the field of... concerns...",
+            "Central to current discussions in... is..."
+          ]
+        },
+        {
+          "id": "intro_bg_004",
+          "phrase": "The past decade has seen rapid developments in...",
+          "usage": "描述领域发展 / Describing field development",
+          "frequency": "high",
+          "academicScore": 88,
+          "examples": [
+            "The past decade has seen rapid developments in machine learning algorithms."
+          ],
+          "variants": [
+            "Recent years have witnessed significant progress in...",
+            "The field of... has experienced remarkable growth in..."
+          ]
+        }
+      ],
+      "stating_purpose": [
+        {
+          "id": "intro_purpose_001",
+          "phrase": "The purpose of this study is to...",
+          "usage": "陈述研究目的 / Stating research purpose",
+          "frequency": "very_high",
+          "academicScore": 85,
+          "examples": [
+            "The purpose of this study is to examine the relationship between sleep quality and academic performance."
+          ],
+          "variants": [
+            "This paper aims to...",
+            "The objective of this research is to...",
+            "This study seeks to..."
+          ]
+        },
+        {
+          "id": "intro_purpose_002",
+          "phrase": "This paper examines the relationship between... and...",
+          "usage": "说明研究内容 / Describing research content",
+          "frequency": "very_high",
+          "academicScore": 90,
+          "examples": [
+            "This paper examines the relationship between teacher motivation and student engagement."
+          ],
+          "variants": [
+            "This study explores the connection between...",
+            "This research investigates the link between..."
+          ]
+        },
+        {
+          "id": "intro_purpose_003",
+          "phrase": "To address this gap, the present study...",
+          "usage": "指出研究缺口并说明自己的贡献 / Identifying gap and contribution",
+          "frequency": "high",
+          "academicScore": 95,
+          "examples": [
+            "To address this gap, the present study examines the impact of remote work on employee productivity."
+          ],
+          "variants": [
+            "To fill this research void, this study...",
+            "Building on previous work, this research..."
+          ]
+        }
+      ],
+      "highlighting_importance": [
+        {
+          "id": "intro_importance_001",
+          "phrase": "Understanding... is crucial for...",
+          "usage": "强调研究重要性 / Emphasizing research importance",
+          "frequency": "high",
+          "academicScore": 88,
+          "examples": [
+            "Understanding cognitive biases is crucial for improving decision-making processes."
+          ],
+          "variants": [
+            "Knowledge of... is essential for...",
+            "Investigating... is critical to..."
+          ]
+        },
+        {
+          "id": "intro_importance_002",
+          "phrase": "This is important because...",
+          "usage": "解释重要性 / Explaining importance",
+          "frequency": "high",
+          "academicScore": 82,
+          "examples": [
+            "This is important because early intervention can significantly improve outcomes."
+          ],
+          "variants": [
+            "This matters because...",
+            "The significance of this lies in..."
+          ]
+        }
+      ]
+    },
+    "methods": {
+      "describing_participants": [
+        {
+          "id": "methods_participants_001",
+          "phrase": "Participants were recruited through...",
+          "usage": "描述招募方式 / Describing recruitment",
+          "frequency": "very_high",
+          "academicScore": 90,
+          "examples": [
+            "Participants were recruited through social media platforms and university mailing lists."
+          ],
+          "variants": [
+            "Subjects were selected via...",
+            "Recruitment was conducted using..."
+          ]
+        },
+        {
+          "id": "methods_participants_002",
+          "phrase": "The sample consisted of... participants (N = ...)",
+          "usage": "描述样本 / Describing sample",
+          "frequency": "very_high",
+          "academicScore": 92,
+          "examples": [
+            "The sample consisted of 250 participants (N = 250) aged 18-65."
+          ],
+          "variants": [
+            "A total of N = ... participants took part in...",
+            "The study included... participants..."
+          ]
+        }
+      ],
+      "describing_procedure": [
+        {
+          "id": "methods_procedure_001",
+          "phrase": "Data were collected using...",
+          "usage": "描述数据收集 / Describing data collection",
+          "frequency": "very_high",
+          "academicScore": 90,
+          "examples": [
+            "Data were collected using online questionnaires and structured interviews."
+          ],
+          "variants": [
+            "Information was gathered through...",
+            "Data collection involved..."
+          ]
+        },
+        {
+          "id": "methods_procedure_002",
+          "phrase": "The procedure was as follows...",
+          "usage": "说明实验步骤 / Outlining experimental procedure",
+          "frequency": "high",
+          "academicScore": 85,
+          "examples": [
+            "The procedure was as follows: participants first completed a baseline assessment..."
+          ],
+          "variants": [
+            "The experiment proceeded in the following manner...",
+            "Participants underwent the following steps..."
+          ]
+        }
+      ],
+      "describing_data_analysis": [
+        {
+          "id": "methods_analysis_001",
+          "phrase": "Data were analyzed using...",
+          "usage": "描述分析方法 / Describing analysis method",
+          "frequency": "very_high",
+          "academicScore": 92,
+          "examples": [
+            "Data were analyzed using SPSS version 26 with a significance level of p < 0.05."
+          ],
+          "variants": [
+            "Analysis was conducted using...",
+            "Statistical analyses were performed with..."
+          ]
+        },
+        {
+          "id": "methods_analysis_002",
+          "phrase": "To examine the relationship between... and..., we employed...",
+          "usage": "说明分析目的和方法 / Stating analysis purpose and method",
+          "frequency": "high",
+          "academicScore": 90,
+          "examples": [
+            "To examine the relationship between age and memory performance, we employed regression analysis."
+          ],
+          "variants": [
+            "In order to investigate..., we utilized...",
+            "To assess the effect of..., we applied..."
+          ]
+        }
+      ]
+    },
+    "results": {
+      "presenting_findings": [
+        {
+          "id": "results_findings_001",
+          "phrase": "The results showed that...",
+          "usage": "呈现结果 / Presenting results",
+          "frequency": "very_high",
+          "academicScore": 85,
+          "examples": [
+            "The results showed that participants in the experimental group performed significantly better."
+          ],
+          "variants": [
+            "The findings indicated that...",
+            "Results revealed that...",
+            "The data demonstrated that..."
+          ]
+        },
+        {
+          "id": "results_findings_002",
+          "phrase": "A significant difference was found between... and...",
+          "usage": "报告显著差异 / Reporting significant difference",
+          "frequency": "very_high",
+          "academicScore": 90,
+          "examples": [
+            "A significant difference was found between the treatment and control groups (p < 0.01)."
+          ],
+          "variants": [
+            "There was a statistically significant difference...",
+            "Significant differences emerged between..."
+          ]
+        },
+        {
+          "id": "results_findings_003",
+          "phrase": "No significant correlation was observed between... and...",
+          "usage": "报告不显著结果 / Reporting non-significant results",
+          "frequency": "high",
+          "academicScore": 88,
+          "examples": [
+            "No significant correlation was observed between exercise frequency and stress levels."
+          ],
+          "variants": [
+            "There was no statistically significant relationship...",
+            "The correlation between... and... was not significant..."
+          ]
+        }
+      ],
+      "reporting_statistics": [
+        {
+          "id": "results_stats_001",
+          "phrase": "As shown in Table/Figure..., ...",
+          "usage": "引用图表 / Referring to tables/figures",
+          "frequency": "very_high",
+          "academicScore": 90,
+          "examples": [
+            "As shown in Table 1, the mean scores were significantly higher in the intervention group."
+          ],
+          "variants": [
+            "Table/Figure... shows that...",
+            "As illustrated in Table/Figure..."
+          ]
+        },
+        {
+          "id": "results_stats_002",
+          "phrase": "The mean score for... was... (SD = ...)",
+          "usage": "报告描述性统计 / Reporting descriptive statistics",
+          "frequency": "very_high",
+          "academicScore": 92,
+          "examples": [
+            "The mean score for the pre-test was 65.4 (SD = 8.2)."
+          ],
+          "variants": [
+            "On average, participants scored... (SD = ...)",
+            "The average... was... with a standard deviation of..."
+          ]
+        }
+      ]
+    },
+    "discussion": {
+      "interpreting_results": [
+        {
+          "id": "discussion_interpret_001",
+          "phrase": "These findings suggest that...",
+          "usage": "解释结果含义 / Interpreting results",
+          "frequency": "very_high",
+          "academicScore": 92,
+          "examples": [
+            "These findings suggest that early intervention is crucial for positive outcomes."
+          ],
+          "variants": [
+            "The results indicate that...",
+            "This implies that...",
+            "These observations point to..."
+          ]
+        },
+        {
+          "id": "discussion_interpret_002",
+          "phrase": "One possible explanation for this is that...",
+          "usage": "提供解释 / Providing explanation",
+          "frequency": "high",
+          "academicScore": 88,
+          "examples": [
+            "One possible explanation for this is that participants lacked motivation."
+          ],
+          "variants": [
+            "This may be explained by...",
+            "A plausible reason for this could be...",
+            "This finding can be attributed to..."
+          ]
+        }
+      ],
+      "comparing_with_literature": [
+        {
+          "id": "discussion_compare_001",
+          "phrase": "This finding is consistent with previous research showing that...",
+          "usage": "与先前研究一致 / Consistent with previous research",
+          "frequency": "very_high",
+          "academicScore": 95,
+          "examples": [
+            "This finding is consistent with previous research showing that sleep quality affects cognitive performance."
+          ],
+          "variants": [
+            "This aligns with earlier studies that...",
+            "These results corroborate the findings of...",
+            "This is in agreement with..."
+          ]
+        },
+        {
+          "id": "discussion_compare_002",
+          "phrase": "However, this contradicts the findings of... who reported that...",
+          "usage": "与先前研究矛盾 / Contrasting with previous research",
+          "frequency": "high",
+          "academicScore": 90,
+          "examples": [
+            "However, this contradicts the findings of Smith (2020) who reported that age had no effect."
+          ],
+          "variants": [
+            "This is inconsistent with...",
+            "In contrast to..., our results show...",
+            "This diverges from the findings of..."
+          ]
+        }
+      ],
+      "acknowledging_limitations": [
+        {
+          "id": "discussion_limitations_001",
+          "phrase": "Several limitations should be acknowledged.",
+          "usage": "引出局限性 / Introducing limitations",
+          "frequency": "very_high",
+          "academicScore": 92,
+          "examples": [
+            "Several limitations should be acknowledged. First, the sample size was relatively small..."
+          ],
+          "variants": [
+            "This study has several limitations.",
+            "It is important to note certain limitations...",
+            "Some limitations of this study should be considered."
+          ]
+        },
+        {
+          "id": "discussion_limitations_002",
+          "phrase": "A limitation of this study is that...",
+          "usage": "具体说明局限性 / Specifying a limitation",
+          "frequency": "very_high",
+          "academicScore": 88,
+          "examples": [
+            "A limitation of this study is that we did not control for socioeconomic status."
+          ],
+          "variants": [
+            "One constraint of this research is...",
+            "A potential weakness is that...",
+            "This study was limited by..."
+          ]
+        }
+      ]
+    },
+    "conclusion": {
+      "summarizing_findings": [
+        {
+          "id": "conclusion_summary_001",
+          "phrase": "In summary, this study has shown that...",
+          "usage": "总结发现 / Summarizing findings",
+          "frequency": "very_high",
+          "academicScore": 90,
+          "examples": [
+            "In summary, this study has shown that mindfulness training improves attention span."
+          ],
+          "variants": [
+            "To summarize, the findings indicate that...",
+            "In conclusion, the results demonstrate that...",
+            "Overall, this research has established that..."
+          ]
+        },
+        {
+          "id": "conclusion_summary_002",
+          "phrase": "The findings of this study contribute to our understanding of...",
+          "usage": "说明研究贡献 / Stating research contribution",
+          "frequency": "high",
+          "academicScore": 92,
+          "examples": [
+            "The findings of this study contribute to our understanding of how stress affects decision-making."
+          ],
+          "variants": [
+            "This research adds to the literature on...",
+            "These results advance our knowledge of...",
+            "This study extends previous work by..."
+          ]
+        }
+      ],
+      "suggesting_implications": [
+        {
+          "id": "conclusion_implications_001",
+          "phrase": "The implications of these findings are...",
+          "usage": "说明研究意义 / Stating implications",
+          "frequency": "high",
+          "academicScore": 88,
+          "examples": [
+            "The implications of these findings are that educators should prioritize active learning strategies."
+          ],
+          "variants": [
+            "These results have important implications for...",
+            "The practical implications include...",
+            "From a practical standpoint, these findings suggest..."
+          ]
+        }
+      ],
+      "making_recommendations": [
+        {
+          "id": "conclusion_recommendations_001",
+          "phrase": "Future research should investigate...",
+          "usage": "建议未来研究 / Suggesting future research",
+          "frequency": "very_high",
+          "academicScore": 90,
+          "examples": [
+            "Future research should investigate the long-term effects of this intervention."
+          ],
+          "variants": [
+            "Further studies are needed to...",
+            "It would be valuable to examine...",
+            "Additional research is required to..."
+          ]
+        }
+      ]
+    }
+  },
+  "citations": {
+    "reporting_verbs_strong": [
+      {
+        "verb": "argue",
+        "strength": "strong",
+        "academicScore": 90,
+        "example": "Smith (2020) argues that climate change is accelerating.",
+        "usage": "用于作者明确表达立场时"
+      },
+      {
+        "verb": "claim",
+        "strength": "strong",
+        "academicScore": 88,
+        "example": "Johnson (2019) claims that the policy was effective.",
+        "usage": "用于作者提出明确主张时"
+      },
+      {
+        "verb": "contend",
+        "strength": "strong",
+        "academicScore": 92,
+        "example": "Lee (2021) contends that alternative approaches are necessary.",
+        "usage": "用于作者坚持某种观点时"
+      }
+    ],
+    "reporting_verbs_moderate": [
+      {
+        "verb": "suggest",
+        "strength": "moderate",
+        "academicScore": 95,
+        "example": "The findings suggest that further investigation is warranted.",
+        "usage": "用于较温和的推论"
+      },
+      {
+        "verb": "indicate",
+        "strength": "moderate",
+        "academicScore": 92,
+        "example": "The data indicate a positive correlation.",
+        "usage": "用于数据支持的结论"
+      },
+      {
+        "verb": "propose",
+        "strength": "moderate",
+        "academicScore": 90,
+        "example": "Chen (2020) proposes a new theoretical framework.",
+        "usage": "用于提出理论或模型"
+      }
+    ],
+    "reporting_verbs_neutral": [
+      {
+        "verb": "describe",
+        "strength": "neutral",
+        "academicScore": 85,
+        "example": "Wilson (2018) describes the experimental procedure.",
+        "usage": "用于客观描述"
+      },
+      {
+        "verb": "report",
+        "strength": "neutral",
+        "academicScore": 88,
+        "example": "Brown et al. (2019) report significant improvements.",
+        "usage": "用于呈现研究结果"
+      },
+      {
+        "verb": "find",
+        "strength": "neutral",
+        "academicScore": 85,
+        "example": "The researchers found a correlation between X and Y.",
+        "usage": "用于陈述发现"
+      }
+    ]
+  },
+  "transitions": {
+    "contrast": [
+      {
+        "word": "however",
+        "academicScore": 95,
+        "usage": "转折，表示对比",
+        "example": "The results were promising. However, several limitations exist."
+      },
+      {
+        "word": "nevertheless",
+        "academicScore": 92,
+        "usage": "尽管如此",
+        "example": "The sample size was small. Nevertheless, the findings are significant."
+      },
+      {
+        "word": "conversely",
+        "academicScore": 90,
+        "usage": "相反地",
+        "example": "Group A showed improvement. Conversely, Group B declined."
+      }
+    ],
+    "addition": [
+      {
+        "word": "moreover",
+        "academicScore": 92,
+        "usage": "此外，而且",
+        "example": "The method is efficient. Moreover, it is cost-effective."
+      },
+      {
+        "word": "furthermore",
+        "academicScore": 95,
+        "usage": "此外",
+        "example": "The results are statistically significant. Furthermore, they have practical implications."
+      },
+      {
+        "word": "additionally",
+        "academicScore": 88,
+        "usage": "另外",
+        "example": "Participants completed a survey. Additionally, they participated in interviews."
+      }
+    ],
+    "result": [
+      {
+        "word": "therefore",
+        "academicScore": 92,
+        "usage": "因此",
+        "example": "The data support the hypothesis. Therefore, we can conclude..."
+      },
+      {
+        "word": "thus",
+        "academicScore": 95,
+        "usage": "因此，从而",
+        "example": "The intervention proved effective, thus validating our approach."
+      },
+      {
+        "word": "consequently",
+        "academicScore": 90,
+        "usage": "结果是",
+        "example": "The sample was biased. Consequently, generalizability is limited."
+      }
+    ]
+  }
+}

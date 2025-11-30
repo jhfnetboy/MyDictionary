@@ -1330,8 +1330,8 @@ UIManager.prototype.showAcademicDownloadPrompt = function() {
         ${this.t('sidebar.academicDatabaseDesc', 'Download 48 curated academic phrases for research writing')}
       </p>
       <div class="mydictionary-download-info">
-        <span>📦 ${this.t('sidebar.size', 'Size')}: ~21 KB</span>
-        <span>📊 ${this.t('sidebar.phrases', 'Phrases')}: 48</span>
+        <span>📦 ${this.t('sidebar.size', 'Size')}: ~1.1 MB</span>
+        <span>📊 ${this.t('sidebar.phrases', 'Phrases')}: 2,500+</span>
       </div>
       <button class="mydictionary-btn-primary" id="mydictionary-download-academic-btn">
         📥 ${this.t('sidebar.downloadNow', 'Download Now')}
