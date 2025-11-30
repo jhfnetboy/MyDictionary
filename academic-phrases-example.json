@@ -1,0 +1,148 @@
+{
+  "sections": {
+    "introduction": {
+      "background": [
+        {
+          "id": "custom_intro_bg_1",
+          "phrase": "This research investigates the relationship between X and Y",
+          "usage": "用于说明研究主题和关系",
+          "academicScore": 8.5,
+          "frequency": "very_high",
+          "examples": [
+            "This research investigates the relationship between social media usage and academic performance"
+          ],
+          "section": "introduction",
+          "subsection": "background"
+        },
+        {
+          "id": "custom_intro_bg_2",
+          "phrase": "Recent studies have demonstrated that...",
+          "usage": "引用近期研究成果",
+          "academicScore": 9.0,
+          "frequency": "high",
+          "examples": [
+            "Recent studies have demonstrated that climate change significantly impacts biodiversity"
+          ],
+          "section": "introduction",
+          "subsection": "background"
+        }
+      ],
+      "research_gap": [
+        {
+          "id": "custom_intro_gap_1",
+          "phrase": "However, there remains a lack of understanding regarding...",
+          "usage": "指出研究空白",
+          "academicScore": 9.5,
+          "frequency": "high",
+          "examples": [
+            "However, there remains a lack of understanding regarding the long-term effects"
+          ],
+          "section": "introduction",
+          "subsection": "research_gap"
+        }
+      ]
+    },
+    "methods": {
+      "data_collection": [
+        {
+          "id": "custom_method_data_1",
+          "phrase": "Data were collected through structured interviews with...",
+          "usage": "描述数据收集方法",
+          "academicScore": 8.0,
+          "frequency": "very_high",
+          "examples": [
+            "Data were collected through structured interviews with 50 participants"
+          ],
+          "section": "methods",
+          "subsection": "data_collection"
+        }
+      ]
+    },
+    "results": {
+      "findings": [
+        {
+          "id": "custom_results_1",
+          "phrase": "The analysis revealed a significant correlation between...",
+          "usage": "报告研究发现",
+          "academicScore": 8.5,
+          "frequency": "high",
+          "examples": [
+            "The analysis revealed a significant correlation between exercise frequency and mental health"
+          ],
+          "section": "results",
+          "subsection": "findings"
+        }
+      ]
+    },
+    "discussion": {
+      "interpretation": [
+        {
+          "id": "custom_discuss_1",
+          "phrase": "These findings suggest that...",
+          "usage": "解释研究结果",
+          "academicScore": 8.0,
+          "frequency": "very_high",
+          "examples": [
+            "These findings suggest that early intervention can significantly improve outcomes"
+          ],
+          "section": "discussion",
+          "subsection": "interpretation"
+        }
+      ]
+    },
+    "conclusion": {
+      "summary": [
+        {
+          "id": "custom_conclusion_1",
+          "phrase": "In conclusion, this study has demonstrated that...",
+          "usage": "总结研究结论",
+          "academicScore": 7.5,
+          "frequency": "very_high",
+          "examples": [
+            "In conclusion, this study has demonstrated that collaborative learning enhances student engagement"
+          ],
+          "section": "conclusion",
+          "subsection": "summary"
+        }
+      ]
+    }
+  },
+  "citations": {
+    "reporting_verbs": [
+      {
+        "id": "custom_citation_1",
+        "phrase": "X argues that...",
+        "usage": "引用学者观点",
+        "academicScore": 9.0,
+        "frequency": "very_high",
+        "examples": [
+          "Smith (2020) argues that technology integration requires systematic planning"
+        ],
+        "section": "citations",
+        "subsection": "reporting_verbs"
+      }
+    ]
+  },
+  "transitions": {
+    "contrast": [
+      {
+        "id": "custom_transition_1",
+        "phrase": "In contrast to previous findings...",
+        "usage": "对比研究发现",
+        "academicScore": 8.5,
+        "frequency": "high",
+        "examples": [
+          "In contrast to previous findings, this study demonstrates a different pattern"
+        ],
+        "section": "transitions",
+        "subsection": "contrast"
+      }
+    ]
+  },
+  "metadata": {
+    "source": "Custom Academic Phrases",
+    "author": "Your Name",
+    "date": "2025-11-30",
+    "description": "自定义学术写作短语示例"
+  }
+}
