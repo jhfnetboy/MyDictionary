@@ -24,7 +24,7 @@ MyDictionary TTS 现在支持**自动发现本地 Rust 服务器**,并在服务�
 │  │  │  speak(text) - 智能播放入口                       │  │ │
 │  │  │                                                    │  │ │
 │  │  │  1. checkLocalServer() (30秒缓存)                 │  │ │
-│  │  │     └─ GET http://localhost:3030/health (1秒超时) │  │ │
+│  │  │     └─ GET http://localhost:9527/health (1秒超时) │  │ │
 │  │  │                                                    │  │ │
 │  │  │  2. if (服务器可用) {                              │  │ │
 │  │  │       try { speakViaLocalServer() }               │  │ │
@@ -41,10 +41,10 @@ MyDictionary TTS 现在支持**自动发现本地 Rust 服务器**,并在服务�
                              │ HTTP Request
                              ▼
 ┌─────────────────────────────────────────────────────────────┐
-│           Rust Model Runner (Port 3030)                     │
+│           Rust TTS Server (Port 9527)                     │
 │                                                              │
 │  ┌────────────────────────────────────────────────────────┐ │
-│  │  Axum HTTP Server (model-runner/src/main.rs)          │ │
+│  │  Axum HTTP Server (tts-server/src/main.rs)          │ │
 │  │                                                          │ │
 │  │  GET  /           → Server Info                        │ │
 │  │  GET  /health     → { success: true }                  │ │
@@ -165,7 +165,7 @@ async speak(text, onEnd = null, onError = null) {
 
 **文件结构**:
 ```
-model-runner/
+tts-server/
 ├── Cargo.toml                 # Rust 依赖配置
 ├── .gitignore                 # 排除 /target/ 构建产物
 ├── src/
@@ -180,7 +180,7 @@ model-runner/
 
 **请求**:
 ```bash
-curl http://localhost:3030/
+curl http://localhost:9527/
 ```
 
 **响应**:
@@ -188,7 +188,7 @@ curl http://localhost:3030/
 {
   "success": true,
   "data": {
-    "name": "Model Runner",
+    "name": "TTS Server",
     "version": "0.1.0",
     "status": "running",
     "mode": "rust-native"
@@ -200,7 +200,7 @@ curl http://localhost:3030/
 
 **请求**:
 ```bash
-curl http://localhost:3030/health
+curl http://localhost:9527/health
 ```
 
 **响应**:
@@ -217,7 +217,7 @@ curl http://localhost:3030/health
 
 **请求**:
 ```bash
-curl -X POST http://localhost:3030/synthesize \
+curl -X POST http://localhost:9527/synthesize \
   -H "Content-Type: application/json" \
   -d '{"text": "Hello World", "format": "wav"}'
 ```
@@ -242,7 +242,7 @@ Content-Length: 123456
 
 **请求**:
 ```bash
-curl -X POST http://localhost:3030/models/download \
+curl -X POST http://localhost:9527/models/download \
   -H "Content-Type: application/json" \
   -d '{"model_id": "microsoft/speecht5_tts"}'
 ```
@@ -295,7 +295,7 @@ curl -X POST http://localhost:3030/models/download \
 
 **启动服务器**:
 ```bash
-cd model-runner
+cd tts-server
 cargo run
 ```
 
@@ -335,14 +335,14 @@ cargo run
 在 `src/lib/tts-manager.js`:
 ```javascript
 constructor() {
-  this.localServerUrl = 'http://localhost:3030'; // Rust 服务器地址
+  this.localServerUrl = 'http://localhost:9527'; // Rust 服务器地址
   this.serverCheckInterval = 30000; // 30秒缓存
 }
 ```
 
 **修改端口** (如果需要):
 1. 修改 `tts-manager.js` 中的 `localServerUrl`
-2. 修改 `model-runner/src/main.rs` 中的端口:
+2. 修改 `tts-server/src/main.rs` 中的端口:
    ```rust
    let addr = SocketAddr::from(([0, 0, 0, 0], 3030)); // 改这里
    ```
