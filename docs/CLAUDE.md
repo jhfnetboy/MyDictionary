@@ -41,6 +41,18 @@ MyDictionary 是一个 Chrome 插件,利用本地运行的 AI 模型提供智能
   - 实时搜索过滤
   - 一键复制短语
 
+### 4. TTS 文本转语音 (Text-to-Speech)
+- **自动发现架构**: 插件自动检测本地 Rust TTS 服务器,无需用户配置
+- **智能回退**: 本地服务器不可用时自动使用浏览器 TTS (SpeechT5)
+- **双模式支持**:
+  - 本地服务器模式 (Rust + Candle): 高质量,支持中英文,音量正常
+  - 浏览器模式 (SpeechT5 ONNX): 完全离线,仅支持英文
+- **3 个 TTS 按钮位置**:
+  - 翻译输入框 🔊
+  - 翻译结果框 🔊
+  - 学术短语卡片 🔊
+- **Offscreen Document**: 在 Service Worker 环境播放音频
+
 ## Core Technology Stack
 
 - **前端框架**: Chrome Extension Manifest V3
@@ -51,6 +63,8 @@ MyDictionary 是一个 Chrome 插件,利用本地运行的 AI 模型提供智能
   - Synonyms: Local WordNet JSON Database (同义词推荐,完全离线)
   - Sentence Embedding: `Xenova/all-MiniLM-L6-v2` (例句检索)
   - Academic Phrasebank: IndexedDB (学术短语库,按需下载)
+  - TTS (Browser): `Xenova/speecht5_tts` (英文 TTS,浏览器内运行)
+  - TTS (Local Server): Rust + Candle (高质量,支持中英文,待实现)
 
 ## Project Architecture
 
@@ -68,7 +82,11 @@ my-dictionary-plugin/
 │   ├── lib/
 │   │   ├── db-manager.js           // 同义词 IndexedDB 管理器
 │   │   ├── academic-db-manager.js  // 学术短语库 IndexedDB 管理器
+│   │   ├── tts-manager.js          // TTS 管理器 (自动发现 + 智能回退)
 │   │   └── academic-phrasebank.js  // 学术短语库管理 (已废弃,迁移到 IndexedDB)
+│   ├── offscreen/
+│   │   ├── audio-player.html       // Offscreen Document (音频播放)
+│   │   └── audio-player.js         // Web Audio API 音频播放逻辑
 │   └── ui/
 │       ├── sidebar.html            // 右侧滑动面板
 │       ├── sidebar.css             // 侧边栏样式 (含学术模式样式)
@@ -78,11 +96,21 @@ my-dictionary-plugin/
 ├── data/
 │   └── synonyms-db.json            // 本地同义词数据库 (WordNet 精选数据)
 ├── docs/
-│   ├── CLAUDE.md                   // 项目开发文档
-│   ├── academic-mode-design.md     // 学术模式设计文档
-│   └── academic-indexeddb-testing.md // IndexedDB 测试指南
+│   ├── CLAUDE.md                        // 项目开发文档
+│   ├── academic-mode-design.md          // 学术模式设计文档
+│   ├── academic-indexeddb-testing.md    // IndexedDB 测试指南
+│   ├── TTS-simplification-summary.md    // TTS 简化总结
+│   ├── TTS-auto-discovery-architecture.md // TTS 自动发现架构
+│   └── rust-service-architecture.md     // Rust 服务模块架构
+├── model-runner/                        // Rust TTS 服务器 (本地高质量 TTS)
+│   ├── Cargo.toml                       // Rust 依赖配置
+│   ├── .gitignore                       // 排除 /target/ 构建产物
+│   └── src/
+│       ├── main.rs                      // HTTP 服务器 (Axum + Tokio)
+│       └── downloader/
+│           └── mod.rs                   // Hugging Face 模型下载器
 └── assets/
-    └── icons/                      // 插件图标资源
+    └── icons/                           // 插件图标资源
 ```
 
 ## User Interaction Flow
