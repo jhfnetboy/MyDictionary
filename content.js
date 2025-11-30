@@ -147,7 +147,7 @@ class UIManager {
     };
 
     // Logo URL (Chrome extensions use content hash for cache busting automatically)
-    const logoUrl = chrome.runtime.getURL('assets/logo.png');
+    const logoUrl = chrome.runtime.getURL('assets/logo-new.png');
 
     this.sidebar.innerHTML = `
       <div class="mydictionary-header">
@@ -1784,26 +1784,35 @@ UIManager.prototype.displayPerformanceResults = function(data, target = '') {
     </div>
   `;
 
-  // 推荐配置
-  const featuresHTML = recommendation.features
-    .map(f => `<li class="mydictionary-feature-item">${f}</li>`)
+  // 推荐配置 (使用双语翻译)
+  const getText = (key, fallback) => {
+    const keys = key.split('.');
+    let value = this.i18n[this.currentLang];
+    for (const k of keys) {
+      value = value?.[k];
+    }
+    return value || fallback || key;
+  };
+
+  const featuresHTML = recommendation.featureKeys
+    .map(key => `<li class="mydictionary-feature-item">${getText(key)}</li>`)
     .join('');
 
   const recommendationHTML = `
     <div class="mydictionary-recommendation-card">
-      <h4>💡 Recommendation</h4>
+      <h4>💡 ${getText('sidebar.recommendation', 'Recommendation')}</h4>
       <div class="mydictionary-recommendation-message">
-        ${recommendation.message}
+        ${getText(recommendation.messageKey)}
       </div>
       <div class="mydictionary-suggested-model">
-        <strong>🎯 Suggested Model:</strong> ${recommendation.suggestedModel}
+        <strong>🎯 ${getText('sidebar.suggestedModel', 'Suggested Model')}:</strong> ${recommendation.suggestedModelFullName}
       </div>
       <ul class="mydictionary-features-list">
         ${featuresHTML}
       </ul>
       ${recommendation.downloadModelPrompt ? `
         <button class="mydictionary-btn-primary mydictionary-btn-small" id="mydictionary-download-model-btn">
-          📥 Download ${recommendation.suggestedModel.split(' ')[0]} Model
+          📥 ${getText('sidebar.downloadModel', 'Download')} ${recommendation.suggestedModel} ${getText('sidebar.model', 'Model')}
         </button>
       ` : ''}
     </div>
@@ -1812,14 +1821,41 @@ UIManager.prototype.displayPerformanceResults = function(data, target = '') {
   // 组合所有内容
   resultsDiv.innerHTML = hardwareHTML + benchmarkHTML + recommendationHTML;
 
-  // 如果有模型下载按钮，绑定事件
+  // 检查模型是否已下载并更新UI
   if (recommendation.downloadModelPrompt) {
-    const downloadModelBtn = resultsDiv.querySelector('#mydictionary-download-model-btn');
-    if (downloadModelBtn) {
-      downloadModelBtn.addEventListener('click', () => {
-        this.handleModelDownload(recommendation.suggestedModel);
-      });
-    }
+    const modelId = recommendation.suggestedModel.toLowerCase();
+    this.checkModelDownloaded(modelId).then(isDownloaded => {
+      const downloadModelBtn = resultsDiv.querySelector('#mydictionary-download-model-btn');
+      if (downloadModelBtn) {
+        if (isDownloaded) {
+          // 模型已下载，显示已下载状态
+          downloadModelBtn.textContent = `✅ ${getText('sidebar.modelDownloaded', 'Model Downloaded')}`;
+          downloadModelBtn.disabled = true;
+          downloadModelBtn.classList.add('mydictionary-btn-disabled');
+        } else {
+          // 模型未下载，绑定下载事件
+          downloadModelBtn.addEventListener('click', () => {
+            this.handleModelDownload(recommendation.suggestedModelFullName);
+          });
+        }
+      }
+    });
+  }
+};
+
+/**
+ * 检查模型是否已下载
+ */
+UIManager.prototype.checkModelDownloaded = async function(modelId) {
+  try {
+    const response = await chrome.runtime.sendMessage({
+      action: 'checkModelDownloaded',
+      modelId: modelId
+    });
+    return response.success && response.isDownloaded;
+  } catch (error) {
+    console.error('❌ 检查模型下载状态失败:', error);
+    return false;
   }
 };
 

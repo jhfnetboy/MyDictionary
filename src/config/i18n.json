@@ -76,7 +76,35 @@
       "checkHardware": "Check Hardware",
       "checking": "Checking...",
       "checkComplete": "Check Complete",
-      "analyzingHardware": "Analyzing your hardware..."
+      "analyzingHardware": "Analyzing your hardware...",
+      "recommendation": "Recommendation",
+      "suggestedModel": "Suggested Model",
+      "downloadModel": "Download",
+      "model": "Model",
+      "modelDownloaded": "Model Downloaded"
+    },
+    "performance": {
+      "high": {
+        "message": "🎉 Excellent performance! You can enable intelligent semantic search for more accurate academic phrase recommendations.",
+        "feature1": "✅ BGE-Base model (768-dim)",
+        "feature2": "✅ Optimized for academic text",
+        "feature3": "✅ Semantic similarity search",
+        "feature4": "✅ Context-aware recommendations"
+      },
+      "medium": {
+        "message": "👍 Good performance! Recommend lightweight semantic search (BGE-Small) for balance between performance and intelligence.",
+        "feature1": "✅ BGE-Small model (384-dim)",
+        "feature2": "✅ Suitable for academic text",
+        "feature3": "✅ Basic semantic search",
+        "feature4": "⏱️ Fast response time"
+      },
+      "low": {
+        "message": "💡 Limited performance. Recommend fast keyword search (IndexedDB) for instant response.",
+        "feature1": "❌ Semantic search not recommended",
+        "feature2": "✅ IndexedDB keyword matching",
+        "feature3": "✅ Ultra-fast response (<10ms)",
+        "feature4": "💾 Low memory usage"
+      }
     },
     "popup": {
       "title": "MyDictionary Settings",
@@ -182,7 +210,35 @@
       "checkHardware": "检测硬件",
       "checking": "检测中...",
       "checkComplete": "检测完成",
-      "analyzingHardware": "正在分析您的硬件..."
+      "analyzingHardware": "正在分析您的硬件...",
+      "recommendation": "推荐配置",
+      "suggestedModel": "推荐模型",
+      "downloadModel": "下载",
+      "model": "模型",
+      "modelDownloaded": "已下载模型"
+    },
+    "performance": {
+      "high": {
+        "message": "🎉 你的设备性能优秀!可以启用智能语义搜索功能,获得更精准的学术短语推荐。",
+        "feature1": "✅ BGE-Base 模型 (768维)",
+        "feature2": "✅ 专为学术文本优化",
+        "feature3": "✅ 语义相似度搜索",
+        "feature4": "✅ 上下文感知推荐"
+      },
+      "medium": {
+        "message": "👍 你的设备性能良好!建议使用轻量级语义搜索 (BGE-Small),在性能和智能之间取得平衡。",
+        "feature1": "✅ BGE-Small 模型 (384维)",
+        "feature2": "✅ 适合学术文本",
+        "feature3": "✅ 基础语义搜索",
+        "feature4": "⏱️ 响应速度快"
+      },
+      "low": {
+        "message": "💡 你的设备性能有限,建议使用快速关键词搜索 (IndexedDB),获得即时响应。",
+        "feature1": "❌ 不建议使用语义搜索",
+        "feature2": "✅ IndexedDB 关键词匹配",
+        "feature3": "✅ 极速响应 (<10ms)",
+        "feature4": "💾 低内存占用"
+      }
     },
     "popup": {
       "title": "我的词典设置",

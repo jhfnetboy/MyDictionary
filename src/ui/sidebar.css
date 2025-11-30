@@ -530,6 +530,13 @@
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
 }
 
+.mydictionary-btn-disabled {
+  opacity: 0.6;
+  cursor: not-allowed !important;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  pointer-events: none;
+}
+
 /* Error container */
 .mydictionary-error-container {
   display: flex;
