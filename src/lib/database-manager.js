@@ -39,16 +39,23 @@ class DatabaseManager {
         globalScope.window = globalScope;
       }
 
-      // 使用静态导入的 sqlite3InitModule
+      // 手动加载 WASM 文件（Service Worker 不能用 fetch 加载 chrome-extension:// 资源）
+      const wasmUrl = chrome.runtime.getURL('sqlite-wasm/sqlite3.wasm');
+      console.log(`📁 Loading WASM from: ${wasmUrl}`);
+
+      const wasmResponse = await fetch(wasmUrl);
+      if (!wasmResponse.ok) {
+        throw new Error(`Failed to load WASM: ${wasmResponse.status}`);
+      }
+
+      const wasmBinary = await wasmResponse.arrayBuffer();
+      console.log(`✅ WASM loaded: ${(wasmBinary.byteLength / 1024).toFixed(2)} KB`);
+
+      // 使用静态导入的 sqlite3InitModule，传入预加载的 WASM
       this.sqlite3 = await sqlite3InitModule({
         print: console.log,
         printErr: console.error,
-        // 配置 WASM 路径（Chrome Extension 环境）
-        locateFile: (file) => {
-          const url = chrome.runtime.getURL(`sqlite-wasm/${file}`);
-          console.log(`📁 Loading WASM file: ${file} from ${url}`);
-          return url;
-        }
+        wasmBinary: wasmBinary
       });
 
       console.log('✅ SQLite WASM initialized successfully');
