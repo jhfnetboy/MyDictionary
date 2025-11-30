@@ -6,6 +6,7 @@
 import { pipeline, env } from '@xenova/transformers';
 import { synonymsManager } from './src/lib/synonyms-manager.js';
 import { academicDBManager } from './src/lib/academic-db-manager.js';
+import { performanceDetector } from './src/lib/performance-detector.js';
 import phrasebankData from './academic-phrasebank.json' assert { type: 'json' };
 
 // 修复 "global is not defined" 错误 (某些库期望 global 变量存在)
@@ -385,6 +386,10 @@ async function handleMessage(request, sender, sendResponse) {
 
     case 'downloadAcademicDatabase':
       await handleDownloadAcademicDatabase(request, sendResponse);
+      break;
+
+    case 'detectPerformance':
+      await handleDetectPerformance(request, sendResponse);
       break;
 
     default:
@@ -1149,6 +1154,53 @@ async function handleDownloadAcademicDatabase(request, sendResponse) {
     sendResponse({
       success: false,
       error: error.message
+    });
+  }
+}
+
+/**
+ * 处理性能检测请求
+ */
+async function handleDetectPerformance(request, sendResponse) {
+  try {
+    console.log('🔍 开始性能检测...');
+
+    // 尝试加载缓存的检测结果
+    const cached = await performanceDetector.loadResults();
+
+    let result;
+    if (cached) {
+      console.log('📦 使用缓存的性能检测结果');
+      result = {
+        level: performanceDetector.performanceLevel,
+        capabilities: performanceDetector.capabilities,
+        benchmark: performanceDetector.benchmarkResults,
+        recommendation: performanceDetector.getRecommendation(),
+        cached: true
+      };
+    } else {
+      // 执行新的检测
+      result = await performanceDetector.detect();
+      // 保存结果
+      await performanceDetector.saveResults();
+      result.cached = false;
+    }
+
+    sendResponse({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    console.error('❌ 性能检测失败:', error);
+    sendResponse({
+      success: false,
+      error: error.message,
+      // 降级: 假设为低性能
+      data: {
+        level: 'low',
+        recommendation: performanceDetector.getRecommendation.call({ performanceLevel: 'low' })
+      }
     });
   }
 }
