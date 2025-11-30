@@ -48,6 +48,11 @@ export default defineConfig({
           src: 'src/config/*',
           dest: 'src/config',
         },
+        // 复制 Offscreen Document 文件
+        {
+          src: 'src/offscreen/*',
+          dest: 'src/offscreen',
+        },
         // 复制图标
         {
           src: 'assets/icons/*',
