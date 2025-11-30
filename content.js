@@ -871,19 +871,17 @@ UIManager.prototype.handleGetSynonyms = async function() {
               // 数据库未下载，显示下载提示
               output.innerHTML = `
                 <div class="mydictionary-synonyms-result">
-                  <h3>📚 WordNet Database Required</h3>
+                  <h3>📚 Synonym Dictionary Required</h3>
 
                   <div class="mydictionary-db-prompt">
-                    <h4>📖 Download Complete Academic Dictionary</h4>
-                    <p>To use the synonym feature, please download the WordNet database:</p>
-                    <ul style="margin: 12px 0; padding-left: 20px; text-align: left;">
-                      <li><strong>126,125 words</strong> (complete academic vocabulary)</li>
-                      <li><strong>406,196 synonym relationships</strong></li>
-                      <li><strong>Size: 30.62 MB</strong> (one-time download)</li>
-                      <li><strong>Offline access</strong> after download</li>
-                    </ul>
+                    <p style="margin: 12px 0;">Enable smart synonym suggestions with <strong>126K+ words</strong> from WordNet.</p>
+                    <div style="display: flex; gap: 16px; justify-content: center; margin: 16px 0; font-size: 13px;">
+                      <div><strong>📦</strong> 2.4 MB</div>
+                      <div><strong>⚡</strong> Instant</div>
+                      <div><strong>💾</strong> Offline</div>
+                    </div>
                     <button id="download-wordnet-btn" class="mydictionary-btn-primary" style="margin-top: 12px; padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
-                      📥 Download Now (30.62 MB)
+                      📥 Download Now (2.4 MB)
                     </button>
                   </div>
 
@@ -898,8 +896,8 @@ UIManager.prototype.handleGetSynonyms = async function() {
               document.getElementById('download-wordnet-btn')?.addEventListener('click', async () => {
                 output.innerHTML = `
                   <div class="mydictionary-db-downloading">
-                    <h4>📥 Downloading WordNet Database...</h4>
-                    <p>This may take a few minutes (30.62 MB)</p>
+                    <h4>📥 Downloading Synonym Data...</h4>
+                    <p>Just a moment (2.4 MB)...</p>
                     <div class="mydictionary-spinner" style="margin: 20px auto; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #4CAF50; border-radius: 50%; animation: spin 1s linear infinite;"></div>
                   </div>
                 `;
@@ -912,8 +910,8 @@ UIManager.prototype.handleGetSynonyms = async function() {
                   if (downloadResponse.success) {
                     output.innerHTML = `
                       <div class="mydictionary-db-success">
-                        <h4>✅ Database Downloaded!</h4>
-                        <p>WordNet database is now ready. Please try your search again.</p>
+                        <h4>✅ Ready!</h4>
+                        <p>Synonym dictionary installed (${downloadResponse.data.wordCount.toLocaleString()} words). Try searching again!</p>
                       </div>
                     `;
                   } else {
@@ -924,6 +922,7 @@ UIManager.prototype.handleGetSynonyms = async function() {
                     <div class="mydictionary-error-container">
                       <h4>❌ Download Failed</h4>
                       <p>${error.message}</p>
+                      <button onclick="location.reload()" class="mydictionary-btn-secondary" style="margin-top: 8px;">🔄 Retry</button>
                     </div>
                   `;
                 }
