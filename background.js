@@ -650,12 +650,80 @@ if (chrome.contextMenus) {
     // 修复：使用新的菜单 ID
     if (info.menuItemId === '0-mydictionary-translate') {
       console.log('🖱️ 右键菜单点击，选中文本:', info.selectionText);
+
+      // 检查是否是受限页面
+      const url = tab.url || '';
+      const isRestrictedPage = url.startsWith('chrome://') ||
+                               url.startsWith('chrome-extension://') ||
+                               url.startsWith('edge://') ||
+                               url.startsWith('about:') ||
+                               url.startsWith('view-source:') ||
+                               url === '';
+
+      if (isRestrictedPage) {
+        console.warn('⚠️ 无法在受限页面使用:', url);
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: 'assets/icons/icon-128.png',
+          title: 'MyDictionary',
+          message: '⚠️ Cannot use on browser internal pages. Please visit a regular webpage (e.g., https://wikipedia.org)',
+          priority: 2
+        });
+        return;
+      }
+
       // 向当前页面发送消息,打开侧边栏并翻译选中文本
       chrome.tabs.sendMessage(tab.id, {
         action: 'openSidebar',
         text: info.selectionText
       }).catch(error => {
         console.error('❌ 发送消息失败:', error);
+
+        // 如果 content script 未注入，尝试注入
+        if (error.message.includes('Could not establish connection')) {
+          console.log('💉 右键菜单触发，尝试注入 content script...');
+
+          // 同时注入 CSS 和 JS
+          Promise.all([
+            chrome.scripting.insertCSS({
+              target: { tabId: tab.id },
+              files: ['src/ui/sidebar.css']
+            }),
+            chrome.scripting.executeScript({
+              target: { tabId: tab.id },
+              files: ['content.js']
+            })
+          ]).then(() => {
+            console.log('✅ Content script 和 CSS 注入成功');
+            // 增加延迟以确保 content script 完全初始化
+            setTimeout(() => {
+              chrome.tabs.sendMessage(tab.id, {
+                action: 'openSidebar',
+                text: info.selectionText
+              }).catch(e => {
+                console.error('❌ 重试失败:', e);
+                // 重试也失败，显示通知
+                chrome.notifications.create({
+                  type: 'basic',
+                  iconUrl: 'assets/icons/icon-128.png',
+                  title: 'MyDictionary',
+                  message: '⚠️ Failed to open sidebar. Please refresh the page (F5) and try again.',
+                  priority: 1
+                });
+              });
+            }, 500);  // 右键菜单需要更长延迟
+          }).catch(e => {
+            console.error('❌ 注入失败:', e);
+            // 显示友好的错误提示
+            chrome.notifications.create({
+              type: 'basic',
+              iconUrl: 'assets/icons/icon-128.png',
+              title: 'MyDictionary',
+              message: '⚠️ Cannot inject script on this page. Please visit a regular webpage (e.g., https://wikipedia.org)',
+              priority: 2
+            });
+          });
+        }
       });
     }
   });
@@ -792,14 +860,36 @@ if (chrome.action) {
           setTimeout(() => {
             chrome.tabs.sendMessage(tab.id, {
               action: 'toggleSidebar'
-            }).catch(e => console.error('❌ 重试失败:', e));
+            }).catch(e => {
+              console.error('❌ 重试失败:', e);
+              // 重试也失败，显示通知
+              chrome.notifications.create({
+                type: 'basic',
+                iconUrl: 'assets/icons/icon-128.png',
+                title: 'MyDictionary',
+                message: '⚠️ Failed to open sidebar. Please refresh the page (F5) and try again.',
+                priority: 1
+              });
+            });
           }, 300);
         }).catch(e => {
           console.error('❌ 注入失败:', e);
-          // 如果是权限问题，记录更详细的信息
+          // 显示友好的错误提示
+          let message = '⚠️ Cannot use on this page. Please visit a regular webpage (e.g., https://google.com)';
+
           if (e.message.includes('Cannot access')) {
-            console.warn('⚠️ 该页面不允许注入 content script，请访问普通网页（如 https://google.com）');
+            message = '⚠️ Cannot use on browser internal pages (chrome://, edge://, etc). Please visit a regular webpage (e.g., https://google.com)';
           }
+
+          chrome.notifications.create({
+            type: 'basic',
+            iconUrl: 'assets/icons/icon-128.png',
+            title: 'MyDictionary',
+            message: message,
+            priority: 2
+          });
+
+          console.warn('⚠️ 该页面不允许注入 content script，请访问普通网页（如 https://google.com）');
         });
       }
     });
