@@ -5,6 +5,7 @@
 
 import { pipeline, env } from '@xenova/transformers';
 import { synonymsManager } from './src/lib/synonyms-manager.js';
+import { phrasebankManager } from './src/lib/academic-phrasebank.js';
 
 // 修复 "global is not defined" 错误 (某些库期望 global 变量存在)
 if (typeof global === 'undefined') {
@@ -363,6 +364,18 @@ async function handleMessage(request, sender, sendResponse) {
 
     case 'downloadDatabase':
       await handleDownloadDatabase(request, sendResponse);
+      break;
+
+    case 'initializePhrasebank':
+      await handleInitializePhrasebank(request, sendResponse);
+      break;
+
+    case 'getPhrasesBySection':
+      await handleGetPhrasesBySection(request, sendResponse);
+      break;
+
+    case 'searchPhrases':
+      await handleSearchPhrases(request, sendResponse);
       break;
 
     default:
@@ -986,6 +999,96 @@ async function handleDownloadDatabase(request, sendResponse) {
     });
   } catch (error) {
     console.error('❌ 数据下载失败:', error);
+    sendResponse({
+      success: false,
+      error: error.message
+    });
+  }
+}
+
+/**
+ * 处理初始化学术短语库
+ */
+async function handleInitializePhrasebank(request, sendResponse) {
+  console.log('📚 初始化学术短语库...');
+
+  try {
+    await phrasebankManager.initialize();
+    const info = phrasebankManager.getInfo();
+
+    console.log('✅ 学术短语库初始化成功');
+    console.log(`📊 短语总数: ${info.totalPhrases}`);
+
+    sendResponse({
+      success: true,
+      data: info
+    });
+  } catch (error) {
+    console.error('❌ 学术短语库初始化失败:', error);
+    sendResponse({
+      success: false,
+      error: error.message
+    });
+  }
+}
+
+/**
+ * 处理获取指定部分的短语
+ */
+async function handleGetPhrasesBySection(request, sendResponse) {
+  const { section } = request;
+
+  console.log(`📑 获取论文部分短语: ${section}`);
+
+  try {
+    // 确保已初始化
+    if (!phrasebankManager.isInitialized) {
+      await phrasebankManager.initialize();
+    }
+
+    const phrases = phrasebankManager.getPhrasesBySection(section);
+
+    console.log(`✅ 找到 ${phrases.length} 个短语`);
+
+    sendResponse({
+      success: true,
+      data: phrases
+    });
+  } catch (error) {
+    console.error('❌ 获取短语失败:', error);
+    sendResponse({
+      success: false,
+      error: error.message
+    });
+  }
+}
+
+/**
+ * 处理搜索短语
+ */
+async function handleSearchPhrases(request, sendResponse) {
+  const { query } = request;
+
+  console.log(`🔍 搜索学术短语: "${query}"`);
+
+  try {
+    // 确保已初始化
+    if (!phrasebankManager.isInitialized) {
+      await phrasebankManager.initialize();
+    }
+
+    const results = phrasebankManager.searchPhrases(query, {
+      maxResults: 20
+    });
+
+    console.log(`✅ 找到 ${results.length} 个匹配短语`);
+
+    sendResponse({
+      success: true,
+      data: results
+    });
+  } catch (error) {
+    console.error('❌ 搜索短语失败:', error);
     sendResponse({
       success: false,
       error: error.message
