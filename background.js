@@ -396,6 +396,10 @@ async function handleMessage(request, sender, sendResponse) {
       await handleDetectPerformance(request, sendResponse);
       break;
 
+    case 'downloadModel':
+      await handleDownloadModel(request, sendResponse);
+      break;
+
     default:
       sendResponse({
         success: false,
@@ -654,21 +658,76 @@ async function handleCheckModelStatus(request, sendResponse) {
  * 处理模型下载请求
  */
 async function handleDownloadModel(request, sendResponse) {
-  const { modelId } = request;
+  const { modelId, modelName } = request;
+
+  console.log(`📥 开始下载模型: ${modelName || modelId} (ID: ${modelId})`);
 
   try {
-    console.log(`📥 开始下载模型: ${modelId}`);
-    await modelManager.loadTranslationModel(modelId);
+    // 检查是否是翻译模型 (旧代码兼容)
+    if (modelId.startsWith('translation-')) {
+      await modelManager.loadTranslationModel(modelId);
+      sendResponse({
+        success: true,
+        message: '翻译模型下载成功'
+      });
+      return;
+    }
+
+    // 新的学术模型下载逻辑
+    let transformersModelId;
+    let taskType;
+
+    switch (modelId.toLowerCase()) {
+      case 'scibert':
+        transformersModelId = 'allenai/scibert_scivocab_uncased';
+        taskType = 'feature-extraction';
+        break;
+
+      case 'minilm-l6':
+      case 'minilm':
+        transformersModelId = 'Xenova/all-MiniLM-L6-v2';
+        taskType = 'feature-extraction';
+        break;
+
+      default:
+        throw new Error(`Unknown model ID: ${modelId}`);
+    }
+
+    console.log(`🔄 Loading Transformers.js pipeline...`);
+    console.log(`   Model: ${transformersModelId}`);
+    console.log(`   Task: ${taskType}`);
+
+    const { pipeline } = await import('@xenova/transformers');
+
+    const model = await pipeline(taskType, transformersModelId, {
+      progress_callback: (progress) => {
+        console.log(`📊 Download progress:`, progress);
+      }
+    });
+
+    console.log(`✅ 模型下载并加载完成: ${modelName || modelId}`);
+
+    // 保存到全局状态
+    if (modelId === 'scibert') {
+      self.academicModel = model;
+    } else if (modelId === 'minilm-l6' || modelId === 'minilm') {
+      self.semanticModel = model;
+    }
 
     sendResponse({
       success: true,
-      message: '模型下载成功'
+      data: {
+        modelId,
+        modelName,
+        message: `Successfully downloaded and loaded ${modelName || modelId}`
+      }
     });
+
   } catch (error) {
+    console.error(`❌ 模型下载失败:`, error);
     sendResponse({
       success: false,
-      error: 'DOWNLOAD_FAILED',
-      message: error.message
+      error: error.message || 'Failed to download model'
     });
   }
 }

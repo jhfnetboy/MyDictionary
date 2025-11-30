@@ -1824,12 +1824,86 @@ UIManager.prototype.displayPerformanceResults = function(data, target = '') {
 };
 
 /**
- * 处理模型下载 (占位符,待实现)
+ * 处理模型下载
  */
-UIManager.prototype.handleModelDownload = function(modelName) {
+UIManager.prototype.handleModelDownload = async function(modelName) {
   console.log('📥 准备下载模型:', modelName);
-  alert(`Model download feature coming soon!\nModel: ${modelName}`);
-  // TODO: 实现模型下载功能
+
+  // 提取模型标识符 (例如: "SciBERT (Semantic Search)" → "SciBERT")
+  const modelId = modelName.split(' ')[0].toLowerCase();
+
+  // 显示下载确认对话框
+  const confirmed = confirm(
+    `Download ${modelName}?\n\n` +
+    `This will download approximately 440MB of data.\n` +
+    `The model will be cached in your browser for offline use.\n\n` +
+    `Continue?`
+  );
+
+  if (!confirmed) {
+    console.log('❌ 用户取消下载');
+    return;
+  }
+
+  // 创建下载状态显示
+  const resultsDiv = this.sidebar.querySelector('#mydictionary-performance-results-main') ||
+                     this.sidebar.querySelector('#mydictionary-performance-results');
+
+  if (resultsDiv) {
+    resultsDiv.innerHTML = `
+      <div class="mydictionary-model-download-progress">
+        <h4>📥 Downloading ${modelName}...</h4>
+        <div class="mydictionary-progress-bar">
+          <div class="mydictionary-progress-fill" id="mydictionary-download-progress"></div>
+        </div>
+        <p class="mydictionary-download-status" id="mydictionary-download-status">
+          Initializing download...
+        </p>
+      </div>
+    `;
+  }
+
+  try {
+    // 发送下载请求到 background
+    const response = await chrome.runtime.sendMessage({
+      action: 'downloadModel',
+      modelId: modelId,
+      modelName: modelName
+    });
+
+    if (response.success) {
+      if (resultsDiv) {
+        resultsDiv.innerHTML = `
+          <div class="mydictionary-success-container">
+            <div class="mydictionary-success-icon">✅</div>
+            <h4>Model Downloaded Successfully!</h4>
+            <p>${modelName} is now ready to use.</p>
+            <button class="mydictionary-btn-primary mydictionary-btn-small"
+                    onclick="location.reload()">
+              Refresh to Enable
+            </button>
+          </div>
+        `;
+      }
+    } else {
+      throw new Error(response.error || 'Download failed');
+    }
+  } catch (error) {
+    console.error('❌ 模型下载失败:', error);
+    if (resultsDiv) {
+      resultsDiv.innerHTML = `
+        <div class="mydictionary-error-container">
+          <div class="mydictionary-error-icon">⚠️</div>
+          <h4>Download Failed</h4>
+          <p class="mydictionary-error-message">${error.message}</p>
+          <button class="mydictionary-btn-secondary mydictionary-btn-small"
+                  onclick="this.closest('.mydictionary-error-container').remove()">
+            Close
+          </button>
+        </div>
+      `;
+    }
+  }
 };
 
 console.log('✅ MyDictionary Content Script 初始化完成');
