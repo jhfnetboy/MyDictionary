@@ -187,11 +187,16 @@ class UIManager {
             <option value="ru">🇷🇺 Русский</option>
           </select>
 
-          <textarea
-            id="mydictionary-input"
-            placeholder="${getText('sidebar.inputPlaceholder', 'Enter text to translate...')}"
-            rows="4"
-          ></textarea>
+          <div class="mydictionary-input-wrapper">
+            <textarea
+              id="mydictionary-input"
+              placeholder="${getText('sidebar.inputPlaceholder', 'Enter text to translate...')}"
+              rows="4"
+            ></textarea>
+            <button class="mydictionary-tts-btn mydictionary-input-tts" id="mydictionary-input-tts-btn" title="Read aloud">
+              🔊
+            </button>
+          </div>
 
           <button id="mydictionary-translate-btn" class="mydictionary-btn-primary">
             ${getText('sidebar.translateButton', 'Translate')}
@@ -380,6 +385,18 @@ class UIManager {
     searchModeTabs.forEach(tab => {
       tab.addEventListener('click', () => this.switchSearchMode(tab.dataset.mode));
     });
+
+    // 输入框 TTS 按钮
+    const inputTtsBtn = this.sidebar.querySelector('#mydictionary-input-tts-btn');
+    if (inputTtsBtn) {
+      inputTtsBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const inputText = input.value.trim();
+        if (inputText) {
+          await ttsButtonHelper.handleClick(inputTtsBtn, inputText);
+        }
+      });
+    }
 
     // 标记已绑定
     this.sidebar.dataset.eventsBound = 'true';
@@ -576,12 +593,27 @@ class UIManager {
         console.log('💾 已保存翻译详情:', this.lastTranslation);
 
         output.innerHTML = `
-          <div class="mydictionary-translation">${translationText}</div>
+          <div class="mydictionary-translation-container">
+            <div class="mydictionary-translation">${translationText}</div>
+            <button class="mydictionary-tts-btn mydictionary-translation-tts" data-text="${translationText}" title="Read aloud">
+              🔊
+            </button>
+          </div>
           <div class="mydictionary-meta">
             <span>⏱️ ${latency}ms</span>
             <span>📦 ${modelId}</span>
           </div>
         `;
+
+        // 绑定翻译结果的 TTS 按钮
+        const translationTtsBtn = output.querySelector('.mydictionary-translation-tts');
+        if (translationTtsBtn) {
+          translationTtsBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            await ttsButtonHelper.handleClick(translationTtsBtn, translationText);
+          });
+        }
+
         this.showStatus(`✅ Translation complete`, 'success');
 
         // 显示功能按钮（仅英文支持同义词和例句）
