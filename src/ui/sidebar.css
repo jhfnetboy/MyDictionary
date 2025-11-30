@@ -1168,3 +1168,74 @@
   border-radius: 6px;
   margin-top: 12px;
 }
+
+/* Divider */
+.mydictionary-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 30px 0;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.mydictionary-divider::before,
+.mydictionary-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.mydictionary-divider span {
+  padding: 0 15px;
+}
+
+/* Import Section */
+.mydictionary-import-section {
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e1;
+}
+
+.mydictionary-import-section h4 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  color: #334155;
+}
+
+.mydictionary-import-description {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
+.mydictionary-btn-secondary {
+  background: #fff;
+  color: #667eea;
+  border: 2px solid #667eea;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  margin-top: 5px;
+}
+
+.mydictionary-btn-secondary:hover {
+  background: #667eea;
+  color: #fff;
+}
+
+.mydictionary-btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mydictionary-import-status {
+  margin-top: 15px;
+  min-height: 30px;
+}

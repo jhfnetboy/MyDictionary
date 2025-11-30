@@ -388,6 +388,10 @@ async function handleMessage(request, sender, sendResponse) {
       await handleDownloadAcademicDatabase(request, sendResponse);
       break;
 
+    case 'importLocalPhrases':
+      await handleImportLocalPhrases(request, sendResponse);
+      break;
+
     case 'detectPerformance':
       await handleDetectPerformance(request, sendResponse);
       break;
@@ -1151,6 +1155,41 @@ async function handleDownloadAcademicDatabase(request, sendResponse) {
     });
   } catch (error) {
     console.error('❌ 下载学术数据库失败:', error);
+    sendResponse({
+      success: false,
+      error: error.message
+    });
+  }
+}
+
+/**
+ * 处理本地文件导入
+ */
+async function handleImportLocalPhrases(request, sendResponse) {
+  console.log('📥 开始导入本地学术短语...');
+
+  try {
+    const { data } = request;
+
+    // 验证数据格式
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid data format');
+    }
+
+    // 导入到 IndexedDB
+    const count = await academicDBManager.importPhrases(data);
+
+    console.log(`✅ 本地文件导入完成，共 ${count} 条短语`);
+
+    sendResponse({
+      success: true,
+      data: {
+        count,
+        message: `Successfully imported ${count} phrases from local file`
+      }
+    });
+  } catch (error) {
+    console.error('❌ 导入本地文件失败:', error);
     sendResponse({
       success: false,
       error: error.message
