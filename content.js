@@ -1327,7 +1327,7 @@ UIManager.prototype.showAcademicDownloadPrompt = function() {
       <div class="mydictionary-download-icon">📚</div>
       <h3>${this.t('sidebar.academicDatabase', 'Academic Phrasebank')}</h3>
       <p class="mydictionary-download-description">
-        ${this.t('sidebar.academicDatabaseDesc', 'Download 48 curated academic phrases for research writing')}
+        ${this.t('sidebar.academicDatabaseDesc', 'Download 2,500+ academic phrases from University of Manchester')}
       </p>
       <div class="mydictionary-download-info">
         <span>📦 ${this.t('sidebar.size', 'Size')}: ~1.1 MB</span>
@@ -1337,6 +1337,22 @@ UIManager.prototype.showAcademicDownloadPrompt = function() {
         📥 ${this.t('sidebar.downloadNow', 'Download Now')}
       </button>
       <div id="mydictionary-download-status" class="mydictionary-download-status"></div>
+
+      <div class="mydictionary-divider">
+        <span>${this.t('sidebar.or', 'or')}</span>
+      </div>
+
+      <div class="mydictionary-import-section">
+        <h4>📂 ${this.t('sidebar.importLocal', 'Import Local File')}</h4>
+        <p class="mydictionary-import-description">
+          ${this.t('sidebar.importLocalDesc', 'Import your own academic phrases from JSON file')}
+        </p>
+        <input type="file" id="mydictionary-import-file-input" accept=".json" style="display: none;" />
+        <button class="mydictionary-btn-secondary" id="mydictionary-import-btn">
+          📁 ${this.t('sidebar.selectFile', 'Select JSON File')}
+        </button>
+        <div id="mydictionary-import-status" class="mydictionary-import-status"></div>
+      </div>
     </div>
   `;
 
@@ -1371,6 +1387,64 @@ UIManager.prototype.showAcademicDownloadPrompt = function() {
       statusDiv.innerHTML = `<div class="mydictionary-error">❌ Download failed: ${error.message}</div>`;
       downloadBtn.disabled = false;
       downloadBtn.textContent = `📥 ${this.t('sidebar.downloadNow', 'Download Now')}`;
+    }
+  });
+
+  // 绑定导入按钮
+  const importBtn = phrasesContainer.querySelector('#mydictionary-import-btn');
+  const fileInput = phrasesContainer.querySelector('#mydictionary-import-file-input');
+  const importStatusDiv = phrasesContainer.querySelector('#mydictionary-import-status');
+
+  importBtn.addEventListener('click', () => {
+    fileInput.click();
+  });
+
+  fileInput.addEventListener('change', async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    importBtn.disabled = true;
+    importBtn.textContent = `⏳ ${this.t('sidebar.importing', 'Importing...')}`;
+    importStatusDiv.innerHTML = '<div class="mydictionary-spinner"></div>';
+
+    try {
+      // 读取文件
+      const fileContent = await file.text();
+
+      // 验证 JSON
+      let phrasesData;
+      try {
+        phrasesData = JSON.parse(fileContent);
+      } catch (e) {
+        throw new Error(this.t('sidebar.invalidJson', 'Invalid JSON format'));
+      }
+
+      // 发送到 background.js 导入
+      const response = await chrome.runtime.sendMessage({
+        action: 'importLocalPhrases',
+        data: phrasesData
+      });
+
+      if (response.success) {
+        const successMsg = this.t('sidebar.importSuccess', 'Successfully imported phrases!');
+        importStatusDiv.innerHTML = `<div class="mydictionary-success">✅ ${successMsg} (${response.data.count} phrases)</div>`;
+        this.phrasebankInitialized = true;
+
+        // 延迟后加载短语
+        setTimeout(() => {
+          this.handleSectionChange();
+        }, 1000);
+      } else {
+        throw new Error(response.error);
+      }
+    } catch (error) {
+      console.error('❌ 导入失败:', error);
+      const errorMsg = this.t('sidebar.importError', 'Import failed');
+      importStatusDiv.innerHTML = `<div class="mydictionary-error">❌ ${errorMsg}: ${error.message}</div>`;
+    } finally {
+      importBtn.disabled = false;
+      importBtn.textContent = `📁 ${this.t('sidebar.selectFile', 'Select JSON File')}`;
+      fileInput.value = ''; // 清空文件选择
     }
   });
 };
