@@ -40,23 +40,40 @@ class DatabaseManager {
       }
 
       // 配置 SQLite WASM 加载 - Service Worker 兼容模式
+      // 完全接管 WASM 实例化过程
+      const wasmUrl = chrome.runtime.getURL('sqlite-wasm/sqlite3.wasm');
+      console.log(`📁 准备加载 WASM from: ${wasmUrl}`);
+
       this.sqlite3 = await sqlite3InitModule({
         print: console.log,
         printErr: console.error,
 
-        // 覆盖 WASM 文件路径
-        locateFile: (path, prefix) => {
-          if (path.endsWith('.wasm')) {
-            const url = chrome.runtime.getURL('sqlite-wasm/sqlite3.wasm');
-            console.log(`📁 Loading WASM from: ${url}`);
-            return url;
-          }
-          return prefix + path;
-        },
+        // 完全接管 WASM 实例化，避免内部 fetch 问题
+        instantiateWasm: async (imports, successCallback) => {
+          console.log('🔧 手动实例化 WASM...');
 
-        // 关键修复: 移除 credentials 参数（chrome-extension:// 不支持 same-origin）
-        fetchSettings: {
-          // 不设置 credentials，让 fetch 使用默认的 'omit'
+          try {
+            // 直接用 fetch 加载（不带 credentials）
+            const response = await fetch(wasmUrl, { credentials: 'omit' });
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const wasmBytes = await response.arrayBuffer();
+            console.log(`✅ WASM 下载完成: ${(wasmBytes.byteLength / 1024).toFixed(2)} KB`);
+
+            // 编译和实例化
+            const wasmModule = await WebAssembly.compile(wasmBytes);
+            const wasmInstance = await WebAssembly.instantiate(wasmModule, imports);
+
+            console.log('✅ WASM 实例化成功');
+            successCallback(wasmInstance, wasmModule);
+
+            return wasmInstance.exports;
+          } catch (error) {
+            console.error('❌ WASM 实例化失败:', error);
+            throw error;
+          }
         }
       });
 
