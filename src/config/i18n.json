@@ -71,7 +71,12 @@
       "dataManagement": "Data Management",
       "clearDatabase": "Clear Database",
       "confirmClear": "Clear all academic phrases? This action cannot be undone.",
-      "databaseCleared": "Database cleared successfully"
+      "databaseCleared": "Database cleared successfully",
+      "performanceCheck": "Performance Check",
+      "checkHardware": "Check Hardware",
+      "checking": "Checking...",
+      "checkComplete": "Check Complete",
+      "analyzingHardware": "Analyzing your hardware..."
     },
     "popup": {
       "title": "MyDictionary Settings",
@@ -172,7 +177,12 @@
       "dataManagement": "数据管理",
       "clearDatabase": "清空数据库",
       "confirmClear": "清空所有学术短语?此操作无法撤销。",
-      "databaseCleared": "数据库已清空"
+      "databaseCleared": "数据库已清空",
+      "performanceCheck": "性能检测",
+      "checkHardware": "检测硬件",
+      "checking": "检测中...",
+      "checkComplete": "检测完成",
+      "analyzingHardware": "正在分析您的硬件..."
     },
     "popup": {
       "title": "我的词典设置",
