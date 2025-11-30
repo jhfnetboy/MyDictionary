@@ -12,7 +12,7 @@
     }
 
     body {
-      width: 320px;
+      width: 280px;
       padding: 16px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -102,88 +102,6 @@
     .info strong {
       font-weight: 600;
     }
-
-    /* TTS Settings Styles */
-    .tts-settings {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 16px;
-    }
-
-    .tts-settings h3 {
-      font-size: 14px;
-      margin-bottom: 12px;
-      font-weight: 600;
-    }
-
-    .setting-group {
-      margin-bottom: 10px;
-    }
-
-    .setting-group label {
-      display: block;
-      font-size: 12px;
-      margin-bottom: 4px;
-      opacity: 0.9;
-    }
-
-    .setting-group select,
-    .setting-group input[type="text"] {
-      width: 100%;
-      padding: 6px 8px;
-      border-radius: 4px;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      font-size: 12px;
-    }
-
-    .setting-group select option {
-      background: #667eea;
-      color: white;
-    }
-
-    .setting-group input::placeholder {
-      color: rgba(255, 255, 255, 0.6);
-    }
-
-    .small-btn {
-      padding: 4px 12px !important;
-      font-size: 11px !important;
-      margin-top: 6px;
-      width: auto !important;
-    }
-
-    .server-status {
-      font-size: 11px;
-      padding: 6px;
-      border-radius: 4px;
-      margin: 8px 0;
-      text-align: center;
-    }
-
-    .server-status.online {
-      background: rgba(76, 175, 80, 0.3);
-      border: 1px solid rgba(76, 175, 80, 0.5);
-    }
-
-    .server-status.offline {
-      background: rgba(244, 67, 54, 0.3);
-      border: 1px solid rgba(244, 67, 54, 0.5);
-    }
-
-    .server-status.checking {
-      background: rgba(255, 193, 7, 0.3);
-      border: 1px solid rgba(255, 193, 7, 0.5);
-    }
-
-    .model-select-group {
-      padding: 8px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 4px;
-      margin-top: 8px;
-    }
   </style>
 </head>
 <body>
@@ -197,39 +115,6 @@
   <div class="actions">
     <button id="open-sidebar-btn">📖 <span id="btn-open-sidebar">Open Sidebar</span></button>
     <button id="settings-btn">⚙️ <span id="btn-settings">Settings</span></button>
-  </div>
-
-  <!-- TTS Settings Section -->
-  <div class="tts-settings">
-    <h3 id="tts-title">🔊 TTS Settings</h3>
-
-    <div class="setting-group">
-      <label id="tts-mode-label">Mode:</label>
-      <select id="tts-mode-select">
-        <option value="auto" id="tts-mode-auto">Auto (Local → Browser)</option>
-        <option value="local-only" id="tts-mode-local">Local Server Only</option>
-        <option value="browser-only" id="tts-mode-browser">Browser TTS Only</option>
-      </select>
-    </div>
-
-    <div class="setting-group">
-      <label id="tts-server-label">Server URL:</label>
-      <input type="text" id="tts-server-url" placeholder="http://localhost:5050" />
-      <button id="test-server-btn" class="small-btn">Test</button>
-    </div>
-
-    <div class="server-status" id="server-status">
-      <span id="status-text">Checking...</span>
-    </div>
-
-    <div class="setting-group model-select-group" id="model-select-group" style="display: none;">
-      <label id="tts-model-label">Model:</label>
-      <select id="tts-model-select">
-        <option value="speecht5">SpeechT5 (English)</option>
-        <option value="cosyvoice">CosyVoice (中英文)</option>
-      </select>
-      <button id="load-model-btn" class="small-btn">Load</button>
-    </div>
   </div>
 
   <div class="info">
