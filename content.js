@@ -705,7 +705,7 @@ class UIManager {
 
         <div class="mydictionary-settings-section">
           <h4>ℹ️ ${this.t('sidebar.about') || 'About'}</h4>
-          <p>${this.t('sidebar.madeWith') || 'Made with'} ❤️ ${this.t('sidebar.by') || 'by')} Jason</p>
+          <p>${this.t('sidebar.madeWith') || 'Made with'} ❤️ ${this.t('sidebar.by') || 'by'} Jason</p>
           <p>
             <a href="https://github.com/jhfnetboy/MyDictionary" target="_blank" style="color: #667eea;">
               GitHub
