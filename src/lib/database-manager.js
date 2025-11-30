@@ -60,8 +60,12 @@ class DatabaseManager {
     try {
       await this.initSQLite();
 
-      // 尝试打开数据库
-      const db = await this.sqlite3.open_v2(DB_NAME, SQLite.SQLITE_OPEN_READONLY);
+      // 尝试打开数据库（wa-sqlite 不需要路径前缀）
+      const db = await this.sqlite3.open_v2(
+        DB_NAME,
+        SQLite.SQLITE_OPEN_READONLY,
+        this.vfs.name  // 指定使用我们的 VFS
+      );
 
       if (db) {
         // 数据库存在，检查是否有数据
@@ -70,19 +74,23 @@ class DatabaseManager {
           'SELECT COUNT(*) as count FROM synonyms'
         );
 
-        const row = await this.sqlite3.step(stmt);
-        const count = this.sqlite3.column_int(stmt, 0);
+        if (await this.sqlite3.step(stmt) === SQLite.SQLITE_ROW) {
+          const count = this.sqlite3.column_int(stmt, 0);
+
+          await this.sqlite3.finalize(stmt);
+          await this.sqlite3.close(db);
+
+          console.log(`📊 Database found with ${count} rows`);
+          return count > 0;
+        }
 
         await this.sqlite3.finalize(stmt);
         await this.sqlite3.close(db);
-
-        console.log(`📊 Database found with ${count} rows`);
-        return count > 0;
       }
 
       return false;
     } catch (error) {
-      console.log('⚠️ Database not found or empty');
+      console.log('⚠️ Database not found or empty:', error.message);
       return false;
     }
   }
@@ -143,6 +151,7 @@ class DatabaseManager {
 
   /**
    * 保存数据库到 IndexedDB (通过 wa-sqlite VFS)
+   * wa-sqlite 使用不同的方法写入数据库
    */
   async saveDatabaseToStorage(dbData) {
     console.log('💾 Saving database to IndexedDB via wa-sqlite VFS...');
@@ -150,46 +159,43 @@ class DatabaseManager {
     try {
       await this.initSQLite();
 
-      // 打开数据库（如果不存在会创建）
-      const db = await this.sqlite3.open_v2(
-        DB_NAME,
-        SQLite.SQLITE_OPEN_READWRITE | SQLite.SQLITE_OPEN_CREATE
-      );
+      // 1. 创建临时内存数据库
+      const tempDb = await this.sqlite3.open_v2(':memory:');
 
-      // 使用 deserialize 写入数据
-      const ptr = this.sqlite3.module.ccall(
-        'sqlite3_malloc',
-        'number',
-        ['number'],
-        [dbData.length]
-      );
-
-      this.sqlite3.module.HEAPU8.set(dbData, ptr);
+      // 2. 使用 deserialize 加载下载的数据
+      const dataPtr = this.sqlite3.module._malloc(dbData.length);
+      this.sqlite3.module.HEAPU8.set(dbData, dataPtr);
 
       const rc = this.sqlite3.module.ccall(
         'sqlite3_deserialize',
         'number',
         ['number', 'string', 'number', 'number', 'number', 'number'],
-        [db, 'main', ptr, dbData.length, dbData.length, 0]
+        [tempDb, 'main', dataPtr, dbData.length, dbData.length, 0]
       );
 
       if (rc !== SQLite.SQLITE_OK) {
         throw new Error(`sqlite3_deserialize failed with code ${rc}`);
       }
 
-      // 测试查询确认数据完整
-      const stmt = await this.sqlite3.prepare_v2(
-        db,
-        'SELECT COUNT(*) as count FROM synonyms'
-      );
-
+      // 3. 使用 VACUUM INTO 复制到 VFS 管理的文件
+      const vacuumSql = `VACUUM INTO '${DB_NAME}'`;
+      const stmt = await this.sqlite3.prepare_v2(tempDb, vacuumSql);
       await this.sqlite3.step(stmt);
-      const count = this.sqlite3.column_int(stmt, 0);
-
       await this.sqlite3.finalize(stmt);
-      await this.sqlite3.close(db);
 
-      console.log(`✅ Database saved successfully with ${count} rows`);
+      await this.sqlite3.close(tempDb);
+
+      // 4. 验证保存成功
+      const db = await this.sqlite3.open_v2(DB_NAME, SQLite.SQLITE_OPEN_READONLY, this.vfs.name);
+      const countStmt = await this.sqlite3.prepare_v2(db, 'SELECT COUNT(*) FROM synonyms');
+
+      if (await this.sqlite3.step(countStmt) === SQLite.SQLITE_ROW) {
+        const count = this.sqlite3.column_int(countStmt, 0);
+        console.log(`✅ Database saved successfully with ${count} rows`);
+      }
+
+      await this.sqlite3.finalize(countStmt);
+      await this.sqlite3.close(db);
     } catch (error) {
       console.error('❌ Failed to save database:', error);
       throw error;
@@ -218,8 +224,12 @@ class DatabaseManager {
         return null;
       }
 
-      // 3. 打开数据库
-      this.db = await this.sqlite3.open_v2(DB_NAME, SQLite.SQLITE_OPEN_READONLY);
+      // 3. 打开数据库（指定 VFS）
+      this.db = await this.sqlite3.open_v2(
+        DB_NAME,
+        SQLite.SQLITE_OPEN_READONLY,
+        this.vfs.name
+      );
 
       this.isInitialized = true;
       console.log('✅ Database connection established');
