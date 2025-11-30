@@ -51,12 +51,8 @@ export class PerformanceDetector {
     // CPU 核心数
     this.capabilities.cpuCores = navigator.hardwareConcurrency || 2;
 
-    // 内存 (如果浏览器支持)
-    if (navigator.deviceMemory) {
-      this.capabilities.memory = navigator.deviceMemory; // GB
-    } else {
-      this.capabilities.memory = 4; // 默认假设 4GB
-    }
+    // 内存检测 - 使用多种方法推断
+    this.capabilities.memory = await this.detectMemory();
 
     // WebGPU 支持
     this.capabilities.webgpu = await this.detectWebGPU();
@@ -77,6 +73,49 @@ export class PerformanceDetector {
   }
 
   /**
+   * 精确内存检测
+   * 使用 chrome.system.memory API 获取准确的系统内存
+   */
+  async detectMemory() {
+    let totalMemoryGB = 4; // 默认值
+
+    try {
+      // 1. 优先使用 chrome.system.memory API (最准确)
+      if (chrome && chrome.system && chrome.system.memory) {
+        const memInfo = await chrome.system.memory.getInfo();
+        // capacity 是总内存，单位是字节
+        totalMemoryGB = Math.round(memInfo.capacity / (1024 * 1024 * 1024));
+        const availableGB = Math.round(memInfo.availableCapacity / (1024 * 1024 * 1024));
+
+        console.log(`🎯 chrome.system.memory API:`);
+        console.log(`   Total: ${totalMemoryGB} GB`);
+        console.log(`   Available: ${availableGB} GB`);
+        console.log(`   Used: ${totalMemoryGB - availableGB} GB`);
+
+        return totalMemoryGB;
+      }
+    } catch (error) {
+      console.warn('⚠️ chrome.system.memory API 不可用:', error);
+    }
+
+    // 2. 回退到 navigator.deviceMemory (不准确，但总比没有强)
+    try {
+      if (navigator.deviceMemory) {
+        totalMemoryGB = navigator.deviceMemory;
+        console.log(`📊 navigator.deviceMemory (fallback): ${totalMemoryGB} GB`);
+        console.log(`⚠️ 注意: 这个值可能不准确，建议检查扩展权限是否包含 "system.memory"`);
+        return totalMemoryGB;
+      }
+    } catch (error) {
+      console.warn('⚠️ navigator.deviceMemory 不可用:', error);
+    }
+
+    // 3. 最后的回退 - 使用默认值
+    console.warn(`⚠️ 无法检测内存，使用默认值: ${totalMemoryGB} GB`);
+    return totalMemoryGB;
+  }
+
+  /**
    * 检测 WebGPU 支持
    */
   async detectWebGPU() {
@@ -94,13 +133,32 @@ export class PerformanceDetector {
 
   /**
    * 检测 WebGL 支持
+   * 注意: Service Worker 中无法检测 WebGL (没有 document)
    */
   detectWebGL() {
     try {
+      // 检查是否在 Service Worker 环境
+      if (typeof document === 'undefined') {
+        console.log('⚠️ Service Worker 环境, 无法检测 WebGL');
+        // 假设支持 (大多数现代浏览器都支持)
+        return true;
+      }
+
       const canvas = document.createElement('canvas');
       const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-      return gl !== null;
+      const supported = gl !== null && gl !== undefined;
+
+      if (supported) {
+        // 清理资源
+        const loseContext = gl.getExtension('WEBGL_lose_context');
+        if (loseContext) {
+          loseContext.loseContext();
+        }
+      }
+
+      return supported;
     } catch (error) {
+      console.warn('WebGL 检测失败:', error);
       return false;
     }
   }
