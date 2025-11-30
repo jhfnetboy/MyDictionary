@@ -4,7 +4,6 @@
  */
 
 import { pipeline, env } from '@xenova/transformers';
-import synonymsDB from './data/synonyms-db.json' assert { type: 'json' };
 import { databaseManager } from './src/lib/database-manager.js';
 
 // 修复 "global is not defined" 错误 (某些库期望 global 变量存在)
@@ -856,42 +855,25 @@ async function getSynonymsFromWordNet(word) {
   console.log(`📖 SQLite 同义词库查询: ${word}`);
 
   try {
-    // 首先尝试从 SQLite 数据库查询
+    // 检查数据库是否已下载
     const isDbAvailable = await databaseManager.isDatabaseDownloaded();
 
-    if (isDbAvailable) {
-      console.log('✅ 使用 SQLite 数据库查询');
-      try {
-        const synonyms = await databaseManager.querySynonyms(word, 8);
-        if (synonyms && synonyms.length > 0) {
-          console.log(`📖 SQLite 找到 ${synonyms.length} 个同义词:`, synonyms.map(s => s.word));
-          return synonyms;
-        }
-      } catch (dbError) {
-        console.warn('⚠️ SQLite 查询失败，回退到 JSON:', dbError.message);
-      }
-    } else {
-      console.log('⚠️ SQLite 数据库未下载，使用备用 JSON 数据库');
-    }
-
-    // 回退到本地 JSON 数据库
-    const queryWord = word.toLowerCase();
-    const synonymsList = synonymsDB[queryWord];
-
-    if (!synonymsList || synonymsList.length === 0) {
-      console.log(`⚠️ 未找到 "${word}" 的同义词`);
+    if (!isDbAvailable) {
+      console.log('⚠️ WordNet 数据库未下载');
       return [];
     }
 
-    const synonyms = synonymsList.slice(0, 8).map((syn, index) => ({
-      word: syn,
-      score: (1.0 - index * 0.05).toFixed(2),
-      confidence: '100%',
-      pos: 'n' // 默认词性
-    }));
+    // 使用 SQLite 数据库查询
+    console.log('✅ 使用 WordNet SQLite 数据库查询');
+    const synonyms = await databaseManager.querySynonyms(word, 8);
 
-    console.log(`📖 JSON 找到 ${synonyms.length} 个同义词:`, synonyms.map(s => s.word));
-    return synonyms;
+    if (synonyms && synonyms.length > 0) {
+      console.log(`📖 SQLite 找到 ${synonyms.length} 个同义词:`, synonyms.map(s => s.word));
+      return synonyms;
+    }
+
+    console.log(`⚠️ 未找到 "${word}" 的同义词`);
+    return [];
   } catch (error) {
     console.error(`❌ 同义词查询失败:`, error);
     return [];
@@ -1015,3 +997,13 @@ async function handleDownloadDatabase(request, sendResponse) {
 }
 
 console.log('🦝 MyDictionary Background Service Worker 已启动');
+
+// 启动时检查数据库状态
+(async () => {
+  const isDownloaded = await databaseManager.isDatabaseDownloaded();
+  if (!isDownloaded) {
+    console.log('⚠️ WordNet 数据库未下载，首次使用同义词功能时将提示下载');
+  } else {
+    console.log('✅ WordNet 数据库已就绪');
+  }
+})();
