@@ -7,16 +7,44 @@
 
 ## 📍 Where is the 🔊 Speaker Icon?
 
-### Current Implementation (v0.1.6)
+### Current Implementation (v0.1.6+)
 
-The **🔊 speaker icon** is currently available **ONLY** in the **Academic Writing** mode:
+The **🔊 speaker icon** is now available in **THREE** locations:
 
+### 1️⃣ Translation Tab - Input Box
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  MyDictionary Sidebar                                   │
 ├─────────────────────────────────────────────────────────┤
+│  [Translation] [Academic Writing]                       │
 │                                                          │
-│  [Translation] [Academic Writing] ← Switch to this tab  │
+│  Source Language: Auto Detect ▼                         │
+│  ┌────────────────────────────────────────────────┐    │
+│  │ Enter text to translate...               [🔊] │ ← HERE!
+│  │                                                 │    │
+│  │                                                 │    │
+│  └────────────────────────────────────────────────┘    │
+│  [Translate]                                            │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 2️⃣ Translation Tab - Result Box
+```
+┌─────────────────────────────────────────────────────────┐
+│  Target Language: 中文 ▼                                │
+│  ┌────────────────────────────────────────────────┐    │
+│  │ 电饭锅  [🔊] ← HERE!                            │    │
+│  │                                                 │    │
+│  │ ⏱️ 850ms  📦 translation-zh-en                 │    │
+│  └────────────────────────────────────────────────┘    │
+│  [Synonyms] [Examples]                                  │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 3️⃣ Academic Writing - Phrase Cards
+```
+┌─────────────────────────────────────────────────────────┐
+│  [Translation] [Academic Writing] ← Switch here         │
 │                                                          │
 │  ┌────────────────────────────────────────────────┐    │
 │  │ Section: Introduction ▼                        │    │
@@ -38,25 +66,33 @@ The **🔊 speaker icon** is currently available **ONLY** in the **Academic Writ
 
 ## 📖 Step-by-Step Instructions
 
-### 1. Open Sidebar
-- **Keyboard Shortcut**: Press `Cmd+Shift+D` (Mac) or `Ctrl+Shift+D` (Windows)
-- **Or**: Select text on any webpage → Right-click → "Translate with MyDictionary"
+### Usage 1: Translation Input TTS
 
-### 2. Switch to Academic Writing Mode
-- Click the **[Academic Writing]** tab at the top of the sidebar
-- If you haven't downloaded the Academic Phrasebank yet, click **"📥 Download Now"**
+1. Open sidebar: `Cmd+Shift+D` (Mac) or `Ctrl+Shift+D` (Windows)
+2. Type or paste text in the input box
+3. Click the 🔊 icon in the **top-right corner of the textarea**
+4. Listen to your input text
 
-### 3. Browse Academic Phrases
-- Select a section (e.g., Introduction, Methods, Results, Discussion)
-- Each phrase card will show:
-  - **📋 Copy** - Copy the phrase to clipboard
-  - **🔊 Speaker** - Read the phrase aloud (TTS)
-  - **💡 Examples** - Show example sentences
+### Usage 2: Translation Result TTS
 
-### 4. Click the 🔊 Icon
-- **First time**: SpeechT5 model (~120MB) will be downloaded automatically
+1. Complete a translation
+2. Find the 🔊 icon **next to the translation result**
+3. Click to hear the translated text
+4. Works for any language translation
+
+### Usage 3: Academic Phrase TTS
+
+1. Switch to **[Academic Writing]** tab
+2. Download Academic Phrasebank (if needed): Click **"📥 Download Now"**
+3. Browse phrases by section (Introduction, Methods, Results, etc.)
+4. Click 🔊 on any phrase card
+5. Hear native English pronunciation
+
+### First-Time Setup
+
+- **First 🔊 click**: SpeechT5 model (~120MB) downloads automatically
 - **Download time**: 1-3 minutes (depends on your internet speed)
-- **After download**: Click 🔊 again to hear the phrase
+- **After download**: TTS works instantly offline
 
 ---
 
@@ -71,31 +107,17 @@ The **🔊 speaker icon** is currently available **ONLY** in the **Academic Writ
 
 ---
 
-## 🚀 Upcoming Features (v0.2.0)
+## 🚀 Current & Future Features
 
-The TTS feature will be expanded to more locations:
+### ✅ Implemented (v0.1.6+)
+1. ✅ **Translation Input Box** - TTS for source text
+2. ✅ **Translation Result Box** - TTS for translated text
+3. ✅ **Academic Phrase Cards** - TTS for academic expressions
 
-### Planned Locations:
-1. ✅ **Academic Writing Mode** (Current)
-2. ⏳ **Translation Results Box** (Next)
-3. ⏳ **Synonym List** (Planned)
-4. ⏳ **Example Sentences** (Planned)
-
-### Example of Future Implementation:
-```
-┌─────────────────────────────────────────────────────────┐
-│  Translation Tab                                         │
-├─────────────────────────────────────────────────────────┤
-│  Original: "rice cooker"                                 │
-│  ┌────────────────────────────────────────────────┐    │
-│  │ 🇨🇳 Translation:                               │    │
-│  │                                                 │    │
-│  │ 电饭锅  [🔊]  ← TTS button (Coming Soon)       │    │
-│  │                                                 │    │
-│  │ [Synonyms] [Examples]                          │    │
-│  └────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────┘
-```
+### ⏳ Upcoming (v0.2.0)
+1. ⏳ **Synonym List** - Read each synonym aloud
+2. ⏳ **Example Sentences** - Hear sentence pronunciation
+3. ⏳ **Popup Tooltip** - Mini TTS for quick translations
 
 ---
 
@@ -118,8 +140,11 @@ For **native-speaker quality** (10/10), install the optional TTS server:
 
 ## ❓ FAQ
 
-### Q1: Why don't I see the 🔊 icon in Translation mode?
-**A**: Currently, TTS is only available in Academic Writing mode. Translation mode TTS will be added in v0.2.0.
+### Q1: Where can I find the 🔊 icon?
+**A**: The 🔊 icon appears in THREE places:
+- Input box (top-right corner of textarea)
+- Translation result box (next to translated text)
+- Academic phrase cards ([🔊] button)
 
 ### Q2: The download is taking too long
 **A**: The SpeechT5 model is ~120MB. On a slow connection, it may take 3-5 minutes. The download happens only once.
