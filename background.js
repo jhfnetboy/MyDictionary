@@ -809,29 +809,46 @@ if (chrome.action) {
     console.log('🖱️ 扩展图标被点击, tab:', tab.id, tab.url);
 
     // 检查是否是特殊页面
-    if (tab.url && (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('edge://'))) {
+    if (tab.url && (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('edge://') || tab.url.startsWith('about:'))) {
       console.warn('⚠️ 无法在浏览器内部页面使用');
 
       // 获取页面类型
       let pageType = 'browser internal page';
       if (tab.url.startsWith('chrome://extensions')) {
-        pageType = 'chrome://extensions/';
+        pageType = 'Chrome Extensions page';
       } else if (tab.url.startsWith('chrome://')) {
-        pageType = 'chrome:// system page';
+        pageType = 'Chrome internal page';
       } else if (tab.url.startsWith('edge://')) {
-        pageType = 'edge:// system page';
+        pageType = 'Edge internal page';
+      } else if (tab.url.startsWith('about:')) {
+        pageType = 'about: page';
       } else if (tab.url.startsWith('chrome-extension://')) {
         pageType = 'extension page';
       }
 
-      // 通过 chrome.notifications API 显示通知
+      const message = `⚠️ MyDictionary cannot work on ${pageType}.\n\nPlease visit a regular webpage:\n• https://wikipedia.org\n• https://google.com\n• Any https:// website`;
+
+      // 尝试多种方式通知用户
+      // 1. Chrome 通知
       chrome.notifications.create({
         type: 'basic',
         iconUrl: 'assets/icons/icon-128.png',
-        title: 'MyDictionary',
-        message: `Cannot use on ${pageType}. Please visit a regular webpage (e.g., https://google.com)`,
-        priority: 1
+        title: 'MyDictionary - Cannot Use Here',
+        message: message.replace(/\n/g, ' '),
+        priority: 2,
+        requireInteraction: true  // 需要用户手动关闭
       });
+
+      // 2. 尝试在当前标签页注入一个临时脚本显示 alert (可能失败，但值得一试)
+      chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: (msg) => alert(msg),
+        args: [message]
+      }).catch(() => {
+        // 注入失败是预期的（chrome:// 页面不允许）
+        console.log('📝 无法在此页面显示 alert，已显示系统通知');
+      });
+
       return;
     }
 
