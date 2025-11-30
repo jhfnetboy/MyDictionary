@@ -535,6 +535,11 @@ async function handleTranslation(request, sendResponse) {
       translationOptions.src_lang = srcCode;
       translationOptions.tgt_lang = tgtCode;
       console.log(`🌐 使用 NLLB 模型: ${srcCode} → ${tgtCode}`);
+    } else if (modelId === 'translation-zh-en') {
+      // zh-en 专用模型现在使用 NLLB-200
+      translationOptions.src_lang = 'zho_Hans';
+      translationOptions.tgt_lang = 'eng_Latn';
+      console.log(`🇨🇳→🇺🇸 使用 NLLB-200 专用模型: zho_Hans → eng_Latn`);
     } else if (modelId === 'translation-universal') {
       // 向后兼容旧版本（应该已在加载时转换为 fast）
       const srcCode = M2M100_LANG_CODES[sourceLang];
