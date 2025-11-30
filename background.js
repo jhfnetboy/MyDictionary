@@ -5,6 +5,7 @@
 
 import { pipeline, env } from '@xenova/transformers';
 import synonymsDB from './data/synonyms-db.json' assert { type: 'json' };
+import { databaseManager } from './src/lib/database-manager.js';
 
 // 修复 "global is not defined" 错误 (某些库期望 global 变量存在)
 if (typeof global === 'undefined') {
@@ -355,6 +356,14 @@ async function handleMessage(request, sender, sendResponse) {
 
     case 'getExamples':
       await handleGetExamples(request, sendResponse);
+      break;
+
+    case 'checkDatabaseStatus':
+      await handleCheckDatabaseStatus(request, sendResponse);
+      break;
+
+    case 'downloadDatabase':
+      await handleDownloadDatabase(request, sendResponse);
       break;
 
     default:
@@ -841,16 +850,32 @@ async function handleGetSynonyms(request, sendResponse) {
 }
 
 /**
- * 使用本地同义词数据库获取同义词
+ * 使用 SQLite 数据库获取同义词
  */
 async function getSynonymsFromWordNet(word) {
-  console.log(`📖 本地同义词库查询: ${word}`);
+  console.log(`📖 SQLite 同义词库查询: ${word}`);
 
   try {
-    // 转为小写进行查询
-    const queryWord = word.toLowerCase();
+    // 首先尝试从 SQLite 数据库查询
+    const isDbAvailable = await databaseManager.isDatabaseDownloaded();
 
-    // 从本地 JSON 数据库查询
+    if (isDbAvailable) {
+      console.log('✅ 使用 SQLite 数据库查询');
+      try {
+        const synonyms = await databaseManager.querySynonyms(word, 8);
+        if (synonyms && synonyms.length > 0) {
+          console.log(`📖 SQLite 找到 ${synonyms.length} 个同义词:`, synonyms.map(s => s.word));
+          return synonyms;
+        }
+      } catch (dbError) {
+        console.warn('⚠️ SQLite 查询失败，回退到 JSON:', dbError.message);
+      }
+    } else {
+      console.log('⚠️ SQLite 数据库未下载，使用备用 JSON 数据库');
+    }
+
+    // 回退到本地 JSON 数据库
+    const queryWord = word.toLowerCase();
     const synonymsList = synonymsDB[queryWord];
 
     if (!synonymsList || synonymsList.length === 0) {
@@ -858,17 +883,17 @@ async function getSynonymsFromWordNet(word) {
       return [];
     }
 
-    // 格式化返回结果
     const synonyms = synonymsList.slice(0, 8).map((syn, index) => ({
       word: syn,
-      score: (1.0 - index * 0.05).toFixed(2), // 递减评分
-      confidence: '100%'
+      score: (1.0 - index * 0.05).toFixed(2),
+      confidence: '100%',
+      pos: 'n' // 默认词性
     }));
 
-    console.log(`📖 本地库找到 ${synonyms.length} 个同义词:`, synonyms.map(s => s.word));
+    console.log(`📖 JSON 找到 ${synonyms.length} 个同义词:`, synonyms.map(s => s.word));
     return synonyms;
   } catch (error) {
-    console.error(`❌ 本地同义词库查询失败:`, error);
+    console.error(`❌ 同义词查询失败:`, error);
     return [];
   }
 }
@@ -922,6 +947,66 @@ async function handleGetExamples(request, sendResponse) {
     });
   } catch (error) {
     console.error('❌ 例句生成失败:', error);
+    sendResponse({
+      success: false,
+      error: error.message
+    });
+  }
+}
+
+/**
+ * 检查数据库状态
+ */
+async function handleCheckDatabaseStatus(request, sendResponse) {
+  try {
+    const isDownloaded = await databaseManager.isDatabaseDownloaded();
+
+    sendResponse({
+      success: true,
+      data: {
+        isDownloaded,
+        dbName: 'wordnet-synonyms.db',
+        dbSize: '30.62 MB',
+        wordCount: 126125,
+        relationshipCount: 406196
+      }
+    });
+  } catch (error) {
+    console.error('❌ 检查数据库状态失败:', error);
+    sendResponse({
+      success: false,
+      error: error.message
+    });
+  }
+}
+
+/**
+ * 下载数据库
+ */
+async function handleDownloadDatabase(request, sendResponse) {
+  try {
+    console.log('📥 开始下载 WordNet 数据库...');
+
+    // 下载数据库文件
+    const dbData = await databaseManager.downloadDatabase((progress) => {
+      // 这里可以通过消息发送进度更新
+      console.log(`下载进度: ${progress.percentage}%`);
+    });
+
+    // 保存到 IndexedDB
+    await databaseManager.saveDatabaseToStorage(dbData);
+
+    console.log('✅ 数据库下载并保存成功');
+
+    sendResponse({
+      success: true,
+      data: {
+        message: 'Database downloaded successfully',
+        size: (dbData.length / 1024 / 1024).toFixed(2) + ' MB'
+      }
+    });
+  } catch (error) {
+    console.error('❌ 数据库下载失败:', error);
     sendResponse({
       success: false,
       error: error.message
