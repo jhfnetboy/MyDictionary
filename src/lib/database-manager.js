@@ -23,7 +23,7 @@ class DatabaseManager {
   }
 
   /**
-   * 初始化 SQLite WASM (Service Worker 兼容模式 - 静态导入)
+   * 初始化 SQLite WASM (Service Worker 兼容模式 - 预加载 WASM 二进制)
    */
   async initSQLite() {
     if (this.sqlite3) return this.sqlite3;
@@ -39,50 +39,25 @@ class DatabaseManager {
         globalScope.window = globalScope;
       }
 
-      // 配置 SQLite WASM 加载 - Service Worker 兼容模式
-      // 完全接管 WASM 实例化过程
+      // 关键修复: 先手动加载 WASM 二进制，然后传递给 sqlite3InitModule
+      // 这样可以完全避免 SQLite WASM 内部的 fetch 调用
       const wasmUrl = chrome.runtime.getURL('sqlite-wasm/sqlite3.wasm');
-      console.log(`📁 准备加载 WASM from: ${wasmUrl}`);
+      console.log(`📁 预加载 WASM 二进制 from: ${wasmUrl}`);
 
+      // 使用不带 credentials 的 fetch
+      const wasmResponse = await fetch(wasmUrl, { credentials: 'omit' });
+      if (!wasmResponse.ok) {
+        throw new Error(`Failed to fetch WASM: ${wasmResponse.status} ${wasmResponse.statusText}`);
+      }
+
+      const wasmBinary = await wasmResponse.arrayBuffer();
+      console.log(`✅ WASM 预加载完成: ${(wasmBinary.byteLength / 1024).toFixed(2)} KB`);
+
+      // 传递预加载的 WASM 二进制给 sqlite3InitModule
       this.sqlite3 = await sqlite3InitModule({
         print: console.log,
         printErr: console.error,
-
-        // 完全接管 WASM 实例化，避免内部 fetch 问题
-        instantiateWasm: (imports, successCallback) => {
-          console.log('🔧 开始手动实例化 WASM...');
-
-          // 异步执行实例化，但立即返回空对象（Emscripten 要求）
-          (async () => {
-            try {
-              // 直接用 fetch 加载（不带 credentials）
-              console.log(`📥 正在下载 WASM...`);
-              const response = await fetch(wasmUrl, { credentials: 'omit' });
-              if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-              }
-
-              const wasmBytes = await response.arrayBuffer();
-              console.log(`✅ WASM 下载完成: ${(wasmBytes.byteLength / 1024).toFixed(2)} KB`);
-
-              // 编译和实例化
-              console.log('🔨 正在编译 WASM...');
-              const result = await WebAssembly.instantiateStreaming(
-                new Response(wasmBytes, { headers: { 'Content-Type': 'application/wasm' } }),
-                imports
-              );
-
-              console.log('✅ WASM 实例化成功');
-              successCallback(result.instance, result.module);
-            } catch (error) {
-              console.error('❌ WASM 实例化失败:', error);
-              throw error;
-            }
-          })();
-
-          // 立即返回空对象，表示异步实例化
-          return {};
-        }
+        wasmBinary: new Uint8Array(wasmBinary)  // 传递预加载的二进制数据
       });
 
       console.log('✅ SQLite WASM initialized successfully');
