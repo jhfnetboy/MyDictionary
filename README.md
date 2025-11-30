@@ -26,7 +26,7 @@
 | Component | Technology | Highlights | Performance |
 |-----------|-----------|-----------|-------------|
 | **🧠 AI Framework** | [Transformers.js](https://huggingface.co/docs/transformers.js) v2.17 | Official HuggingFace browser runtime · WASM + WebGL acceleration · Zero backend dependency | ⚡ Native speed |
-| **🌐 Translation Engine** | Helsinki-NLP OPUS-MT + Meta NLLB-200 | Specialized EN↔CN models (300MB each) · Universal 200-language support (600MB) · SOTA translation quality | 🏆 BLEU 35+ |
+| **🌐 Translation Engine** | Meta NLLB-200 | Unified EN↔CN model (600MB shared) · Universal 200-language support · SOTA translation quality | 🏆 BLEU 40+ |
 | **🎓 Academic Search** | [BGE-Base-EN-v1.5](https://huggingface.co/BAAI/bge-base-en-v1.5) | BAAI General Embedding · MTEB Top 5 (84.7% accuracy) · 768-dim semantic vectors | 🥇 MTEB Rank #5 |
 | **📚 Academic Database** | [Manchester Phrasebank](https://www.phrasebank.manchester.ac.uk/) | 2,500+ curated phrases · 5 paper sections · University-verified expressions | ✅ Academic-grade |
 | **🔍 Synonym Engine** | DistilBERT-base-uncased | Lightweight BERT variant · Context-aware recommendations · 65MB optimized model | 🚀 Fast inference |
@@ -43,7 +43,7 @@
 - 💬 **Example Sentences** - Real-world usage examples from authentic sources
 - 🎓 **Academic Writing** - 2,500+ academic phrases + AI semantic search for research papers
 - 🔊 **Text-to-Speech** - Browser-native TTS (SpeechT5) + optional high-quality server (Kokoro-82M)
-- ⚡ **On-Demand Download** - Only 300MB by default, other models downloaded as needed
+- ⚡ **On-Demand Download** - Only 600MB by default (EN↔CN shared model), other models downloaded as needed
 - 🎯 **Hardware Detection** - Auto-recommends optimal models based on your device capabilities
 
 ### 🚀 Quick Start
@@ -107,16 +107,15 @@ See [tts-server/README.md](./tts-server/README.md) for detailed instructions.
 
 ### 📦 Models
 
-#### Default Installation (300MB Only)
-- ✅ **English to Chinese** - Helsinki-NLP/opus-mt-en-zh (300MB)
+#### Default Installation (600MB)
+- ✅ **English ↔ Chinese** - Meta NLLB-200-distilled-600M (600MB, shared for both directions)
 
 #### On-Demand Downloads
 Models are downloaded automatically when you use the corresponding features:
 
 | Feature | Model | Size | Download Trigger | Technology |
 |---------|-------|------|------------------|-----------|
-| Chinese→English | Helsinki-NLP/opus-mt-zh-en | 300MB | First CN→EN translation | OPUS-MT (Marian) |
-| Other Languages | Meta NLLB-200 | 600MB | First non-EN/CN translation | NLLB distilled |
+| Other Languages | Meta NLLB-200 (Universal) | 600MB | First non-EN/CN translation | NLLB distilled (same as EN↔CN) |
 | Synonyms | DistilBERT-base-uncased | 65MB | Click [Synonyms] button | DistilBERT |
 | Examples | MiniLM-L6-v2 | 23MB | Click [Examples] button | Sentence-Transformers |
 | Academic Phrases | Phrasebank JSON | 1.1MB | Switch to Academic mode | JSON database |
@@ -125,7 +124,7 @@ Models are downloaded automatically when you use the corresponding features:
 | **🔊 TTS (Browser)** | **SpeechT5 ONNX** | **120MB** | **Click 🔊 button** | **Microsoft SpeechT5** |
 | 🔊 TTS (High Quality) | Kokoro-82M | 90MB | Install local server (optional) | Rust Candle |
 
-**Total**: 300MB (default) → **970MB** (with AI semantic search) → **1.1GB** (with TTS) → 2.1GB (full installation)
+**Total**: 600MB (default) → **870MB** (with AI semantic search) → **990MB** (with TTS) → 1.8GB (full installation)
 
 > 💡 **High-Quality TTS**: Install optional [Candle TTS Server](./tts-server) for native-speaker quality (Kokoro-82M, TTS Arena #1)
 
@@ -169,7 +168,7 @@ Models are downloaded automatically when you use the corresponding features:
 
 - **Frontend**: Chrome Extension Manifest V3
 - **AI Library**: [Transformers.js](https://huggingface.co/docs/transformers.js) (@xenova/transformers)
-- **Translation Models**: Helsinki-NLP/opus-mt + NLLB-200
+- **Translation Models**: Meta NLLB-200-distilled-600M (EN↔CN) + NLLB-200 (Universal)
 - **Academic Models**: SciBERT + Academic Phrasebank
 - **Model Download**: Hugging Face Hub (official recommended method)
 
@@ -241,9 +240,8 @@ MIT License - see [LICENSE](LICENSE) file
 
 **AI Models & Libraries:**
 - [Transformers.js](https://huggingface.co/docs/transformers.js) by Hugging Face - Run Transformers models in the browser with ONNX Runtime
-- [Helsinki-NLP/opus-mt-en-zh](https://huggingface.co/Helsinki-NLP/opus-mt-en-zh) - English to Chinese translation (OPUS-MT)
-- [Helsinki-NLP/opus-mt-zh-en](https://huggingface.co/Helsinki-NLP/opus-mt-zh-en) - Chinese to English translation (OPUS-MT)
-- [facebook/nllb-200-distilled-600M](https://huggingface.co/facebook/nllb-200-distilled-600M) - 200 languages universal translation
+- [Xenova/nllb-200-distilled-600M](https://huggingface.co/Xenova/nllb-200-distilled-600M) - English ↔ Chinese translation (Meta NLLB-200, quality: 8/10)
+- [facebook/nllb-200-distilled-600M](https://huggingface.co/facebook/nllb-200-distilled-600M) - 200 languages universal translation (Meta AI)
 - [BAAI/bge-base-en-v1.5](https://huggingface.co/BAAI/bge-base-en-v1.5) - **BGE embeddings for AI semantic search (MTEB Top 5)**
 - [BAAI/bge-small-en-v1.5](https://huggingface.co/BAAI/bge-small-en-v1.5) - Lightweight BGE for low-end devices
 - [distilbert-base-uncased](https://huggingface.co/distilbert-base-uncased) - Synonym suggestions
@@ -271,7 +269,7 @@ Made with ❤️ by Jason
 | 组件 | 技术 | 亮点 | 性能 |
 |------|------|------|------|
 | **🧠 AI 框架** | [Transformers.js](https://huggingface.co/docs/transformers.js) v2.17 | HuggingFace 官方浏览器运行时 · WASM + WebGL 加速 · 零后端依赖 | ⚡ 原生速度 |
-| **🌐 翻译引擎** | Helsinki-NLP OPUS-MT + Meta NLLB-200 | 专用英中模型 (各300MB) · 通用200语言支持 (600MB) · SOTA 翻译质量 | 🏆 BLEU 35+ |
+| **🌐 翻译引擎** | Meta NLLB-200 | 统一英中模型 (600MB共享) · 通用200语言支持 · SOTA 翻译质量 | 🏆 BLEU 40+ |
 | **🎓 学术搜索** | [BGE-Base-EN-v1.5](https://huggingface.co/BAAI/bge-base-en-v1.5) | 北京智源 BGE 嵌入 · MTEB 排名第5 (84.7%准确度) · 768维语义向量 | 🥇 MTEB #5 |
 | **📚 学术数据库** | [曼彻斯特大学学术短语库](https://www.phrasebank.manchester.ac.uk/) | 2500+精选短语 · 5个论文章节 · 大学认证表达 | ✅ 学术级 |
 | **🔍 同义词引擎** | DistilBERT-base-uncased | 轻量BERT变体 · 上下文感知推荐 · 65MB优化模型 | 🚀 快速推理 |
@@ -285,7 +283,7 @@ Made with ❤️ by Jason
 - 📚 **近义词推荐** - DistilBERT 驱动的上下文感知智能建议
 - 💬 **例句展示** - 来自真实来源的使用场景例句
 - 🎓 **学术写作** - 2,500+ 学术短语 + AI 语义搜索助力论文写作
-- ⚡ **按需下载** - 默认仅 300MB,其他模型按需下载
+- ⚡ **按需下载** - 默认仅 600MB (英中双向共享模型),其他模型按需下载
 - 🎯 **硬件检测** - 根据设备性能自动推荐最优模型
 
 ### 🚀 快速开始
@@ -325,23 +323,22 @@ pnpm install
 
 ### 📦 模型说明
 
-#### 默认安装 (仅 300MB)
-- ✅ **英译中** - Helsinki-NLP/opus-mt-en-zh (300MB)
+#### 默认安装 (600MB)
+- ✅ **英译中 / 中译英** - Meta NLLB-200-distilled-600M (600MB，双向共享)
 
 #### 按需下载
 当您使用相应功能时,会自动提示下载:
 
 | 功能 | 模型 | 大小 | 下载时机 | 技术 |
 |------|------|------|----------|------|
-| 中译英 | Helsinki-NLP/opus-mt-zh-en | 300MB | 首次使用中译英时 | OPUS-MT (Marian) |
-| 其他语言翻译 | Meta NLLB-200 | 600MB | 翻译非英中语言时 | NLLB distilled |
+| 其他语言翻译 | Meta NLLB-200 (通用) | 600MB | 翻译非英中语言时 | NLLB distilled (与英中同模型) |
 | 近义词 | DistilBERT-base-uncased | 65MB | 点击[近义词]按钮时 | DistilBERT |
 | 例句 | MiniLM-L6-v2 | 23MB | 点击[例句]按钮时 | Sentence-Transformers |
 | 学术短语库 | Phrasebank JSON | 1.1MB | 切换到学术模式时 | JSON 数据库 |
 | **🧠 AI 语义搜索** | **BGE-Base-EN-v1.5** | **270MB** | **点击"语义搜索"标签** | **北京智源 BGE** |
 | AI 语义搜索(轻量) | BGE-Small-EN-v1.5 | 130MB | 低性能设备 | 北京智源 BGE |
 
-**总计**: 300MB (默认) → **970MB** (含AI语义搜索) → 1.9GB (完整安装)
+**总计**: 600MB (默认) → **870MB** (含AI语义搜索) → **990MB** (含TTS) → 1.8GB (完整安装)
 
 ### 🎯 核心功能
 
@@ -372,7 +369,7 @@ pnpm install
 
 - **前端**: Chrome Extension Manifest V3
 - **AI 库**: [Transformers.js](https://huggingface.co/docs/transformers.js) (@xenova/transformers)
-- **翻译模型**: Helsinki-NLP/opus-mt + NLLB-200
+- **翻译模型**: Meta NLLB-200-distilled-600M (英中) + NLLB-200 (通用)
 - **学术模型**: SciBERT + Academic Phrasebank
 - **模型下载**: Hugging Face Hub (官方推荐方式)
 
@@ -444,9 +441,8 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 
 **AI 模型与库:**
 - [Transformers.js](https://huggingface.co/docs/transformers.js) by Hugging Face - 使用 ONNX Runtime 在浏览器中运行 Transformers 模型
-- [Helsinki-NLP/opus-mt-en-zh](https://huggingface.co/Helsinki-NLP/opus-mt-en-zh) - 英译中翻译 (OPUS-MT)
-- [Helsinki-NLP/opus-mt-zh-en](https://huggingface.co/Helsinki-NLP/opus-mt-zh-en) - 中译英翻译 (OPUS-MT)
-- [facebook/nllb-200-distilled-600M](https://huggingface.co/facebook/nllb-200-distilled-600M) - 200 种语言通用翻译
+- [Xenova/nllb-200-distilled-600M](https://huggingface.co/Xenova/nllb-200-distilled-600M) - 英中双向翻译 (Meta NLLB-200, 质量 8/10)
+- [facebook/nllb-200-distilled-600M](https://huggingface.co/facebook/nllb-200-distilled-600M) - 200 种语言通用翻译 (Meta AI)
 - [BAAI/bge-base-en-v1.5](https://huggingface.co/BAAI/bge-base-en-v1.5) - **BGE 嵌入用于 AI 语义搜索 (MTEB 排名第5)**
 - [BAAI/bge-small-en-v1.5](https://huggingface.co/BAAI/bge-small-en-v1.5) - 轻量级 BGE 用于低性能设备
 - [distilbert-base-uncased](https://huggingface.co/distilbert-base-uncased) - 近义词推荐
