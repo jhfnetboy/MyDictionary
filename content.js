@@ -147,7 +147,7 @@ class UIManager {
     };
 
     // Logo URL (Chrome extensions use content hash for cache busting automatically)
-    const logoUrl = chrome.runtime.getURL('assets/logo-new.png');
+    const logoUrl = chrome.runtime.getURL('assets/logo.png');
 
     this.sidebar.innerHTML = `
       <div class="mydictionary-header">
@@ -374,6 +374,12 @@ class UIManager {
     if (academicSearchInput) {
       academicSearchInput.addEventListener('input', () => this.handleAcademicSearch());
     }
+
+    // 学术模式 - 搜索模式切换（关键词 / 语义）
+    const searchModeTabs = this.sidebar.querySelectorAll('.mydictionary-search-mode-tab');
+    searchModeTabs.forEach(tab => {
+      tab.addEventListener('click', () => this.switchSearchMode(tab.dataset.mode));
+    });
 
     // 标记已绑定
     this.sidebar.dataset.eventsBound = 'true';
@@ -1215,7 +1221,7 @@ UIManager.prototype.loadPhrasesBySection = async function(section) {
 /**
  * 显示学术短语列表
  */
-UIManager.prototype.displayAcademicPhrases = function(phrases) {
+UIManager.prototype.displayAcademicPhrases = function(phrases, isSemanticSearch = false) {
   const phrasesContainer = this.sidebar.querySelector('#mydictionary-academic-phrases');
 
   if (!phrases || phrases.length === 0) {
@@ -1227,16 +1233,22 @@ UIManager.prototype.displayAcademicPhrases = function(phrases) {
     return;
   }
 
-  // 按学术度评分排序
-  const sortedPhrases = phrases.sort((a, b) => b.academicScore - a.academicScore);
+  // 按相似度或学术度评分排序
+  const sortedPhrases = isSemanticSearch
+    ? phrases.sort((a, b) => (b.similarity || 0) - (a.similarity || 0))
+    : phrases.sort((a, b) => b.academicScore - a.academicScore);
 
   // 生成短语卡片
   const phrasesHTML = sortedPhrases.map(phrase => {
     const stars = '⭐'.repeat(Math.round(phrase.academicScore / 20));
+    const similarityBadge = isSemanticSearch && phrase.similarityPercent
+      ? `<span class="mydictionary-similarity-badge">${phrase.similarityPercent}% ${this.t('sidebar.similarity', 'Similarity')}</span>`
+      : '';
 
     return `
       <div class="mydictionary-phrase-card" data-phrase-id="${phrase.id}">
         <div class="mydictionary-phrase-header">
+          ${similarityBadge}
           <span class="mydictionary-phrase-score">${stars} ${phrase.academicScore}</span>
           <span class="mydictionary-phrase-frequency">${phrase.frequency}</span>
         </div>
@@ -1300,6 +1312,56 @@ UIManager.prototype.displayAcademicPhrases = function(phrases) {
 /**
  * 处理学术短语搜索
  */
+/**
+ * 切换搜索模式（关键词 / 语义）
+ */
+UIManager.prototype.switchSearchMode = async function(mode) {
+  console.log('🔄 切换搜索模式:', mode);
+
+  // 更新按钮状态
+  const tabs = this.sidebar.querySelectorAll('.mydictionary-search-mode-tab');
+  tabs.forEach(tab => {
+    if (tab.dataset.mode === mode) {
+      tab.classList.add('active');
+    } else {
+      tab.classList.remove('active');
+    }
+  });
+
+  // 保存当前搜索模式
+  this.currentSearchMode = mode;
+
+  // 更新搜索提示
+  const searchHint = this.sidebar.querySelector('#mydictionary-search-hint');
+  if (mode === 'semantic') {
+    searchHint.style.display = 'block';
+
+    // 检查模型是否已下载
+    const isModelDownloaded = await this.checkModelDownloaded('bge-base') ||
+                               await this.checkModelDownloaded('bge-small');
+    if (!isModelDownloaded) {
+      searchHint.innerHTML = `⚠️ ${this.t('sidebar.semanticSearchRequiresModel', 'Semantic search requires downloading the BGE model first')}`;
+      searchHint.style.background = '#fef3c7';
+      searchHint.style.borderColor = '#f59e0b';
+    } else {
+      searchHint.innerHTML = `💡 ${this.t('sidebar.semanticSearchHint', 'AI will find phrases with similar meanings')}`;
+      searchHint.style.background = '#f0f9ff';
+      searchHint.style.borderColor = '#667eea';
+    }
+  } else {
+    searchHint.style.display = 'none';
+  }
+
+  // 重新执行搜索（如果有搜索内容）
+  const searchInput = this.sidebar.querySelector('#mydictionary-academic-search-input');
+  if (searchInput.value.trim()) {
+    this.handleAcademicSearch();
+  }
+};
+
+/**
+ * 处理学术短语搜索
+ */
 UIManager.prototype.handleAcademicSearch = async function() {
   const searchInput = this.sidebar.querySelector('#mydictionary-academic-search-input');
   const query = searchInput.value.trim();
@@ -1310,25 +1372,26 @@ UIManager.prototype.handleAcademicSearch = async function() {
     return;
   }
 
-  console.log('🔍 搜索学术短语:', query);
+  const mode = this.currentSearchMode || 'keyword';
+  console.log(`🔍 搜索学术短语 (${mode} 模式):`, query);
 
   const phrasesContainer = this.sidebar.querySelector('#mydictionary-academic-phrases');
   phrasesContainer.innerHTML = `
     <div class="mydictionary-loading-container">
       <div class="mydictionary-spinner"></div>
-      <p>Searching...</p>
+      <p>${mode === 'semantic' ? 'AI Searching...' : 'Searching...'}</p>
     </div>
   `;
 
   try {
     const response = await chrome.runtime.sendMessage({
-      action: 'searchPhrases',
+      action: mode === 'semantic' ? 'semanticSearchPhrases' : 'searchPhrases',
       query: query
     });
 
     if (response.success) {
       const phrases = response.data;
-      this.displayAcademicPhrases(phrases);
+      this.displayAcademicPhrases(phrases, mode === 'semantic');
     } else {
       throw new Error(response.error || 'Search failed');
     }

@@ -59,7 +59,7 @@ export default defineConfig({
           dest: 'assets',
         },
         {
-          src: 'assets/logo-new.png',
+          src: 'assets/logo.png',
           dest: 'assets',
         },
         // 复制同义词数据文件

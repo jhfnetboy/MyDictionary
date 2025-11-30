@@ -1592,3 +1592,15 @@
   font-size: 13px;
   color: #475569;
 }
+
+/* Similarity Badge */
+.mydictionary-similarity-badge {
+  padding: 4px 10px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 12px;
+  display: inline-block;
+  margin-right: 8px;
+}
