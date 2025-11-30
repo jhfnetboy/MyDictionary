@@ -14,6 +14,9 @@ importers:
       '@xenova/transformers':
         specifier: ^2.17.2
         version: 2.17.2
+      wa-sqlite:
+        specifier: ^1.0.0
+        version: 1.0.0
     devDependencies:
       '@vitejs/plugin-react':
         specifier: ^5.1.1
@@ -956,6 +959,9 @@ packages:
       yaml:
         optional: true
 
+  wa-sqlite@1.0.0:
+    resolution: {integrity: sha512-Kyybo5/BaJp76z7gDWGk2J6Hthl4NIPsE+swgraEjy3IY6r5zIR02wAs1OJH4XtJp1y3puj3Onp5eMGS0z7nUA==}
+
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
 
@@ -1849,6 +1855,8 @@ snapshots:
       '@types/node': 24.10.1
       fsevents: 2.3.3
       terser: 5.44.1
+
+  wa-sqlite@1.0.0: {}
 
   wrappy@1.0.2: {}
 
