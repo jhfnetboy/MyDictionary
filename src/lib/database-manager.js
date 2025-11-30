@@ -39,17 +39,27 @@ class DatabaseManager {
         globalScope.window = globalScope;
       }
 
-      // 手动加载 WASM 文件（Service Worker 不能用 fetch 加载 chrome-extension:// 资源）
+      // 手动加载 WASM 文件（使用 XMLHttpRequest，因为 Service Worker 中 fetch 对 chrome-extension:// 不可靠）
       const wasmUrl = chrome.runtime.getURL('sqlite-wasm/sqlite3.wasm');
       console.log(`📁 Loading WASM from: ${wasmUrl}`);
 
-      const wasmResponse = await fetch(wasmUrl);
-      if (!wasmResponse.ok) {
-        throw new Error(`Failed to load WASM: ${wasmResponse.status}`);
-      }
+      const wasmBinary = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', wasmUrl, true);
+        xhr.responseType = 'arraybuffer';
 
-      const wasmBinary = await wasmResponse.arrayBuffer();
-      console.log(`✅ WASM loaded: ${(wasmBinary.byteLength / 1024).toFixed(2)} KB`);
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            console.log(`✅ WASM loaded: ${(xhr.response.byteLength / 1024).toFixed(2)} KB`);
+            resolve(new Uint8Array(xhr.response));
+          } else {
+            reject(new Error(`XHR failed: ${xhr.status}`));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error('XHR network error'));
+        xhr.send();
+      });
 
       // 使用静态导入的 sqlite3InitModule，传入预加载的 WASM
       this.sqlite3 = await sqlite3InitModule({
