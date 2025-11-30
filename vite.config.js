@@ -58,6 +58,10 @@ export default defineConfig({
           src: 'assets/logo-64.png',
           dest: 'assets',
         },
+        {
+          src: 'assets/logo.png',
+          dest: 'assets',
+        },
         // 复制同义词数据文件
         {
           src: 'public/synonyms.json.gz',
