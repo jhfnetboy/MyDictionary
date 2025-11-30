@@ -34,6 +34,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true; // 异步响应
   }
 
+  if (message.action === 'playAudioFromUrl') {
+    playAudioFromUrl(message.url)
+      .then(() => {
+        sendResponse({ success: true });
+      })
+      .catch((error) => {
+        console.error('[Offscreen] 播放 URL 失败:', error);
+        sendResponse({ success: false, error: error.message });
+      });
+    return true; // 异步响应
+  }
+
   if (message.action === 'stopAudio') {
     stopAudio();
     sendResponse({ success: true });
@@ -102,7 +114,69 @@ async function playAudio(audioArray, sampleRate) {
 }
 
 /**
- * 播放来自 Blob 的音频 (本地服务器)
+ * 播放来自 URL 的音频 (本地服务器 URL 模式)
+ */
+async function playAudioFromUrl(url) {
+  try {
+    // 停止当前播放
+    stopAudio();
+
+    // 创建 AudioContext
+    if (!audioContext) {
+      audioContext = new AudioContext();
+    }
+
+    console.log('[Offscreen] 从 URL 加载音频:', url);
+
+    // 获取音频数据
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+
+    // 解码音频数据
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+    // 创建音频源
+    const source = audioContext.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(audioContext.destination);
+
+    // 播放结束回调
+    source.onended = () => {
+      currentSource = null;
+      console.log('[Offscreen] 播放结束 (URL 模式)');
+
+      // 通知 background
+      chrome.runtime.sendMessage({
+        type: 'TTS_PLAYBACK_ENDED',
+        action: 'audioEnded'
+      }).catch(() => {});
+    };
+
+    // 开始播放
+    source.start(0);
+    currentSource = source;
+
+    console.log('[Offscreen] 开始播放 (URL 模式)');
+
+  } catch (error) {
+    console.error('[Offscreen] 播放 URL 错误:', error);
+
+    // 通知 background 错误
+    chrome.runtime.sendMessage({
+      type: 'TTS_PLAYBACK_ERROR',
+      error: error.message
+    }).catch(() => {});
+
+    throw error;
+  }
+}
+
+/**
+ * 播放来自 Blob 的音频 (本地服务器 - 废弃)
  */
 async function playAudioFromBlob(audioData, mimeType) {
   try {

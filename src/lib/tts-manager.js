@@ -291,26 +291,56 @@ export class TTSManager {
         throw new Error(`Server returned ${response.status}`);
       }
 
-      // 获取音频 Blob
-      const audioBlob = await response.blob();
+      // 解析 JSON 响应 (新 API 返回 URL)
+      const result = await response.json();
+
+      if (!result.url) {
+        throw new Error('服务器未返回音频 URL');
+      }
+
+      console.log(`🎵 音频 URL: ${result.url} (缓存${result.cached ? '命中' : '未命中'})`);
 
       // 确保 Offscreen Document 已创建
       await this.ensureOffscreenDocument();
 
-      // 将 Blob 转换为 ArrayBuffer
-      const arrayBuffer = await audioBlob.arrayBuffer();
-      const audioData = new Uint8Array(arrayBuffer);
+      // 等待一小段时间确保 offscreen document 完全加载
+      await new Promise(resolve => setTimeout(resolve, 100));
 
-      // 发送到 Offscreen Document 播放
-      const playResponse = await chrome.runtime.sendMessage({
-        action: 'playAudioFromBlob',
-        audioData: Array.from(audioData),
-        mimeType: 'audio/wav'
-      });
+      // 发送 URL 到 Offscreen Document 播放 (带重试)
+      let playResponse = null;
+      let retries = 3;
+
+      while (retries > 0) {
+        try {
+          playResponse = await chrome.runtime.sendMessage({
+            action: 'playAudioFromUrl',
+            url: result.url
+          });
+          break; // 成功则跳出
+        } catch (err) {
+          retries--;
+          if (retries === 0) throw err;
+
+          console.warn(`⚠️ Offscreen 消息失败,重试... (剩余 ${retries} 次)`);
+          // 重新创建 offscreen document
+          this.offscreenReady = false;
+          await this.ensureOffscreenDocument();
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+      }
 
       if (playResponse && playResponse.success) {
         this.isPlaying = true;
-        console.log('🎵 音频已发送到 Offscreen Document (本地服务器)');
+        console.log('✅ 音频已发送到 Offscreen Document (本地 TTS)');
+        if (onEnd) {
+          // 监听播放结束
+          chrome.runtime.onMessage.addListener(function listener(message) {
+            if (message.action === 'audioEnded') {
+              chrome.runtime.onMessage.removeListener(listener);
+              onEnd();
+            }
+          });
+        }
       } else {
         throw new Error(playResponse?.error || 'Failed to play audio');
       }
