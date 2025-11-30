@@ -3,6 +3,9 @@
  * 管理 SQLite 数据库的下载、存储和查询
  */
 
+// 静态导入 SQLite WASM (Service Worker 不支持动态 import)
+import sqlite3InitModule from '@sqlite.org/sqlite-wasm';
+
 // GitHub Release URL for WordNet database
 const WORDNET_DB_URL = 'https://github.com/jhfnetboy/MyDictionary/releases/download/v0.2.0-beta/wordnet-synonyms.db';
 const DB_NAME = 'wordnet-synonyms.db';
@@ -20,16 +23,15 @@ class DatabaseManager {
   }
 
   /**
-   * 初始化 SQLite WASM (Service Worker 兼容模式)
+   * 初始化 SQLite WASM (Service Worker 兼容模式 - 静态导入)
    */
   async initSQLite() {
     if (this.sqlite3) return this.sqlite3;
 
-    console.log('📦 Loading SQLite WASM for Service Worker...');
+    console.log('📦 Initializing SQLite WASM for Service Worker...');
 
     try {
-      // 在 Service Worker 中，我们需要手动加载 WASM
-      // 模拟 window/self 环境
+      // 在 Service Worker 中，模拟 window 环境
       const globalScope = typeof self !== 'undefined' ? self : globalThis;
 
       // 临时提供 window 别名
@@ -37,10 +39,8 @@ class DatabaseManager {
         globalScope.window = globalScope;
       }
 
-      // 动态导入 SQLite WASM
-      const sqlite3InitModule = await import('@sqlite.org/sqlite-wasm');
-
-      this.sqlite3 = await sqlite3InitModule.default({
+      // 使用静态导入的 sqlite3InitModule
+      this.sqlite3 = await sqlite3InitModule({
         print: console.log,
         printErr: console.error,
         // 配置 WASM 路径（Chrome Extension 环境）
@@ -51,12 +51,12 @@ class DatabaseManager {
         }
       });
 
-      console.log('✅ SQLite WASM loaded successfully');
+      console.log('✅ SQLite WASM initialized successfully');
       console.log('📊 SQLite version:', this.sqlite3.version.libVersion);
 
       return this.sqlite3;
     } catch (error) {
-      console.error('❌ Failed to load SQLite WASM:', error);
+      console.error('❌ Failed to initialize SQLite WASM:', error);
       console.error('Error details:', error.stack);
       throw new Error('SQLite initialization failed: ' + error.message);
     }
