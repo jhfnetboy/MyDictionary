@@ -117,24 +117,16 @@ async function handlePageLoad() {
       const infoDiv = document.querySelector('.info');
       infoDiv.innerHTML = currentLang === 'zh'
         ? `
-          <p style="color: #ffeb3b; font-size: 14px; margin-bottom: 12px;">
-            ⚠️ <strong>无法在此页面使用</strong>
+          <p style="background: #fff3cd; color: #856404; padding: 12px; border-radius: 4px; border-left: 4px solid #ffc107; margin: 0; font-size: 13px; line-height: 1.5;">
+            ⚠️ <strong>浏览器内部页面无法使用</strong><br>
+            请访问普通网页 (如 wikipedia.org)
           </p>
-          <p>MyDictionary 无法在浏览器内部页面运行。</p>
-          <p style="margin-top: 12px;"><strong>请访问普通网页：</strong></p>
-          <p>• https://wikipedia.org</p>
-          <p>• https://google.com</p>
-          <p>• 任何 https:// 网站</p>
         `
         : `
-          <p style="color: #ffeb3b; font-size: 14px; margin-bottom: 12px;">
-            ⚠️ <strong>Cannot Use on This Page</strong>
+          <p style="background: #fff3cd; color: #856404; padding: 12px; border-radius: 4px; border-left: 4px solid #ffc107; margin: 0; font-size: 13px; line-height: 1.5;">
+            ⚠️ <strong>Cannot Use on Browser Pages</strong><br>
+            Visit a regular webpage (e.g., wikipedia.org)
           </p>
-          <p>MyDictionary cannot run on browser internal pages.</p>
-          <p style="margin-top: 12px;"><strong>Please visit a regular webpage:</strong></p>
-          <p>• https://wikipedia.org</p>
-          <p>• https://google.com</p>
-          <p>• Any https:// website</p>
         `;
     }
     return;
