@@ -137,7 +137,8 @@ class UIManager {
     `;
 
     const buildTime = new Date().toISOString();
-    const version = '0.1.4';
+    // 从 manifest.json 动态读取版本号,确保始终同步
+    const version = chrome.runtime.getManifest().version;
 
     // 使用默认文本（如果 i18n 未加载）
     const getText = (key, fallback) => {
@@ -145,10 +146,13 @@ class UIManager {
       return text === key ? fallback : text;
     };
 
+    // Logo URL with cache busting (使用版本号作为查询参数)
+    const logoUrl = chrome.runtime.getURL(`assets/logo-64.png?v=${version}`);
+
     this.sidebar.innerHTML = `
       <div class="mydictionary-header">
         <div class="mydictionary-header-left">
-          <img src="${chrome.runtime.getURL('assets/logo-64.png')}" alt="MyDictionary" class="mydictionary-logo" />
+          <img src="${logoUrl}" alt="MyDictionary" class="mydictionary-logo" />
           <span class="mydictionary-title">${getText('sidebar.title', 'MyDictionary')}</span>
         </div>
         <div class="mydictionary-header-right">
