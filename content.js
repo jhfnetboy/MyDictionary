@@ -137,7 +137,7 @@ class UIManager {
     `;
 
     const buildTime = new Date().toISOString();
-    const version = '0.1.0';
+    const version = '0.1.4';
 
     // 使用默认文本（如果 i18n 未加载）
     const getText = (key, fallback) => {
