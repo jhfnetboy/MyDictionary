@@ -114,12 +114,13 @@ Models are downloaded automatically when you use the corresponding features:
 
 ### 📖 Documentation
 
-- [Product Design](./DESIGN.md)
-- [Technical Architecture](./CLAUDE.md)
-- [UI Wireframes](./UI_WIREFRAME.md)
-- [Model Strategy](./HYBRID_MODEL_STRATEGY.md)
-- [Academic Writing Models](./ACADEMIC_WRITING_MODELS.md)
-- [Product Summary](./PRODUCT_SUMMARY.md)
+- [Product Design](./docs/DESIGN.md)
+- [Technical Architecture](./docs/CLAUDE.md)
+- [UI Wireframes](./docs/UI_WIREFRAME.md)
+- [Model Strategy](./docs/HYBRID_MODEL_STRATEGY.md)
+- [Academic Writing Models](./docs/ACADEMIC_WRITING_MODELS.md)
+- [Academic Version Plan](./docs/ACADEMIC_VERSION_PLAN.md)
+- [Product Summary](./docs/PRODUCT_SUMMARY.md)
 
 ### 🎨 Logo Design
 
@@ -297,12 +298,13 @@ pnpm install
 
 ### 📖 文档
 
-- [产品设计文档](./DESIGN.md)
-- [技术架构指南](./CLAUDE.md)
-- [UI 设计稿](./UI_WIREFRAME.md)
-- [模型策略](./HYBRID_MODEL_STRATEGY.md)
-- [学术写作模型](./ACADEMIC_WRITING_MODELS.md)
-- [产品总结](./PRODUCT_SUMMARY.md)
+- [产品设计文档](./docs/DESIGN.md)
+- [技术架构指南](./docs/CLAUDE.md)
+- [UI 设计稿](./docs/UI_WIREFRAME.md)
+- [模型策略](./docs/HYBRID_MODEL_STRATEGY.md)
+- [学术写作模型](./docs/ACADEMIC_WRITING_MODELS.md)
+- [学术版本开发计划](./docs/ACADEMIC_VERSION_PLAN.md)
+- [产品总结](./docs/PRODUCT_SUMMARY.md)
 
 ### 🎨 Logo 设计
 
