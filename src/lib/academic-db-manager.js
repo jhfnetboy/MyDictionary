@@ -161,9 +161,9 @@ export class AcademicDBManager {
         }
       }
 
-      // 批量添加到 IndexedDB
+      // 批量添加到 IndexedDB (使用 put 以支持覆盖重复 ID)
       for (const phrase of allPhrases) {
-        const request = objectStore.add(phrase);
+        const request = objectStore.put(phrase);
         request.onsuccess = () => {
           importedCount++;
         };
