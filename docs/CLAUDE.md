@@ -102,7 +102,7 @@ my-dictionary-plugin/
 │   ├── TTS-simplification-summary.md    // TTS 简化总结
 │   ├── TTS-auto-discovery-architecture.md // TTS 自动发现架构
 │   └── rust-service-architecture.md     // Rust 服务模块架构
-├── model-runner/                        // Rust TTS 服务器 (本地高质量 TTS)
+├── tts-server/                        // Rust TTS 服务器 (本地高质量 TTS)
 │   ├── Cargo.toml                       // Rust 依赖配置
 │   ├── .gitignore                       // 排除 /target/ 构建产物
 │   └── src/
