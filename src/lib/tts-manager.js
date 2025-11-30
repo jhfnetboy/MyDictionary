@@ -10,13 +10,46 @@ export class TTSManager {
     this.tts = null;
     this.isLoading = false;
     this.isReady = false;
-    this.currentAudio = null;  // 当前播放的音频
-    this.audioContext = null;  // Web Audio API context
-    this.currentSource = null; // 当前音频源
     this.isPlaying = false;    // 是否正在播放
+    this.offscreenReady = false; // Offscreen Document 是否就绪
 
     // 默认 speaker embeddings (可以从预设中选择)
     this.DEFAULT_SPEAKER = null;
+  }
+
+  /**
+   * 创建 Offscreen Document (用于播放音频)
+   */
+  async ensureOffscreenDocument() {
+    if (this.offscreenReady) return;
+
+    try {
+      // 检查是否已存在 offscreen document
+      const existingContexts = await chrome.runtime.getContexts({
+        contextTypes: ['OFFSCREEN_DOCUMENT'],
+        documentUrls: [chrome.runtime.getURL('src/offscreen/audio-player.html')]
+      });
+
+      if (existingContexts.length > 0) {
+        console.log('✅ Offscreen document 已存在');
+        this.offscreenReady = true;
+        return;
+      }
+
+      // 创建 offscreen document
+      await chrome.offscreen.createDocument({
+        url: 'src/offscreen/audio-player.html',
+        reasons: ['AUDIO_PLAYBACK'],
+        justification: 'Play TTS audio in Service Worker environment'
+      });
+
+      this.offscreenReady = true;
+      console.log('✅ Offscreen document 创建成功');
+
+    } catch (error) {
+      console.error('❌ 创建 Offscreen document 失败:', error);
+      throw error;
+    }
   }
 
   /**
@@ -149,36 +182,32 @@ export class TTSManager {
         this.stop();
       }
 
+      // 确保 Offscreen Document 已创建
+      await this.ensureOffscreenDocument();
+
       // 生成音频
       const audioData = await this.synthesize(text);
 
-      // 创建 Audio Context
-      if (!this.audioContext) {
-        this.audioContext = new AudioContext();
+      // 将 Float32Array 转换为可传输的格式
+      const audioArray = Array.from(audioData.audio); // Float32Array -> Array
+      const sampleRate = audioData.sampling_rate;
+
+      // 发送到 Offscreen Document 播放
+      const response = await chrome.runtime.sendMessage({
+        action: 'playAudio',
+        audioArray: audioArray,
+        sampleRate: sampleRate
+      });
+
+      if (response && response.success) {
+        this.isPlaying = true;
+        console.log('🎵 音频已发送到 Offscreen Document');
+
+        // 注意: onEnd 会在 Offscreen Document 的 onended 回调中触发
+        // 通过 TTS_PLAYBACK_ENDED 消息通知
+      } else {
+        throw new Error(response?.error || 'Failed to play audio');
       }
-
-      // 解码音频数据
-      const audioBuffer = await this.decodeAudioData(audioData);
-
-      // 创建音频源
-      const source = this.audioContext.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(this.audioContext.destination);
-
-      // 设置播放结束回调
-      source.onended = () => {
-        this.isPlaying = false;
-        this.currentSource = null;
-        console.log('🎵 播放结束');
-        if (onEnd) onEnd();
-      };
-
-      // 开始播放
-      source.start(0);
-      this.currentSource = source;
-      this.isPlaying = true;
-
-      console.log('🎵 开始播放');
 
     } catch (error) {
       console.error('❌ 播放失败:', error);
@@ -192,17 +221,15 @@ export class TTSManager {
    * 停止播放
    */
   stop() {
-    if (this.currentSource) {
-      try {
-        this.currentSource.stop();
-        this.currentSource.disconnect();
-      } catch (e) {
-        // 已经停止或断开连接，忽略错误
-      }
-      this.currentSource = null;
+    if (this.isPlaying) {
+      // 发送停止消息到 Offscreen Document
+      chrome.runtime.sendMessage({
+        action: 'stopAudio'
+      }).catch(() => {});
+
+      this.isPlaying = false;
+      console.log('🛑 播放已停止');
     }
-    this.isPlaying = false;
-    console.log('🛑 播放已停止');
   }
 
   /**
@@ -210,30 +237,6 @@ export class TTSManager {
    */
   pause() {
     this.stop();
-  }
-
-  /**
-   * 解码音频数据
-   * @param {Object} audioData - Transformers.js 输出的音频数据
-   * @returns {Promise<AudioBuffer>} AudioBuffer
-   */
-  async decodeAudioData(audioData) {
-    // SpeechT5 输出格式: { audio: Float32Array, sampling_rate: 16000 }
-    const sampleRate = audioData.sampling_rate;
-    const audioArray = audioData.audio;
-
-    // 创建 AudioBuffer
-    const audioBuffer = this.audioContext.createBuffer(
-      1,  // 单声道
-      audioArray.length,
-      sampleRate
-    );
-
-    // 填充数据
-    const channelData = audioBuffer.getChannelData(0);
-    channelData.set(audioArray);
-
-    return audioBuffer;
   }
 
   /**

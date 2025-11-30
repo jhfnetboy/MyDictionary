@@ -42,7 +42,8 @@
     "contextMenus",
     "scripting",
     "notifications",
-    "system.memory"
+    "system.memory",
+    "offscreen"
   ],
 
   "commands": {
@@ -63,6 +64,8 @@
         "src/ui/*.js",
         "src/config/*.json",
         "src/lib/*.js",
+        "src/offscreen/*.html",
+        "src/offscreen/*.js",
         "assets/*.png",
         "assets/icons/*.png",
         "transformers/*.wasm",
