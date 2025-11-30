@@ -41,7 +41,8 @@
     "activeTab",
     "contextMenus",
     "scripting",
-    "notifications"
+    "notifications",
+    "system.memory"
   ],
 
   "commands": {
