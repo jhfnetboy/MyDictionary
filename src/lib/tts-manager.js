@@ -17,7 +17,7 @@ export class TTSManager {
     this.DEFAULT_SPEAKER = null;
 
     // 本地服务器配置
-    this.localServerUrl = 'http://localhost:3030'; // Rust 服务器端口
+    this.localServerUrl = 'http://localhost:9527'; // Rust TTS 服务器端口
     this.localServerAvailable = false;
     this.lastServerCheck = 0;
     this.serverCheckInterval = 30000; // 30秒检查一次
