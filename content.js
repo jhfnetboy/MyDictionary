@@ -871,26 +871,25 @@ UIManager.prototype.handleGetSynonyms = async function() {
               // 数据库未下载，显示下载提示
               output.innerHTML = `
                 <div class="mydictionary-synonyms-result">
-                  <h3>📚 Synonyms for "<span class="highlight">${targetWord}</span>"</h3>
-                  <p class="mydictionary-no-results">⚠️ Word not found in basic database (50 words)</p>
+                  <h3>📚 WordNet Database Required</h3>
 
                   <div class="mydictionary-db-prompt">
-                    <h4>📖 Download Complete WordNet Database</h4>
-                    <p>Access <strong>126,000+ academic words</strong> with full synonym coverage:</p>
+                    <h4>📖 Download Complete Academic Dictionary</h4>
+                    <p>To use the synonym feature, please download the WordNet database:</p>
                     <ul style="margin: 12px 0; padding-left: 20px; text-align: left;">
-                      <li>126,125 words</li>
-                      <li>406,196 synonym relationships</li>
-                      <li>Size: 30.62 MB (one-time download)</li>
-                      <li>Offline after download</li>
+                      <li><strong>126,125 words</strong> (complete academic vocabulary)</li>
+                      <li><strong>406,196 synonym relationships</strong></li>
+                      <li><strong>Size: 30.62 MB</strong> (one-time download)</li>
+                      <li><strong>Offline access</strong> after download</li>
                     </ul>
                     <button id="download-wordnet-btn" class="mydictionary-btn-primary" style="margin-top: 12px; padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
-                      📥 Download WordNet Database
+                      📥 Download Now (30.62 MB)
                     </button>
                   </div>
 
                   <div class="mydictionary-meta">
                     <span>⏱️ ${latency}ms</span>
-                    <span>📖 Basic Database (50 words)</span>
+                    <span>📖 Database: Not Downloaded</span>
                   </div>
                 </div>
               `;
