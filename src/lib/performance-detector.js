@@ -346,39 +346,42 @@ export class PerformanceDetector {
     const recommendations = {
       high: {
         canUseSemanticSearch: true,
-        suggestedModel: 'BGE-Base (Academic Semantic Search)',
-        message: '🎉 你的设备性能优秀!可以启用智能语义搜索功能,获得更精准的学术短语推荐。',
-        features: [
-          '✅ 支持 BGE-Base 模型 (768维)',
-          '✅ 专为学术文本优化',
-          '✅ 语义相似度搜索',
-          '✅ 上下文感知推荐'
+        suggestedModel: 'BGE-Base',
+        suggestedModelFullName: 'BGE-Base (Academic Semantic Search)',
+        messageKey: 'performance.high.message',
+        featureKeys: [
+          'performance.high.feature1',
+          'performance.high.feature2',
+          'performance.high.feature3',
+          'performance.high.feature4'
         ],
         downloadModelPrompt: true
       },
 
       medium: {
         canUseSemanticSearch: true,
-        suggestedModel: 'BGE-Small (Lightweight Semantic)',
-        message: '👍 你的设备性能良好!建议使用轻量级语义搜索 (BGE-Small),在性能和智能之间取得平衡。',
-        features: [
-          '✅ BGE-Small 模型 (384维)',
-          '✅ 适合学术文本',
-          '✅ 基础语义搜索',
-          '⏱️ 响应速度快'
+        suggestedModel: 'BGE-Small',
+        suggestedModelFullName: 'BGE-Small (Lightweight Semantic)',
+        messageKey: 'performance.medium.message',
+        featureKeys: [
+          'performance.medium.feature1',
+          'performance.medium.feature2',
+          'performance.medium.feature3',
+          'performance.medium.feature4'
         ],
         downloadModelPrompt: true
       },
 
       low: {
         canUseSemanticSearch: false,
-        suggestedModel: 'IndexedDB (Keyword Search)',
-        message: '💡 你的设备性能有限,建议使用快速关键词搜索 (IndexedDB),获得即时响应。',
-        features: [
-          '❌ 不建议使用语义搜索',
-          '✅ IndexedDB 关键词匹配',
-          '✅ 极速响应 (<10ms)',
-          '💾 低内存占用'
+        suggestedModel: 'IndexedDB',
+        suggestedModelFullName: 'IndexedDB (Keyword Search)',
+        messageKey: 'performance.low.message',
+        featureKeys: [
+          'performance.low.feature1',
+          'performance.low.feature2',
+          'performance.low.feature3',
+          'performance.low.feature4'
         ],
         downloadModelPrompt: false
       }

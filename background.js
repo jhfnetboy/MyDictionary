@@ -400,6 +400,10 @@ async function handleMessage(request, sender, sendResponse) {
       await handleDownloadModel(request, sendResponse);
       break;
 
+    case 'checkModelDownloaded':
+      await handleCheckModelDownloaded(request, sendResponse);
+      break;
+
     default:
       sendResponse({
         success: false,
@@ -719,6 +723,15 @@ async function handleDownloadModel(request, sendResponse) {
       self.semanticModel = model;
     }
 
+    // 记录已下载的模型到 storage
+    const result = await chrome.storage.local.get(['downloadedModels']);
+    const downloadedModels = result.downloadedModels || [];
+    if (!downloadedModels.includes(modelId)) {
+      downloadedModels.push(modelId);
+      await chrome.storage.local.set({ downloadedModels });
+      console.log(`💾 已记录模型下载: ${modelId}`);
+    }
+
     sendResponse({
       success: true,
       data: {
@@ -733,6 +746,45 @@ async function handleDownloadModel(request, sendResponse) {
     sendResponse({
       success: false,
       error: error.message || 'Failed to download model'
+    });
+  }
+}
+
+/**
+ * 检查模型是否已下载
+ */
+async function handleCheckModelDownloaded(request, sendResponse) {
+  const { modelId } = request;
+
+  try {
+    // 检查全局状态中是否已加载模型
+    let isDownloaded = false;
+
+    if (modelId === 'bge-small' || modelId === 'bge-base') {
+      isDownloaded = !!self.academicModel;
+    } else if (modelId === 'minilm-l6' || modelId === 'minilm') {
+      isDownloaded = !!self.semanticModel;
+    }
+
+    // 如果内存中没有，检查 localStorage 中的下载记录
+    if (!isDownloaded) {
+      const result = await chrome.storage.local.get(['downloadedModels']);
+      const downloadedModels = result.downloadedModels || [];
+      isDownloaded = downloadedModels.includes(modelId);
+    }
+
+    console.log(`📊 模型下载状态检查: ${modelId} -> ${isDownloaded ? '已下载' : '未下载'}`);
+
+    sendResponse({
+      success: true,
+      isDownloaded: isDownloaded
+    });
+
+  } catch (error) {
+    console.error('❌ 检查模型状态失败:', error);
+    sendResponse({
+      success: false,
+      error: error.message
     });
   }
 }
