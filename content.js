@@ -1262,6 +1262,9 @@ UIManager.prototype.displayAcademicPhrases = function(phrases, isSemanticSearch 
           <button class="mydictionary-phrase-copy-btn" data-phrase="${phrase.phrase}">
             📋 ${this.t('sidebar.copyPhrase', 'Copy')}
           </button>
+          <button class="mydictionary-tts-btn" data-phrase="${phrase.phrase}" title="Read aloud">
+            🔊
+          </button>
           ${phrase.examples && phrase.examples.length > 0 ? `
             <button class="mydictionary-phrase-example-btn" data-phrase-id="${phrase.id}">
               💡 ${this.t('sidebar.viewExamples', 'Examples')}
@@ -1305,6 +1308,16 @@ UIManager.prototype.displayAcademicPhrases = function(phrases, isSemanticSearch 
         examplesDiv.style.display = isHidden ? 'block' : 'none';
         btn.textContent = isHidden ? '▲ Hide' : `💡 ${this.t('sidebar.viewExamples', 'Examples')}`;
       }
+    });
+  });
+
+  // 绑定 TTS 按钮事件
+  const ttsBtns = phrasesContainer.querySelectorAll('.mydictionary-tts-btn');
+  ttsBtns.forEach((btn, index) => {
+    const phrase = btn.dataset.phrase;
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await ttsButtonHelper.handleClick(btn, phrase);
     });
   });
 };
@@ -2030,5 +2043,167 @@ UIManager.prototype.handleModelDownload = async function(modelName) {
     }
   }
 };
+
+/**
+ * TTS 按钮辅助类
+ */
+class TTSButtonHelper {
+  constructor() {
+    this.activeButtons = new Map(); // 跟踪活跃的 TTS 按钮
+  }
+
+  /**
+   * 创建 TTS 按钮
+   * @param {string} text - 要朗读的文本
+   * @param {string} buttonId - 按钮唯一 ID (可选)
+   * @returns {HTMLElement} TTS 按钮元素
+   */
+  createButton(text, buttonId = null) {
+    const btn = document.createElement('button');
+    btn.className = 'mydictionary-tts-btn';
+    btn.innerHTML = '🔊';
+    btn.title = 'Read aloud';
+    btn.setAttribute('data-text', text);
+
+    if (buttonId) {
+      btn.setAttribute('data-btn-id', buttonId);
+    }
+
+    // 添加点击事件
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await this.handleClick(btn, text);
+    });
+
+    return btn;
+  }
+
+  /**
+   * 处理按钮点击
+   */
+  async handleClick(btn, text) {
+    try {
+      // 如果正在播放，停止
+      if (btn.classList.contains('playing')) {
+        this.stopTTS(btn);
+        return;
+      }
+
+      // 停止其他正在播放的按钮
+      this.stopAllOtherButtons(btn);
+
+      // 设置加载状态
+      btn.innerHTML = '⏳';
+      btn.disabled = true;
+      btn.classList.add('loading');
+
+      // 发送 TTS 请求到 background
+      const response = await chrome.runtime.sendMessage({
+        action: 'speakText',
+        text: text
+      });
+
+      if (response.success) {
+        // 设置播放状态
+        btn.innerHTML = '⏸️';
+        btn.disabled = false;
+        btn.classList.remove('loading');
+        btn.classList.add('playing');
+        btn.title = 'Stop';
+
+        // 添加到活跃按钮列表
+        const btnId = btn.getAttribute('data-btn-id') || `btn-${Date.now()}`;
+        this.activeButtons.set(btnId, btn);
+
+      } else {
+        throw new Error(response.error || 'TTS 请求失败');
+      }
+
+    } catch (error) {
+      console.error('❌ TTS 按钮错误:', error);
+
+      // 显示错误状态
+      btn.innerHTML = '❌';
+      btn.classList.remove('loading', 'playing');
+      btn.classList.add('error');
+
+      // 2秒后恢复
+      setTimeout(() => {
+        btn.innerHTML = '🔊';
+        btn.disabled = false;
+        btn.classList.remove('error');
+        btn.title = 'Read aloud';
+      }, 2000);
+    }
+  }
+
+  /**
+   * 停止 TTS
+   */
+  stopTTS(btn) {
+    chrome.runtime.sendMessage({
+      action: 'stopTTS'
+    }).then(() => {
+      this.resetButton(btn);
+    }).catch(error => {
+      console.error('❌ 停止 TTS 失败:', error);
+      this.resetButton(btn);
+    });
+  }
+
+  /**
+   * 停止所有其他按钮
+   */
+  stopAllOtherButtons(currentBtn) {
+    for (const [btnId, btn] of this.activeButtons.entries()) {
+      if (btn !== currentBtn) {
+        this.resetButton(btn);
+      }
+    }
+    this.activeButtons.clear();
+  }
+
+  /**
+   * 重置按钮状态
+   */
+  resetButton(btn) {
+    btn.innerHTML = '🔊';
+    btn.disabled = false;
+    btn.classList.remove('loading', 'playing', 'error');
+    btn.title = 'Read aloud';
+  }
+
+  /**
+   * 监听来自 background 的播放结束事件
+   */
+  listenToBackgroundEvents() {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (message.type === 'TTS_PLAYBACK_ENDED') {
+        // 重置所有播放中的按钮
+        for (const [btnId, btn] of this.activeButtons.entries()) {
+          this.resetButton(btn);
+        }
+        this.activeButtons.clear();
+      } else if (message.type === 'TTS_PLAYBACK_ERROR') {
+        // 显示错误
+        console.error('❌ TTS 播放错误:', message.error);
+        for (const [btnId, btn] of this.activeButtons.entries()) {
+          btn.innerHTML = '❌';
+          btn.classList.remove('loading', 'playing');
+          btn.classList.add('error');
+
+          setTimeout(() => {
+            this.resetButton(btn);
+          }, 2000);
+        }
+        this.activeButtons.clear();
+      }
+    });
+  }
+}
+
+// 创建全局 TTS 按钮辅助实例
+const ttsButtonHelper = new TTSButtonHelper();
+ttsButtonHelper.listenToBackgroundEvents();
 
 console.log('✅ MyDictionary Content Script 初始化完成');
