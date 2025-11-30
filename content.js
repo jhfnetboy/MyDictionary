@@ -21,6 +21,8 @@ class UIManager {
     this.currentLang = 'en'; // 默认英文
     this.isTranslating = false; // 防止重复翻译
     this.lastTranslation = null; // 保存最后一次翻译的详细信息
+    this.currentMode = 'translation'; // 当前模式: translation | academic
+    this.phrasebankInitialized = false; // 学术短语库是否已初始化
     this.loadLanguage();
   }
 
@@ -157,6 +159,15 @@ class UIManager {
         </div>
       </div>
 
+      <div class="mydictionary-mode-tabs">
+        <button class="mydictionary-mode-tab active" id="mydictionary-mode-translation" data-mode="translation">
+          🌐 ${getText('sidebar.modeTranslation', 'Translation')}
+        </button>
+        <button class="mydictionary-mode-tab" id="mydictionary-mode-academic" data-mode="academic">
+          🎓 ${getText('sidebar.modeAcademic', 'Academic Writing')}
+        </button>
+      </div>
+
       <div class="mydictionary-content">
         <div class="mydictionary-input-section">
           <label>${getText('sidebar.sourceLanguage', 'Source Language')}</label>
@@ -211,6 +222,33 @@ class UIManager {
         </div>
 
         <div id="mydictionary-status" class="mydictionary-status"></div>
+
+        <div id="mydictionary-academic-panel" class="mydictionary-academic-panel" style="display: none;">
+          <div class="mydictionary-academic-search">
+            <input
+              type="text"
+              id="mydictionary-academic-search-input"
+              placeholder="${getText('sidebar.searchPhrases', 'Search phrases...')}"
+            />
+          </div>
+
+          <div class="mydictionary-section-selector">
+            <label>${getText('sidebar.selectPaperSection', 'Select Paper Section')}:</label>
+            <select id="mydictionary-section-select">
+              <option value="introduction">${getText('sidebar.introduction', 'Introduction')}</option>
+              <option value="methods">${getText('sidebar.methods', 'Methods')}</option>
+              <option value="results">${getText('sidebar.results', 'Results')}</option>
+              <option value="discussion">${getText('sidebar.discussion', 'Discussion')}</option>
+              <option value="conclusion">${getText('sidebar.conclusion', 'Conclusion')}</option>
+            </select>
+          </div>
+
+          <div id="mydictionary-academic-phrases" class="mydictionary-academic-phrases">
+            <div class="mydictionary-placeholder">
+              ${getText('sidebar.selectPaperSection', 'Select a paper section to view phrases')}...
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="mydictionary-footer">
@@ -284,6 +322,24 @@ class UIManager {
     const examplesBtn = this.sidebar.querySelector('#mydictionary-examples-btn');
     if (examplesBtn) {
       examplesBtn.addEventListener('click', () => this.handleGetExamples());
+    }
+
+    // 模式切换标签页
+    const modeTabs = this.sidebar.querySelectorAll('.mydictionary-mode-tab');
+    modeTabs.forEach(tab => {
+      tab.addEventListener('click', () => this.switchMode(tab.dataset.mode));
+    });
+
+    // 学术模式 - 论文部分选择
+    const sectionSelect = this.sidebar.querySelector('#mydictionary-section-select');
+    if (sectionSelect) {
+      sectionSelect.addEventListener('change', () => this.handleSectionChange());
+    }
+
+    // 学术模式 - 短语搜索
+    const academicSearchInput = this.sidebar.querySelector('#mydictionary-academic-search-input');
+    if (academicSearchInput) {
+      academicSearchInput.addEventListener('input', () => this.handleAcademicSearch());
     }
 
     // 标记已绑定
@@ -990,6 +1046,271 @@ UIManager.prototype.handleGetSynonyms = async function() {
       </div>
     `;
   }
+};
+
+/**
+ * 切换模式 (翻译 ↔ 学术写作)
+ */
+UIManager.prototype.switchMode = function(mode) {
+  console.log('🔄 切换模式:', mode);
+  this.currentMode = mode;
+
+  // 更新标签页激活状态
+  const tabs = this.sidebar.querySelectorAll('.mydictionary-mode-tab');
+  tabs.forEach(tab => {
+    if (tab.dataset.mode === mode) {
+      tab.classList.add('active');
+    } else {
+      tab.classList.remove('active');
+    }
+  });
+
+  // 显示/隐藏对应的内容区域
+  const translationSection = this.sidebar.querySelector('.mydictionary-input-section');
+  const outputSection = this.sidebar.querySelector('.mydictionary-output-section');
+  const academicPanel = this.sidebar.querySelector('#mydictionary-academic-panel');
+
+  if (mode === 'translation') {
+    // 显示翻译模式
+    translationSection.style.display = 'block';
+    outputSection.style.display = 'block';
+    academicPanel.style.display = 'none';
+  } else if (mode === 'academic') {
+    // 显示学术模式
+    translationSection.style.display = 'none';
+    outputSection.style.display = 'none';
+    academicPanel.style.display = 'block';
+
+    // 初始化学术短语库（如果还没有初始化）
+    if (!this.phrasebankInitialized) {
+      this.initializeAcademicPhrasebank();
+    } else {
+      // 加载默认部分的短语
+      this.handleSectionChange();
+    }
+  }
+};
+
+/**
+ * 初始化学术短语库
+ */
+UIManager.prototype.initializeAcademicPhrasebank = async function() {
+  console.log('📚 初始化学术短语库...');
+
+  try {
+    // 向 background script 发送初始化请求
+    const response = await chrome.runtime.sendMessage({
+      action: 'initializePhrasebank'
+    });
+
+    if (response.success) {
+      this.phrasebankInitialized = true;
+      console.log('✅ 学术短语库初始化成功');
+
+      // 加载默认部分的短语
+      this.handleSectionChange();
+    } else {
+      throw new Error(response.error || 'Failed to initialize phrasebank');
+    }
+  } catch (error) {
+    console.error('❌ 学术短语库初始化失败:', error);
+    this.showAcademicError('Failed to load academic phrasebank');
+  }
+};
+
+/**
+ * 处理论文部分切换
+ */
+UIManager.prototype.handleSectionChange = async function() {
+  const sectionSelect = this.sidebar.querySelector('#mydictionary-section-select');
+  const section = sectionSelect.value;
+
+  console.log('📑 切换论文部分:', section);
+
+  await this.loadPhrasesBySection(section);
+};
+
+/**
+ * 加载指定部分的短语
+ */
+UIManager.prototype.loadPhrasesBySection = async function(section) {
+  const phrasesContainer = this.sidebar.querySelector('#mydictionary-academic-phrases');
+
+  // 显示加载状态
+  phrasesContainer.innerHTML = `
+    <div class="mydictionary-loading-container">
+      <div class="mydictionary-spinner"></div>
+      <p>Loading phrases...</p>
+    </div>
+  `;
+
+  try {
+    const response = await chrome.runtime.sendMessage({
+      action: 'getPhrasesBySection',
+      section: section
+    });
+
+    if (response.success) {
+      const phrases = response.data;
+      this.displayAcademicPhrases(phrases);
+    } else {
+      throw new Error(response.error || 'Failed to load phrases');
+    }
+  } catch (error) {
+    console.error('❌ 加载短语失败:', error);
+    this.showAcademicError(error.message);
+  }
+};
+
+/**
+ * 显示学术短语列表
+ */
+UIManager.prototype.displayAcademicPhrases = function(phrases) {
+  const phrasesContainer = this.sidebar.querySelector('#mydictionary-academic-phrases');
+
+  if (!phrases || phrases.length === 0) {
+    phrasesContainer.innerHTML = `
+      <div class="mydictionary-placeholder">
+        ${this.t('sidebar.noPhrasesFound', 'No phrases found')}
+      </div>
+    `;
+    return;
+  }
+
+  // 按学术度评分排序
+  const sortedPhrases = phrases.sort((a, b) => b.academicScore - a.academicScore);
+
+  // 生成短语卡片
+  const phrasesHTML = sortedPhrases.map(phrase => {
+    const stars = '⭐'.repeat(Math.round(phrase.academicScore / 20));
+
+    return `
+      <div class="mydictionary-phrase-card" data-phrase-id="${phrase.id}">
+        <div class="mydictionary-phrase-header">
+          <span class="mydictionary-phrase-score">${stars} ${phrase.academicScore}</span>
+          <span class="mydictionary-phrase-frequency">${phrase.frequency}</span>
+        </div>
+        <div class="mydictionary-phrase-content">
+          "${phrase.phrase}"
+        </div>
+        <div class="mydictionary-phrase-usage">
+          ${phrase.usage}
+        </div>
+        <div class="mydictionary-phrase-actions">
+          <button class="mydictionary-phrase-copy-btn" data-phrase="${phrase.phrase}">
+            📋 ${this.t('sidebar.copyPhrase', 'Copy')}
+          </button>
+          ${phrase.examples && phrase.examples.length > 0 ? `
+            <button class="mydictionary-phrase-example-btn" data-phrase-id="${phrase.id}">
+              💡 ${this.t('sidebar.viewExamples', 'Examples')}
+            </button>
+          ` : ''}
+        </div>
+        ${phrase.examples && phrase.examples.length > 0 ? `
+          <div class="mydictionary-phrase-examples" id="examples-${phrase.id}" style="display: none;">
+            ${phrase.examples.map(ex => `
+              <div class="mydictionary-phrase-example">${ex}</div>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+
+  phrasesContainer.innerHTML = phrasesHTML;
+
+  // 绑定复制按钮事件
+  const copyBtns = phrasesContainer.querySelectorAll('.mydictionary-phrase-copy-btn');
+  copyBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const phrase = e.target.dataset.phrase;
+      this.copyToClipboard(phrase);
+      btn.textContent = '✅ Copied!';
+      setTimeout(() => {
+        btn.textContent = `📋 ${this.t('sidebar.copyPhrase', 'Copy')}`;
+      }, 2000);
+    });
+  });
+
+  // 绑定例句展开按钮事件
+  const exampleBtns = phrasesContainer.querySelectorAll('.mydictionary-phrase-example-btn');
+  exampleBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const phraseId = e.target.dataset.phraseId;
+      const examplesDiv = phrasesContainer.querySelector(`#examples-${phraseId}`);
+      if (examplesDiv) {
+        const isHidden = examplesDiv.style.display === 'none';
+        examplesDiv.style.display = isHidden ? 'block' : 'none';
+        btn.textContent = isHidden ? '▲ Hide' : `💡 ${this.t('sidebar.viewExamples', 'Examples')}`;
+      }
+    });
+  });
+};
+
+/**
+ * 处理学术短语搜索
+ */
+UIManager.prototype.handleAcademicSearch = async function() {
+  const searchInput = this.sidebar.querySelector('#mydictionary-academic-search-input');
+  const query = searchInput.value.trim();
+
+  if (!query) {
+    // 如果搜索为空，恢复显示当前部分的短语
+    this.handleSectionChange();
+    return;
+  }
+
+  console.log('🔍 搜索学术短语:', query);
+
+  const phrasesContainer = this.sidebar.querySelector('#mydictionary-academic-phrases');
+  phrasesContainer.innerHTML = `
+    <div class="mydictionary-loading-container">
+      <div class="mydictionary-spinner"></div>
+      <p>Searching...</p>
+    </div>
+  `;
+
+  try {
+    const response = await chrome.runtime.sendMessage({
+      action: 'searchPhrases',
+      query: query
+    });
+
+    if (response.success) {
+      const phrases = response.data;
+      this.displayAcademicPhrases(phrases);
+    } else {
+      throw new Error(response.error || 'Search failed');
+    }
+  } catch (error) {
+    console.error('❌ 搜索失败:', error);
+    this.showAcademicError(error.message);
+  }
+};
+
+/**
+ * 复制到剪贴板
+ */
+UIManager.prototype.copyToClipboard = function(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    console.log('✅ 已复制到剪贴板:', text);
+  }).catch(err => {
+    console.error('❌ 复制失败:', err);
+  });
+};
+
+/**
+ * 显示学术模式错误
+ */
+UIManager.prototype.showAcademicError = function(message) {
+  const phrasesContainer = this.sidebar.querySelector('#mydictionary-academic-phrases');
+  phrasesContainer.innerHTML = `
+    <div class="mydictionary-error-container">
+      <div class="mydictionary-error-icon">⚠️</div>
+      <h4>Error</h4>
+      <p class="mydictionary-error-message">${message}</p>
+    </div>
+  `;
 };
 
 /**

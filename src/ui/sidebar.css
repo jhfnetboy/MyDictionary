@@ -823,3 +823,258 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* ==================== Academic Mode Styles ==================== */
+
+/* Mode Tabs */
+.mydictionary-mode-tabs {
+  display: flex;
+  border-bottom: 2px solid #e0e0e0;
+  background: #f8f9fa;
+  padding: 0;
+}
+
+.mydictionary-mode-tab {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 3px solid transparent;
+  position: relative;
+}
+
+.mydictionary-mode-tab:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.mydictionary-mode-tab.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+  background: #ffffff;
+  font-weight: 600;
+}
+
+/* Academic Panel */
+.mydictionary-academic-panel {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Academic Search */
+.mydictionary-academic-search {
+  margin-bottom: 16px;
+}
+
+.mydictionary-academic-search input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.mydictionary-academic-search input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+/* Section Selector */
+.mydictionary-section-selector {
+  margin-bottom: 20px;
+}
+
+.mydictionary-section-selector label {
+  display: block;
+  margin-bottom: 8px;
+  color: #495057;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mydictionary-section-selector select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.mydictionary-section-selector select:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+/* Academic Phrases Container */
+.mydictionary-academic-phrases {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Phrase Card */
+.mydictionary-phrase-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 14px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.mydictionary-phrase-card:hover {
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Phrase Header */
+.mydictionary-phrase-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed #e0e0e0;
+}
+
+.mydictionary-phrase-score {
+  font-size: 12px;
+  color: #667eea;
+  font-weight: 600;
+}
+
+.mydictionary-phrase-frequency {
+  font-size: 11px;
+  color: #6c757d;
+  background: #e9ecef;
+  padding: 3px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Phrase Content */
+.mydictionary-phrase-content {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #212529;
+  font-weight: 500;
+  margin-bottom: 8px;
+  font-style: italic;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-left: 3px solid #667eea;
+  border-radius: 4px;
+}
+
+/* Phrase Usage */
+.mydictionary-phrase-usage {
+  font-size: 12px;
+  color: #6c757d;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+/* Phrase Actions */
+.mydictionary-phrase-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.mydictionary-phrase-copy-btn,
+.mydictionary-phrase-example-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 5px;
+  background: white;
+  color: #495057;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.mydictionary-phrase-copy-btn:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.mydictionary-phrase-example-btn:hover {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+}
+
+/* Phrase Examples */
+.mydictionary-phrase-examples {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e9ecef;
+}
+
+.mydictionary-phrase-example {
+  padding: 10px 12px;
+  background: #f8f9fa;
+  border-left: 2px solid #6c757d;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+.mydictionary-phrase-example:last-child {
+  margin-bottom: 0;
+}
+
+/* Placeholder for Academic Mode */
+.mydictionary-academic-panel .mydictionary-placeholder {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+/* Academic Loading State */
+.mydictionary-academic-panel .mydictionary-loading-container {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+/* Academic Error State */
+.mydictionary-academic-panel .mydictionary-error-container {
+  text-align: center;
+  padding: 30px 20px;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+}
+
+.mydictionary-academic-panel .mydictionary-error-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.mydictionary-academic-panel .mydictionary-error-container h4 {
+  margin: 0 0 10px 0;
+  color: #856404;
+}
+
+.mydictionary-academic-panel .mydictionary-error-message {
+  color: #856404;
+  font-size: 13px;
+  line-height: 1.5;
+}
