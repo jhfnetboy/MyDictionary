@@ -582,6 +582,10 @@ function playAudio(audioData) {
 
 #### 方案选择: Rust Candle 🦀
 
+**独立仓库**: [Candle-local-AI-Server](https://github.com/jhfnetboy/Candle-local-AI-Server)
+**集成方式**: Git Submodule (位于 `tts-server/` 目录)
+**开发分支**: `dev`
+
 **为什么选择 Candle**:
 - ✅ Hugging Face 官方 Rust 推理框架
 - ✅ 性能优于 Python (启动速度 3-5 倍)
@@ -611,17 +615,36 @@ function playAudio(audioData) {
 
 #### 服务器实现 (Rust + Candle)
 
+**项目位置**: `tts-server/` (Git Submodule)
+**仓库地址**: https://github.com/jhfnetboy/Candle-local-AI-Server
+
+**克隆项目（含 Submodule）**:
+```bash
+# 方式 1: 克隆时自动初始化 submodule
+git clone --recurse-submodules https://github.com/jhfnetboy/MyDictionary.git
+
+# 方式 2: 已克隆项目，后续初始化 submodule
+cd MyDictionary
+git submodule update --init --recursive
+
+# 方式 3: 切换到 dev 分支（推荐用于开发）
+cd tts-server
+git checkout dev
+```
+
 **项目结构**:
 ```
-kokoro-tts-server/
-├── Cargo.toml
-├── src/
-│   ├── main.rs          # 主服务器
-│   ├── tts.rs           # Kokoro 推理引擎
-│   └── models.rs        # 模型加载
-├── models/
-│   └── kokoro-82m/      # 模型权重 (自动下载)
-└── README.md
+MyDictionary/
+├── tts-server/          # Git Submodule (Candle-local-AI-Server)
+│   ├── Cargo.toml
+│   ├── src/
+│   │   ├── main.rs      # 主服务器
+│   │   ├── tts.rs       # Kokoro 推理引擎
+│   │   └── models.rs    # 模型加载
+│   ├── models/
+│   │   └── kokoro-82m/  # 模型权重 (自动下载)
+│   └── README.md
+└── ... (MyDictionary 主项目文件)
 ```
 
 **Cargo.toml**:
