@@ -24,7 +24,7 @@
 - 🌐 **Smart Translation** - Supports 200 languages with dedicated high-quality models for major language pairs
 - 📚 **Synonym Suggestions** - Context-aware intelligent synonym recommendations
 - 💬 **Example Sentences** - Real-world usage examples from authentic sources
-- 🎓 **Academic Writing** - 20,000+ academic phrases to boost your research papers
+- 🎓 **Academic Writing** - 2,500+ academic phrases to boost your research papers
 - ⚡ **On-Demand Download** - Only 300MB by default, other models downloaded as needed
 
 ### 🚀 Quick Start
@@ -76,7 +76,7 @@ Models are downloaded automatically when you use the corresponding features:
 | Other Languages | NLLB-200 | 600MB | First non-English/Chinese translation |
 | Synonyms | DistilBERT | 65MB | Click [Synonyms] button |
 | Examples | MiniLM | 23MB | Click [Examples] button |
-| Academic Phrases | Phrasebank JSON | 8MB | Switch to Academic mode |
+| Academic Phrases | Phrasebank JSON | 1.1MB | Switch to Academic mode |
 | Academic Pro | SciBERT | 440MB | Enable in Academic settings |
 
 **Total**: 300MB (default) → 1.7GB (full installation)
@@ -99,7 +99,7 @@ Models are downloaded automatically when you use the corresponding features:
 - Highlighted target vocabulary
 
 #### 4. Academic Writing Mode
-- **20,000+ Academic Phrases**: From top-tier journal papers
+- **2,500+ Academic Phrases**: From University of Manchester Academic Phrasebank
 - **Paper Section Specific**: Introduction / Methods / Results / Discussion / Conclusion
 - **Copy & Paste**: One-click copy to your paper
 - **Optional SciBERT**: Academic-grade synonym suggestions
@@ -208,7 +208,7 @@ Made with ❤️ by Jason
 - 🌐 **智能翻译** - 支持 200 种语言互译,主要语言对使用专用高质量模型
 - 📚 **近义词推荐** - 基于上下文的智能同义词建议
 - 💬 **例句展示** - 来自真实来源的使用场景例句
-- 🎓 **学术写作** - 20,000+ 学术常用表达,助力论文写作
+- 🎓 **学术写作** - 2,500+ 学术常用表达,助力论文写作
 - ⚡ **按需下载** - 默认仅 300MB,其他模型按需下载
 
 ### 🚀 快速开始
@@ -260,7 +260,7 @@ pnpm install
 | 其他语言翻译 | NLLB-200 | 600MB | 翻译非英中语言时 |
 | 近义词 | DistilBERT | 65MB | 点击[近义词]按钮时 |
 | 例句 | MiniLM | 23MB | 点击[例句]按钮时 |
-| 学术短语库 | Phrasebank JSON | 8MB | 切换到学术模式时 |
+| 学术短语库 | Phrasebank JSON | 1.1MB | 切换到学术模式时 |
 | 学术专业版 | SciBERT | 440MB | 学术设置中启用 |
 
 **总计**: 300MB (默认) → 1.7GB (完整安装)
@@ -283,7 +283,7 @@ pnpm install
 - 高亮显示目标词汇
 
 #### 4. 学术写作模式
-- **20,000+ 学术表达**: 来自顶尖期刊论文
+- **2,500+ 学术表达**: 来自曼彻斯特大学学术短语库
 - **论文各部分专用**: Introduction / Methods / Results / Discussion / Conclusion
 - **即复即用**: 一键复制到论文中
 - **可选 SciBERT**: 学术级近义词推荐
