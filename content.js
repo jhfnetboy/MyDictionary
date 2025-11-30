@@ -1829,13 +1829,23 @@ UIManager.prototype.displayPerformanceResults = function(data, target = '') {
 UIManager.prototype.handleModelDownload = async function(modelName) {
   console.log('📥 准备下载模型:', modelName);
 
-  // 提取模型标识符 (例如: "SciBERT (Semantic Search)" → "SciBERT")
+  // 提取模型标识符 (例如: "BGE-Base (Academic Semantic Search)" → "bge-base")
   const modelId = modelName.split(' ')[0].toLowerCase();
+
+  // 根据模型类型确定下载大小
+  let downloadSize = '~150MB';
+  if (modelId.includes('base')) {
+    downloadSize = '~270MB';
+  } else if (modelId.includes('small')) {
+    downloadSize = '~130MB';
+  } else if (modelId.includes('minilm')) {
+    downloadSize = '~90MB';
+  }
 
   // 显示下载确认对话框
   const confirmed = confirm(
     `Download ${modelName}?\n\n` +
-    `This will download approximately 440MB of data.\n` +
+    `This will download approximately ${downloadSize} of data.\n` +
     `The model will be cached in your browser for offline use.\n\n` +
     `Continue?`
   );

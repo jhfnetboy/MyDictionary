@@ -678,8 +678,13 @@ async function handleDownloadModel(request, sendResponse) {
     let taskType;
 
     switch (modelId.toLowerCase()) {
-      case 'scibert':
-        transformersModelId = 'allenai/scibert_scivocab_uncased';
+      case 'bge-small':
+        transformersModelId = 'Xenova/bge-small-en-v1.5';
+        taskType = 'feature-extraction';
+        break;
+
+      case 'bge-base':
+        transformersModelId = 'Xenova/bge-base-en-v1.5';
         taskType = 'feature-extraction';
         break;
 
@@ -708,7 +713,7 @@ async function handleDownloadModel(request, sendResponse) {
     console.log(`✅ 模型下载并加载完成: ${modelName || modelId}`);
 
     // 保存到全局状态
-    if (modelId === 'scibert') {
+    if (modelId === 'bge-small' || modelId === 'bge-base') {
       self.academicModel = model;
     } else if (modelId === 'minilm-l6' || modelId === 'minilm') {
       self.semanticModel = model;

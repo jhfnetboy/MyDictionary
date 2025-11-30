@@ -346,26 +346,26 @@ export class PerformanceDetector {
     const recommendations = {
       high: {
         canUseSemanticSearch: true,
-        suggestedModel: 'SciBERT (Semantic Search)',
+        suggestedModel: 'BGE-Base (Academic Semantic Search)',
         message: '🎉 你的设备性能优秀!可以启用智能语义搜索功能,获得更精准的学术短语推荐。',
         features: [
-          '✅ 支持 SciBERT 模型',
+          '✅ 支持 BGE-Base 模型 (768维)',
+          '✅ 专为学术文本优化',
           '✅ 语义相似度搜索',
-          '✅ 上下文感知推荐',
-          '✅ 快速响应 (<500ms)'
+          '✅ 上下文感知推荐'
         ],
         downloadModelPrompt: true
       },
 
       medium: {
         canUseSemanticSearch: true,
-        suggestedModel: 'MiniLM-L6 (Lightweight Semantic)',
-        message: '👍 你的设备性能良好!建议使用轻量级语义搜索 (MiniLM-L6),在性能和智能之间取得平衡。',
+        suggestedModel: 'BGE-Small (Lightweight Semantic)',
+        message: '👍 你的设备性能良好!建议使用轻量级语义搜索 (BGE-Small),在性能和智能之间取得平衡。',
         features: [
-          '⚠️ SciBERT 可能较慢',
-          '✅ 推荐使用 MiniLM-L6',
+          '✅ BGE-Small 模型 (384维)',
+          '✅ 适合学术文本',
           '✅ 基础语义搜索',
-          '⏱️ 响应时间 ~200ms'
+          '⏱️ 响应速度快'
         ],
         downloadModelPrompt: true
       },
