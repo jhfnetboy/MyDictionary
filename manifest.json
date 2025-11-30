@@ -18,7 +18,8 @@
       "48": "assets/icons/icon-48.png",
       "128": "assets/icons/icon-128.png"
     },
-    "default_title": "MyDictionary - Click to open sidebar"
+    "default_title": "MyDictionary - Smart Dictionary",
+    "default_popup": "src/ui/popup.html"
   },
 
   "background": {

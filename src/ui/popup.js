@@ -71,48 +71,120 @@ async function switchLanguage() {
 // 语言切换按钮
 document.getElementById('lang-switch-btn').addEventListener('click', switchLanguage);
 
-// 打开翻译面板按钮
-document.getElementById('open-sidebar-btn').addEventListener('click', async () => {
+/**
+ * 检查当前页面类型
+ */
+async function checkCurrentPage() {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-    // 检查是否是特殊页面（chrome:// 等）
-    if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('edge://')) {
+    if (!tab || !tab.id) {
+      return { canUse: false, reason: 'no_tab', tab: null };
+    }
+
+    // 检查是否是受限页面
+    const isRestrictedPage = tab.url && (
+      tab.url.startsWith('chrome://') ||
+      tab.url.startsWith('chrome-extension://') ||
+      tab.url.startsWith('edge://') ||
+      tab.url.startsWith('about:') ||
+      tab.url.startsWith('view-source:') ||
+      tab.url === ''
+    );
+
+    return {
+      canUse: !isRestrictedPage,
+      tab: tab,
+      reason: isRestrictedPage ? 'restricted_page' : null
+    };
+  } catch (error) {
+    console.error('❌ 检查页面失败:', error);
+    return { canUse: false, reason: 'error', tab: null };
+  }
+}
+
+/**
+ * 页面加载时自动处理
+ */
+async function handlePageLoad() {
+  const result = await checkCurrentPage();
+
+  if (!result.canUse) {
+    // 在受限页面，显示友好提示
+    if (result.reason === 'restricted_page') {
+      document.querySelector('.actions').style.display = 'none';
+
+      const infoDiv = document.querySelector('.info');
+      infoDiv.innerHTML = currentLang === 'zh'
+        ? `
+          <p style="color: #ffeb3b; font-size: 14px; margin-bottom: 12px;">
+            ⚠️ <strong>无法在此页面使用</strong>
+          </p>
+          <p>MyDictionary 无法在浏览器内部页面运行。</p>
+          <p style="margin-top: 12px;"><strong>请访问普通网页：</strong></p>
+          <p>• https://wikipedia.org</p>
+          <p>• https://google.com</p>
+          <p>• 任何 https:// 网站</p>
+        `
+        : `
+          <p style="color: #ffeb3b; font-size: 14px; margin-bottom: 12px;">
+            ⚠️ <strong>Cannot Use on This Page</strong>
+          </p>
+          <p>MyDictionary cannot run on browser internal pages.</p>
+          <p style="margin-top: 12px;"><strong>Please visit a regular webpage:</strong></p>
+          <p>• https://wikipedia.org</p>
+          <p>• https://google.com</p>
+          <p>• Any https:// website</p>
+        `;
+    }
+    return;
+  }
+
+  // 在普通页面，自动打开侧边栏并关闭 popup
+  try {
+    console.log('📤 Auto-opening sidebar for regular page:', result.tab.url);
+
+    await chrome.tabs.sendMessage(result.tab.id, {
+      action: 'toggleSidebar'
+    });
+
+    // 立即关闭 popup
+    window.close();
+  } catch (error) {
+    console.error('❌ 自动打开侧边栏失败:', error);
+    // 如果失败，保持 popup 打开，让用户看到按钮
+  }
+}
+
+// 打开翻译面板按钮
+document.getElementById('open-sidebar-btn').addEventListener('click', async () => {
+  try {
+    const result = await checkCurrentPage();
+
+    if (!result.canUse) {
       const msg = currentLang === 'zh'
-        ? '⚠️ 无法在浏览器内部页面使用 MyDictionary。\n请打开一个普通网页（如 https://google.com）。'
-        : '⚠️ Cannot use MyDictionary on browser internal pages.\nPlease open a regular webpage (e.g., https://google.com).';
+        ? '⚠️ 无法在浏览器内部页面使用 MyDictionary。\n请打开一个普通网页（如 https://wikipedia.org）。'
+        : '⚠️ Cannot use MyDictionary on browser internal pages.\nPlease open a regular webpage (e.g., https://wikipedia.org).';
       alert(msg);
       return;
     }
 
-    console.log('📤 Popup 发送 toggleSidebar 消息到 tab:', tab.id, tab.url);
+    console.log('📤 Popup 发送 toggleSidebar 消息到 tab:', result.tab.id, result.tab.url);
 
-    // 发送消息并等待响应
-    const response = await chrome.tabs.sendMessage(tab.id, {
+    await chrome.tabs.sendMessage(result.tab.id, {
       action: 'toggleSidebar'
     });
 
-    console.log('✅ 收到响应:', response);
-
-    // 等待消息发送完成后再关闭 popup
-    setTimeout(() => {
-      window.close();
-    }, 100);
+    window.close();
   } catch (error) {
     console.error('❌ Popup 发送消息失败:', error);
 
-    // 如果是 content script 未注入的错误
     if (error.message.includes('Could not establish connection')) {
       const msg = currentLang === 'zh'
         ? '⚠️ 请先刷新页面！\n\nContent script 未加载。请尝试：\n1. 刷新网页 (F5)\n2. 或访问一个普通网页'
         : '⚠️ Please refresh the page first!\n\nContent script not loaded. Try:\n1. Refresh the webpage (F5)\n2. Or navigate to a regular webpage';
       alert(msg);
     }
-
-    // 延迟关闭，让用户看到错误提示
-    setTimeout(() => {
-      window.close();
-    }, 100);
   }
 });
 
@@ -123,6 +195,11 @@ document.getElementById('settings-btn').addEventListener('click', () => {
 });
 
 // 初始化
-loadLanguage();
+async function init() {
+  await loadLanguage();
+  await handlePageLoad();  // 加载完语言后检查页面
+}
+
+init();
 
 console.log('🦝 MyDictionary Popup 已加载');
