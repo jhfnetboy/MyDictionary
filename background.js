@@ -706,8 +706,7 @@ async function handleDownloadModel(request, sendResponse) {
     console.log(`   Model: ${transformersModelId}`);
     console.log(`   Task: ${taskType}`);
 
-    const { pipeline } = await import('@xenova/transformers');
-
+    // 使用顶部静态导入的 pipeline (避免 Vite warning)
     const model = await pipeline(taskType, transformersModelId, {
       progress_callback: (progress) => {
         console.log(`📊 Download progress:`, progress);

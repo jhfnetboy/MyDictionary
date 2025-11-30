@@ -47,11 +47,10 @@
 }
 
 .mydictionary-logo {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-  background: white;
-  padding: 4px;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  /* 去掉白色背景和边框 */
 }
 
 .mydictionary-title {
@@ -1533,4 +1532,63 @@
 .mydictionary-success-container p {
   margin: 0 0 15px 0;
   color: #065f46;
+}
+
+/* Search Mode Switcher */
+.mydictionary-search-mode-switcher {
+  margin: 16px 0 12px 0;
+}
+
+.mydictionary-search-mode-tabs {
+  display: flex;
+  gap: 8px;
+  background: #f8fafc;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.mydictionary-search-mode-tab {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.mydictionary-search-mode-tab:hover {
+  background: #e2e8f0;
+}
+
+.mydictionary-search-mode-tab.active {
+  background: white;
+  color: #667eea;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.mydictionary-beta-badge {
+  padding: 2px 6px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 10px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.mydictionary-search-hint {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #f0f9ff;
+  border-left: 3px solid #667eea;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #475569;
 }
