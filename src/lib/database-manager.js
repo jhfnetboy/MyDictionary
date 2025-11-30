@@ -9,6 +9,7 @@ import { IDBBatchAtomicVFS } from 'wa-sqlite/src/examples/IDBBatchAtomicVFS.js';
 
 // GitHub Release URL for WordNet database
 const WORDNET_DB_URL = 'https://github.com/jhfnetboy/MyDictionary/releases/download/v0.2.0-beta/wordnet-synonyms.db';
+// wa-sqlite VFS 文件名（不需要路径前缀）
 const DB_NAME = 'wordnet-synonyms.db';
 
 /**
@@ -55,20 +56,28 @@ class DatabaseManager {
 
   /**
    * 检查数据库是否已下载
+   * wa-sqlite 在数据库不存在时 open_v2 会抛出错误
    */
   async isDatabaseDownloaded() {
     try {
       await this.initSQLite();
 
-      // 尝试打开数据库（wa-sqlite 不需要路径前缀）
-      const db = await this.sqlite3.open_v2(
-        DB_NAME,
-        SQLite.SQLITE_OPEN_READONLY,
-        this.vfs.name  // 指定使用我们的 VFS
-      );
+      // 尝试打开数据库（只读模式，如果不存在会失败）
+      let db;
+      try {
+        db = await this.sqlite3.open_v2(
+          DB_NAME,
+          SQLite.SQLITE_OPEN_READONLY,
+          this.vfs.name
+        );
+      } catch (openError) {
+        // 数据库不存在或无法打开
+        console.log('⚠️ Database file not found in VFS');
+        return false;
+      }
 
-      if (db) {
-        // 数据库存在，检查是否有数据
+      // 数据库存在，检查是否有数据
+      try {
         const stmt = await this.sqlite3.prepare_v2(
           db,
           'SELECT COUNT(*) as count FROM synonyms'
@@ -76,7 +85,6 @@ class DatabaseManager {
 
         if (await this.sqlite3.step(stmt) === SQLite.SQLITE_ROW) {
           const count = this.sqlite3.column_int(stmt, 0);
-
           await this.sqlite3.finalize(stmt);
           await this.sqlite3.close(db);
 
@@ -86,11 +94,15 @@ class DatabaseManager {
 
         await this.sqlite3.finalize(stmt);
         await this.sqlite3.close(db);
+        return false;
+      } catch (queryError) {
+        // 查询失败，可能表结构不对
+        await this.sqlite3.close(db);
+        console.log('⚠️ Database exists but query failed:', queryError.message);
+        return false;
       }
-
-      return false;
     } catch (error) {
-      console.log('⚠️ Database not found or empty:', error.message);
+      console.log('⚠️ Error checking database:', error.message);
       return false;
     }
   }
