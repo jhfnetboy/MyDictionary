@@ -705,8 +705,7 @@ class UIManager {
 
         <div class="mydictionary-settings-section">
           <h4>ℹ️ ${this.t('sidebar.about') || 'About'}</h4>
-          <p>MyDictionary v0.1.0</p>
-          <p>${this.t('sidebar.madeWith') || 'Made with'} ❤️ ${this.t('sidebar.by') || 'by'} Jason</p>
+          <p>${this.t('sidebar.madeWith') || 'Made with'} ❤️ ${this.t('sidebar.by') || 'by')} Jason</p>
           <p>
             <a href="https://github.com/jhfnetboy/MyDictionary" target="_blank" style="color: #667eea;">
               GitHub
@@ -1328,11 +1327,11 @@ UIManager.prototype.showAcademicDownloadPrompt = function() {
       <div class="mydictionary-download-icon">📚</div>
       <h3>${this.t('sidebar.academicDatabase', 'Academic Phrasebank')}</h3>
       <p class="mydictionary-download-description">
-        ${this.t('sidebar.academicDatabaseDesc', 'Download 120+ curated academic phrases for research writing')}
+        ${this.t('sidebar.academicDatabaseDesc', 'Download 48 curated academic phrases for research writing')}
       </p>
       <div class="mydictionary-download-info">
-        <span>📦 ${this.t('sidebar.size', 'Size')}: ~50 KB</span>
-        <span>📊 ${this.t('sidebar.phrases', 'Phrases')}: 120+</span>
+        <span>📦 ${this.t('sidebar.size', 'Size')}: ~21 KB</span>
+        <span>📊 ${this.t('sidebar.phrases', 'Phrases')}: 48</span>
       </div>
       <button class="mydictionary-btn-primary" id="mydictionary-download-academic-btn">
         📥 ${this.t('sidebar.downloadNow', 'Download Now')}
@@ -1347,7 +1346,7 @@ UIManager.prototype.showAcademicDownloadPrompt = function() {
 
   downloadBtn.addEventListener('click', async () => {
     downloadBtn.disabled = true;
-    downloadBtn.textContent = '⏳ Downloading...';
+    downloadBtn.textContent = `⏳ ${this.t('sidebar.downloading', 'Downloading...')}`;
     statusDiv.innerHTML = '<div class="mydictionary-spinner"></div>';
 
     try {
@@ -1356,7 +1355,8 @@ UIManager.prototype.showAcademicDownloadPrompt = function() {
       });
 
       if (response.success) {
-        statusDiv.innerHTML = `<div class="mydictionary-success">✅ ${response.data.message}</div>`;
+        const successMsg = this.t('sidebar.downloadSuccess', 'Successfully downloaded academic database!');
+        statusDiv.innerHTML = `<div class="mydictionary-success">✅ ${successMsg}</div>`;
         this.phrasebankInitialized = true;
 
         // 延迟后加载短语
@@ -1370,7 +1370,7 @@ UIManager.prototype.showAcademicDownloadPrompt = function() {
       console.error('❌ 下载失败:', error);
       statusDiv.innerHTML = `<div class="mydictionary-error">❌ Download failed: ${error.message}</div>`;
       downloadBtn.disabled = false;
-      downloadBtn.textContent = '📥 Retry Download';
+      downloadBtn.textContent = `📥 ${this.t('sidebar.downloadNow', 'Download Now')}`;
     }
   });
 };

@@ -52,7 +52,14 @@
       "academicSynonyms": "Academic Synonyms",
       "academicScore": "Academic Score",
       "formality": "Formality",
-      "frequency": "Frequency"
+      "frequency": "Frequency",
+      "academicDatabase": "Academic Phrasebank",
+      "academicDatabaseDesc": "Download 48 curated academic phrases for research writing",
+      "size": "Size",
+      "phrases": "Phrases",
+      "downloadNow": "Download Now",
+      "downloading": "Downloading...",
+      "downloadSuccess": "Successfully downloaded academic database!"
     },
     "popup": {
       "title": "MyDictionary Settings",
@@ -134,7 +141,14 @@
       "academicSynonyms": "学术同义词",
       "academicScore": "学术度",
       "formality": "正式程度",
-      "frequency": "使用频率"
+      "frequency": "使用频率",
+      "academicDatabase": "学术短语库",
+      "academicDatabaseDesc": "下载 48 个精选学术写作短语",
+      "size": "大小",
+      "phrases": "短语",
+      "downloadNow": "立即下载",
+      "downloading": "下载中...",
+      "downloadSuccess": "学术短语库下载成功!"
     },
     "popup": {
       "title": "我的词典设置",
