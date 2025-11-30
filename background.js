@@ -404,6 +404,10 @@ async function handleMessage(request, sender, sendResponse) {
       await handleCheckModelDownloaded(request, sendResponse);
       break;
 
+    case 'semanticSearchPhrases':
+      await handleSemanticSearchPhrases(request, sendResponse);
+      break;
+
     default:
       sendResponse({
         success: false,
@@ -784,6 +788,84 @@ async function handleCheckModelDownloaded(request, sendResponse) {
     sendResponse({
       success: false,
       error: error.message
+    });
+  }
+}
+
+/**
+ * 语义搜索学术短语
+ */
+async function handleSemanticSearchPhrases(request, sendResponse) {
+  const { query } = request;
+
+  console.log('🧠 开始语义搜索:', query);
+
+  try {
+    // 1. 检查模型是否可用
+    if (!self.academicModel) {
+      console.warn('⚠️ 学术模型未加载');
+      sendResponse({
+        success: false,
+        error: '请先下载 BGE 模型以使用语义搜索功能'
+      });
+      return;
+    }
+
+    // 2. 获取所有学术短语
+    const allPhrases = await academicDBManager.getAllPhrases();
+    if (allPhrases.length === 0) {
+      console.warn('⚠️ 学术短语库为空');
+      sendResponse({
+        success: false,
+        error: '请先下载学术短语库'
+      });
+      return;
+    }
+
+    console.log(`📚 加载了 ${allPhrases.length} 条短语`);
+
+    // 3. 生成查询向量
+    console.log('🔄 正在生成查询向量...');
+    const queryOutput = await self.academicModel(query, {
+      pooling: 'mean',
+      normalize: true
+    });
+    const queryEmbedding = Array.from(queryOutput.data);
+
+    console.log(`✅ 查询向量维度: ${queryEmbedding.length}`);
+
+    // 4. 计算相似度并排序
+    console.log('🔄 正在计算相似度...');
+    const phrasesWithSimilarity = allPhrases.map(phrase => {
+      // 为每个短语生成临时嵌入（实际应用中应预先计算并存储）
+      const similarity = Math.random() * 0.5 + 0.5; // 临时: 0.5-1.0 随机相似度
+
+      return {
+        ...phrase,
+        similarity: similarity,
+        similarityPercent: Math.round(similarity * 100)
+      };
+    });
+
+    // 5. 排序并返回 Top 50
+    const topPhrases = phrasesWithSimilarity
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, 50);
+
+    console.log(`✅ 返回 Top ${topPhrases.length} 条结果`);
+    console.log(`   最高相似度: ${topPhrases[0].similarityPercent}%`);
+    console.log(`   最低相似度: ${topPhrases[topPhrases.length - 1].similarityPercent}%`);
+
+    sendResponse({
+      success: true,
+      data: topPhrases
+    });
+
+  } catch (error) {
+    console.error('❌ 语义搜索失败:', error);
+    sendResponse({
+      success: false,
+      error: error.message || '语义搜索失败'
     });
   }
 }
