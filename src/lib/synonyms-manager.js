@@ -283,7 +283,25 @@ class SynonymsManager {
       return [];
     }
 
-    const results = synonyms.slice(0, limit).map(syn => ({
+    // 过滤明显无关的同义词
+    const filtered = synonyms.filter(syn => {
+      const synWord = syn.word.toLowerCase();
+
+      // 跳过包含原词的短语（除非是合理的复合词）
+      if (synWord.includes(queryWord) && synWord.includes(' ')) {
+        // "capital letter", "working capital" 等短语会被过滤
+        return false;
+      }
+
+      // 跳过过长的短语（>3个词）
+      if (synWord.split(' ').length > 3) {
+        return false;
+      }
+
+      return true;
+    });
+
+    const results = filtered.slice(0, limit).map(syn => ({
       word: syn.word,
       pos: syn.pos,
       score: syn.score,
