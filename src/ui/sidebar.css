@@ -1604,3 +1604,86 @@
   display: inline-block;
   margin-right: 8px;
 }
+
+/* ========================================
+   TTS 按钮样式
+   ======================================== */
+
+.mydictionary-tts-btn {
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #6B7280;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+  min-width: 36px;
+  min-height: 36px;
+}
+
+.mydictionary-tts-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.mydictionary-tts-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.mydictionary-tts-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* TTS 按钮状态 */
+.mydictionary-tts-btn.loading {
+  animation: tts-pulse 1.5s ease-in-out infinite;
+}
+
+.mydictionary-tts-btn.playing {
+  background: #fef3c7;
+  border-color: #F59E0B;
+  color: #F59E0B;
+}
+
+.mydictionary-tts-btn.playing:hover {
+  background: #fbbf24;
+  transform: scale(1.05);
+}
+
+.mydictionary-tts-btn.error {
+  background: #fee2e2;
+  border-color: #EF4444;
+  color: #EF4444;
+}
+
+/* TTS 按钮动画 */
+@keyframes tts-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+/* TTS 按钮容器 (用于与文本一起显示) */
+.mydictionary-text-with-tts {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mydictionary-text-with-tts .mydictionary-tts-btn {
+  margin-left: 0;
+  flex-shrink: 0;
+}

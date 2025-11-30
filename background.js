@@ -7,6 +7,7 @@ import { pipeline, env } from '@xenova/transformers';
 import { synonymsManager } from './src/lib/synonyms-manager.js';
 import { academicDBManager } from './src/lib/academic-db-manager.js';
 import { performanceDetector } from './src/lib/performance-detector.js';
+import { ttsManager } from './src/lib/tts-manager.js';
 import phrasebankData from './academic-phrasebank.json' assert { type: 'json' };
 
 // 修复 "global is not defined" 错误 (某些库期望 global 变量存在)
@@ -406,6 +407,18 @@ async function handleMessage(request, sender, sendResponse) {
 
     case 'semanticSearchPhrases':
       await handleSemanticSearchPhrases(request, sendResponse);
+      break;
+
+    case 'speakText':
+      await handleSpeakText(request, sendResponse);
+      break;
+
+    case 'stopTTS':
+      await handleStopTTS(request, sendResponse);
+      break;
+
+    case 'checkTTSStatus':
+      await handleCheckTTSStatus(request, sendResponse);
       break;
 
     default:
@@ -1437,6 +1450,105 @@ async function handleDetectPerformance(request, sendResponse) {
         level: 'low',
         recommendation: performanceDetector.getRecommendation.call({ performanceLevel: 'low' })
       }
+    });
+  }
+}
+
+/**
+ * 处理 TTS 朗读请求
+ */
+async function handleSpeakText(request, sendResponse) {
+  try {
+    const { text } = request;
+
+    if (!text || text.trim() === '') {
+      sendResponse({
+        success: false,
+        error: '文本不能为空'
+      });
+      return;
+    }
+
+    console.log(`🔊 TTS 请求: "${text.substring(0, 50)}..."`);
+
+    // 生成并播放语音
+    await ttsManager.speak(
+      text,
+      // onEnd callback
+      () => {
+        console.log('✅ TTS 播放完成');
+        // 通知 content script 播放结束
+        chrome.runtime.sendMessage({
+          type: 'TTS_PLAYBACK_ENDED'
+        }).catch(() => {});
+      },
+      // onError callback
+      (error) => {
+        console.error('❌ TTS 播放错误:', error);
+        chrome.runtime.sendMessage({
+          type: 'TTS_PLAYBACK_ERROR',
+          error: error.message
+        }).catch(() => {});
+      }
+    );
+
+    sendResponse({
+      success: true,
+      message: '开始播放'
+    });
+
+  } catch (error) {
+    console.error('❌ TTS 处理失败:', error);
+    sendResponse({
+      success: false,
+      error: error.message
+    });
+  }
+}
+
+/**
+ * 处理停止 TTS 请求
+ */
+async function handleStopTTS(request, sendResponse) {
+  try {
+    ttsManager.stop();
+
+    sendResponse({
+      success: true,
+      message: '已停止播放'
+    });
+
+  } catch (error) {
+    console.error('❌ 停止 TTS 失败:', error);
+    sendResponse({
+      success: false,
+      error: error.message
+    });
+  }
+}
+
+/**
+ * 检查 TTS 状态
+ */
+async function handleCheckTTSStatus(request, sendResponse) {
+  try {
+    const loadingState = ttsManager.getLoadingState();
+    const isPlaying = ttsManager.getPlayingState();
+
+    sendResponse({
+      success: true,
+      data: {
+        isReady: loadingState.isReady,
+        isLoading: loadingState.isLoading,
+        isPlaying: isPlaying
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ 检查 TTS 状态失败:', error);
+    sendResponse({
+      success: false,
+      error: error.message
     });
   }
 }
