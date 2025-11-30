@@ -66,9 +66,7 @@
         "transformers/*.wasm",
         "transformers/*.mjs",
         "transformers/*.js",
-        "sqlite-wasm/*.wasm",
-        "sqlite-wasm/*.mjs",
-        "sqlite-wasm/*.js"
+        "synonyms.json.gz"
       ],
       "matches": ["<all_urls>"]
     }
