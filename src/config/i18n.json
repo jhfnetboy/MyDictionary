@@ -81,7 +81,12 @@
       "suggestedModel": "Suggested Model",
       "downloadModel": "Download",
       "model": "Model",
-      "modelDownloaded": "Model Downloaded"
+      "modelDownloaded": "Model Downloaded",
+      "keywordSearch": "Keyword Search",
+      "semanticSearch": "Semantic Search",
+      "semanticSearchHint": "AI will find phrases with similar meanings",
+      "semanticSearchRequiresModel": "Semantic search requires downloading the BGE model first",
+      "similarity": "Similarity"
     },
     "performance": {
       "high": {
@@ -215,7 +220,12 @@
       "suggestedModel": "推荐模型",
       "downloadModel": "下载",
       "model": "模型",
-      "modelDownloaded": "已下载模型"
+      "modelDownloaded": "已下载模型",
+      "keywordSearch": "关键词搜索",
+      "semanticSearch": "语义搜索",
+      "semanticSearchHint": "AI 将查找含义相似的短语",
+      "semanticSearchRequiresModel": "语义搜索需要先下载 BGE 模型",
+      "similarity": "相似度"
     },
     "performance": {
       "high": {

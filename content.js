@@ -241,12 +241,28 @@ class UIManager {
             </div>
           </div>
 
+          <!-- 搜索模式切换器 -->
+          <div class="mydictionary-search-mode-switcher">
+            <div class="mydictionary-search-mode-tabs">
+              <button class="mydictionary-search-mode-tab active" data-mode="keyword">
+                🔍 ${getText('sidebar.keywordSearch', 'Keyword Search')}
+              </button>
+              <button class="mydictionary-search-mode-tab" data-mode="semantic" id="mydictionary-semantic-search-tab">
+                🧠 ${getText('sidebar.semanticSearch', 'Semantic Search')}
+                <span class="mydictionary-beta-badge">AI</span>
+              </button>
+            </div>
+          </div>
+
           <div class="mydictionary-academic-search">
             <input
               type="text"
               id="mydictionary-academic-search-input"
               placeholder="${getText('sidebar.searchPhrases', 'Search phrases...')}"
             />
+            <div class="mydictionary-search-hint" id="mydictionary-search-hint" style="display: none;">
+              💡 ${getText('sidebar.semanticSearchHint', 'AI will find phrases with similar meanings')}
+            </div>
           </div>
 
           <div class="mydictionary-section-selector">
