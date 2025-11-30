@@ -52,7 +52,7 @@ export class AcademicPhrasebankManager {
    */
   async loadFromFile() {
     try {
-      const response = await fetch(chrome.runtime.getURL('public/academic-phrasebank.json'));
+      const response = await fetch(chrome.runtime.getURL('academic-phrasebank.json'));
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

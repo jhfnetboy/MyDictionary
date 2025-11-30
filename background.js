@@ -794,8 +794,8 @@ async function createContextMenus() {
     // 注意: 使用数字前缀让菜单在字典序中排在前面
     return new Promise((resolve) => {
       chrome.contextMenus.create({
-        id: '0-mydictionary-translate',  // 数字 0 开头，让菜单排在前面
-        title: `🦊 ${t.contextMenu.openSidebar}`,  // 添加图标更醒目
+        id: '0-mydictionary-translate',
+        title: t.contextMenu.openSidebar,
         contexts: ['selection']
       }, () => {
         if (chrome.runtime.lastError) {

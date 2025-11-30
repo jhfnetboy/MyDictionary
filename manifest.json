@@ -64,11 +64,11 @@
         "src/lib/*.js",
         "assets/*.png",
         "assets/icons/*.png",
-        "public/*.json",
         "transformers/*.wasm",
         "transformers/*.mjs",
         "transformers/*.js",
-        "synonyms.json.gz"
+        "synonyms.json.gz",
+        "academic-phrasebank.json"
       ],
       "matches": ["<all_urls>"]
     }
