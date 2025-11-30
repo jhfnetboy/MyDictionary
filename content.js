@@ -860,23 +860,101 @@ UIManager.prototype.handleGetSynonyms = async function() {
 
       // 检查是否有同义词
       if (!synonyms || synonyms.length === 0) {
-        output.innerHTML = `
-          <div class="mydictionary-synonyms-result">
-            <h3>📚 Synonyms for "<span class="highlight">${targetWord}</span>"</h3>
-            <p class="mydictionary-no-results">❌ No synonyms found in local database.</p>
-            <p class="mydictionary-tip">💡 Our curated synonym database contains 50+ common words. The word "${targetWord}" may be:
-              <ul style="margin: 8px 0; padding-left: 20px;">
-                <li>Not in our database yet</li>
-                <li>A proper noun or specialized term</li>
-                <li>Misspelled</li>
-              </ul>
-            </p>
-            <div class="mydictionary-meta">
-              <span>⏱️ ${latency}ms</span>
-              <span>📖 Local Synonym Database</span>
-            </div>
-          </div>
-        `;
+        // 检查数据库状态
+        const checkDbStatus = async () => {
+          try {
+            const dbStatusResponse = await chrome.runtime.sendMessage({
+              action: 'checkDatabaseStatus'
+            });
+
+            if (dbStatusResponse.success && !dbStatusResponse.data.isDownloaded) {
+              // 数据库未下载，显示下载提示
+              output.innerHTML = `
+                <div class="mydictionary-synonyms-result">
+                  <h3>📚 Synonyms for "<span class="highlight">${targetWord}</span>"</h3>
+                  <p class="mydictionary-no-results">⚠️ Word not found in basic database (50 words)</p>
+
+                  <div class="mydictionary-db-prompt">
+                    <h4>📖 Download Complete WordNet Database</h4>
+                    <p>Access <strong>126,000+ academic words</strong> with full synonym coverage:</p>
+                    <ul style="margin: 12px 0; padding-left: 20px; text-align: left;">
+                      <li>126,125 words</li>
+                      <li>406,196 synonym relationships</li>
+                      <li>Size: 30.62 MB (one-time download)</li>
+                      <li>Offline after download</li>
+                    </ul>
+                    <button id="download-wordnet-btn" class="mydictionary-btn-primary" style="margin-top: 12px; padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                      📥 Download WordNet Database
+                    </button>
+                  </div>
+
+                  <div class="mydictionary-meta">
+                    <span>⏱️ ${latency}ms</span>
+                    <span>📖 Basic Database (50 words)</span>
+                  </div>
+                </div>
+              `;
+
+              // 绑定下载按钮事件
+              document.getElementById('download-wordnet-btn')?.addEventListener('click', async () => {
+                output.innerHTML = `
+                  <div class="mydictionary-db-downloading">
+                    <h4>📥 Downloading WordNet Database...</h4>
+                    <p>This may take a few minutes (30.62 MB)</p>
+                    <div class="mydictionary-spinner" style="margin: 20px auto; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #4CAF50; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                  </div>
+                `;
+
+                try {
+                  const downloadResponse = await chrome.runtime.sendMessage({
+                    action: 'downloadDatabase'
+                  });
+
+                  if (downloadResponse.success) {
+                    output.innerHTML = `
+                      <div class="mydictionary-db-success">
+                        <h4>✅ Database Downloaded!</h4>
+                        <p>WordNet database is now ready. Please try your search again.</p>
+                      </div>
+                    `;
+                  } else {
+                    throw new Error(downloadResponse.error);
+                  }
+                } catch (error) {
+                  output.innerHTML = `
+                    <div class="mydictionary-error-container">
+                      <h4>❌ Download Failed</h4>
+                      <p>${error.message}</p>
+                    </div>
+                  `;
+                }
+              });
+            } else {
+              // 数据库已下载但找不到词
+              output.innerHTML = `
+                <div class="mydictionary-synonyms-result">
+                  <h3>📚 Synonyms for "<span class="highlight">${targetWord}</span>"</h3>
+                  <p class="mydictionary-no-results">❌ No synonyms found.</p>
+                  <p class="mydictionary-tip">💡 The word "${targetWord}" may be:
+                    <ul style="margin: 8px 0; padding-left: 20px;">
+                      <li>A proper noun</li>
+                      <li>Very specialized terminology</li>
+                      <li>Misspelled</li>
+                    </ul>
+                  </p>
+                  <div class="mydictionary-meta">
+                    <span>⏱️ ${latency}ms</span>
+                    <span>📖 WordNet Database (126K words)</span>
+                  </div>
+                </div>
+              `;
+            }
+          } catch (error) {
+            console.error('Error checking database status:', error);
+          }
+        };
+
+        checkDbStatus();
         return;
       }
 
