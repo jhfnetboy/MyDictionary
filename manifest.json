@@ -64,7 +64,10 @@
         "assets/icons/*.png",
         "transformers/*.wasm",
         "transformers/*.mjs",
-        "transformers/*.js"
+        "transformers/*.js",
+        "sqlite-wasm/*.wasm",
+        "sqlite-wasm/*.mjs",
+        "sqlite-wasm/*.js"
       ],
       "matches": ["<all_urls>"]
     }

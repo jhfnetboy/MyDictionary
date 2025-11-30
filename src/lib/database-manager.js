@@ -20,7 +20,7 @@ class DatabaseManager {
   }
 
   /**
-   * 初始化 SQLite WASM
+   * 初始化 SQLite WASM (主线程模式)
    */
   async initSQLite() {
     if (this.sqlite3) return this.sqlite3;
@@ -30,9 +30,17 @@ class DatabaseManager {
     try {
       // 动态导入 SQLite WASM
       const sqlite3InitModule = await import('@sqlite.org/sqlite-wasm');
+
       this.sqlite3 = await sqlite3InitModule.default({
         print: console.log,
-        printErr: console.error
+        printErr: console.error,
+        // 配置 WASM 路径（Chrome Extension 环境）
+        locateFile: (file) => {
+          if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL) {
+            return chrome.runtime.getURL(`sqlite-wasm/${file}`);
+          }
+          return file;
+        }
       });
 
       console.log('✅ SQLite WASM loaded successfully');
@@ -222,7 +230,7 @@ class DatabaseManager {
   }
 
   /**
-   * 初始化数据库连接
+   * 初始化数据库连接 (主线程模式)
    */
   async initialize() {
     if (this.isInitialized && this.db) {
@@ -246,12 +254,18 @@ class DatabaseManager {
       // 3. 从存储加载数据库
       const dbData = await this.loadDatabaseFromStorage();
 
-      // 4. 创建 SQLite 数据库连接
-      const p = this.sqlite3.wasm.allocFromTypedArray(dbData);
+      // 4. 创建内存数据库并加载数据
       this.db = new this.sqlite3.oo1.DB();
 
+      // 使用 deserialize API 加载数据库
+      const p = this.sqlite3.wasm.allocFromTypedArray(dbData);
+
       const rc = this.sqlite3.capi.sqlite3_deserialize(
-        this.db.pointer, 'main', p, dbData.length, dbData.length,
+        this.db.pointer,
+        'main',
+        p,
+        dbData.length,
+        dbData.length,
         this.sqlite3.capi.SQLITE_DESERIALIZE_FREEONCLOSE |
         this.sqlite3.capi.SQLITE_DESERIALIZE_RESIZEABLE
       );
@@ -268,7 +282,10 @@ class DatabaseManager {
         sql: 'SELECT COUNT(*) as count FROM synonyms',
         rowMode: 'object'
       });
-      console.log(`📊 Database contains ${testResult[0].count} synonym relationships`);
+
+      if (testResult && testResult.length > 0) {
+        console.log(`📊 Database contains ${testResult[0].count} synonym relationships`);
+      }
 
       return this.db;
     } catch (error) {

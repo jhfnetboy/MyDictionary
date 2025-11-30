@@ -22,6 +22,9 @@ export default defineConfig({
     target: 'esnext',
     modulePreload: false,
   },
+  optimizeDeps: {
+    exclude: ['@sqlite.org/sqlite-wasm'],
+  },
   plugins: [
     viteStaticCopy({
       targets: [
@@ -54,6 +57,15 @@ export default defineConfig({
         {
           src: 'node_modules/@xenova/transformers/dist/*.wasm',
           dest: 'transformers',
+        },
+        // 复制 SQLite WASM 文件
+        {
+          src: 'node_modules/@sqlite.org/sqlite-wasm/sqlite-wasm/jswasm/*.wasm',
+          dest: 'sqlite-wasm',
+        },
+        {
+          src: 'node_modules/@sqlite.org/sqlite-wasm/sqlite-wasm/jswasm/sqlite3.mjs',
+          dest: 'sqlite-wasm',
         },
       ],
     }),
