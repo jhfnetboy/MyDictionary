@@ -20,14 +20,23 @@ class DatabaseManager {
   }
 
   /**
-   * 初始化 SQLite WASM (主线程模式)
+   * 初始化 SQLite WASM (Service Worker 兼容模式)
    */
   async initSQLite() {
     if (this.sqlite3) return this.sqlite3;
 
-    console.log('📦 Loading SQLite WASM...');
+    console.log('📦 Loading SQLite WASM for Service Worker...');
 
     try {
+      // 在 Service Worker 中，我们需要手动加载 WASM
+      // 模拟 window/self 环境
+      const globalScope = typeof self !== 'undefined' ? self : globalThis;
+
+      // 临时提供 window 别名
+      if (typeof window === 'undefined') {
+        globalScope.window = globalScope;
+      }
+
       // 动态导入 SQLite WASM
       const sqlite3InitModule = await import('@sqlite.org/sqlite-wasm');
 
@@ -36,10 +45,9 @@ class DatabaseManager {
         printErr: console.error,
         // 配置 WASM 路径（Chrome Extension 环境）
         locateFile: (file) => {
-          if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL) {
-            return chrome.runtime.getURL(`sqlite-wasm/${file}`);
-          }
-          return file;
+          const url = chrome.runtime.getURL(`sqlite-wasm/${file}`);
+          console.log(`📁 Loading WASM file: ${file} from ${url}`);
+          return url;
         }
       });
 
@@ -49,6 +57,7 @@ class DatabaseManager {
       return this.sqlite3;
     } catch (error) {
       console.error('❌ Failed to load SQLite WASM:', error);
+      console.error('Error details:', error.stack);
       throw new Error('SQLite initialization failed: ' + error.message);
     }
   }
