@@ -1252,6 +1252,20 @@
   border: 1px solid #e2e8f0;
 }
 
+.mydictionary-performance-compact {
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.mydictionary-performance-compact h4 {
+  margin: 0;
+  font-size: 14px;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .mydictionary-performance-header {
   display: flex;
   justify-content: space-between;
