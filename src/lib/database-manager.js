@@ -39,33 +39,25 @@ class DatabaseManager {
         globalScope.window = globalScope;
       }
 
-      // 手动加载 WASM 文件（使用 XMLHttpRequest，因为 Service Worker 中 fetch 对 chrome-extension:// 不可靠）
-      const wasmUrl = chrome.runtime.getURL('sqlite-wasm/sqlite3.wasm');
-      console.log(`📁 Loading WASM from: ${wasmUrl}`);
-
-      const wasmBinary = await new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', wasmUrl, true);
-        xhr.responseType = 'arraybuffer';
-
-        xhr.onload = () => {
-          if (xhr.status === 200) {
-            console.log(`✅ WASM loaded: ${(xhr.response.byteLength / 1024).toFixed(2)} KB`);
-            resolve(new Uint8Array(xhr.response));
-          } else {
-            reject(new Error(`XHR failed: ${xhr.status}`));
-          }
-        };
-
-        xhr.onerror = () => reject(new Error('XHR network error'));
-        xhr.send();
-      });
-
-      // 使用静态导入的 sqlite3InitModule，传入预加载的 WASM
+      // 配置 SQLite WASM 加载 - Service Worker 兼容模式
       this.sqlite3 = await sqlite3InitModule({
         print: console.log,
         printErr: console.error,
-        wasmBinary: wasmBinary
+
+        // 覆盖 WASM 文件路径
+        locateFile: (path, prefix) => {
+          if (path.endsWith('.wasm')) {
+            const url = chrome.runtime.getURL('sqlite-wasm/sqlite3.wasm');
+            console.log(`📁 Loading WASM from: ${url}`);
+            return url;
+          }
+          return prefix + path;
+        },
+
+        // 关键修复: 移除 credentials 参数（chrome-extension:// 不支持 same-origin）
+        fetchSettings: {
+          // 不设置 credentials，让 fetch 使用默认的 'omit'
+        }
       });
 
       console.log('✅ SQLite WASM initialized successfully');
