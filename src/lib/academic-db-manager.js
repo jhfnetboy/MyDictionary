@@ -161,11 +161,17 @@ export class AcademicDBManager {
         }
       }
 
-      // 批量添加到 IndexedDB (使用 put 以支持覆盖重复 ID)
+      // 批量添加到 IndexedDB (使用 add 避免覆盖,重复 ID 会跳过)
       for (const phrase of allPhrases) {
-        const request = objectStore.put(phrase);
+        const request = objectStore.add(phrase);
         request.onsuccess = () => {
           importedCount++;
+        };
+        request.onerror = (e) => {
+          // 忽略重复 ID 错误,继续添加其他短语
+          if (e.target.error.name === 'ConstraintError') {
+            console.log(`⚠️ 跳过重复 ID: ${phrase.id}`);
+          }
         };
       }
 

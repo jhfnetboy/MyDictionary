@@ -146,8 +146,8 @@ class UIManager {
       return text === key ? fallback : text;
     };
 
-    // Logo URL with cache busting (使用版本号作为查询参数)
-    const logoUrl = chrome.runtime.getURL(`assets/logo.png?v=${version}`);
+    // Logo URL (Chrome extensions use content hash for cache busting automatically)
+    const logoUrl = chrome.runtime.getURL('assets/logo.png');
 
     this.sidebar.innerHTML = `
       <div class="mydictionary-header">
@@ -228,6 +228,19 @@ class UIManager {
         <div id="mydictionary-status" class="mydictionary-status"></div>
 
         <div id="mydictionary-academic-panel" class="mydictionary-academic-panel" style="display: none;">
+          <!-- 硬件检测区域 (固定显示) -->
+          <div class="mydictionary-performance-section mydictionary-performance-compact" id="mydictionary-performance-section-main">
+            <div class="mydictionary-performance-header">
+              <h4>⚡ ${getText('sidebar.performanceCheck', 'Performance Check')}</h4>
+              <button class="mydictionary-btn-secondary mydictionary-btn-small" id="mydictionary-run-performance-check-main">
+                🔍 ${getText('sidebar.checkHardware', 'Check Hardware')}
+              </button>
+            </div>
+            <div id="mydictionary-performance-results-main" class="mydictionary-performance-results" style="display: none;">
+              <!-- 性能检测结果将在这里显示 -->
+            </div>
+          </div>
+
           <div class="mydictionary-academic-search">
             <input
               type="text"
@@ -1084,6 +1097,9 @@ UIManager.prototype.switchMode = function(mode) {
     outputSection.style.display = 'none';
     academicPanel.style.display = 'block';
 
+    // 绑定主面板的硬件检测按钮
+    this.bindMainPerformanceCheckButton();
+
     // 初始化学术短语库（如果还没有初始化）
     if (!this.phrasebankInitialized) {
       this.initializeAcademicPhrasebank();
@@ -1597,7 +1613,59 @@ UIManager.prototype.handleGetExamples = async function() {
 };
 
 /**
- * 绑定性能检测按钮事件
+ * 绑定主面板的性能检测按钮 (已下载状态)
+ */
+UIManager.prototype.bindMainPerformanceCheckButton = function() {
+  const checkBtn = this.sidebar.querySelector('#mydictionary-run-performance-check-main');
+  const resultsDiv = this.sidebar.querySelector('#mydictionary-performance-results-main');
+
+  if (!checkBtn) return;
+
+  // 移除旧的事件监听器
+  const newBtn = checkBtn.cloneNode(true);
+  checkBtn.parentNode.replaceChild(newBtn, checkBtn);
+
+  newBtn.addEventListener('click', async () => {
+    // 显示加载状态
+    newBtn.disabled = true;
+    newBtn.innerHTML = '⏳ ' + (this.t('sidebar.checking', 'Checking...') || 'Checking...');
+    resultsDiv.style.display = 'block';
+    resultsDiv.innerHTML = `
+      <div class="mydictionary-loading-container">
+        <div class="mydictionary-spinner"></div>
+        <p>${this.t('sidebar.analyzingHardware', 'Analyzing your hardware...')}</p>
+      </div>
+    `;
+
+    try {
+      const response = await chrome.runtime.sendMessage({
+        action: 'detectPerformance'
+      });
+
+      if (response.success) {
+        this.displayPerformanceResults(response.data, 'main');
+        // 恢复按钮状态
+        newBtn.disabled = false;
+        newBtn.innerHTML = '✅ ' + (this.t('sidebar.checkComplete', 'Check Complete') || 'Check Complete');
+      } else {
+        throw new Error(response.error || 'Performance check failed');
+      }
+    } catch (error) {
+      console.error('❌ 性能检测失败:', error);
+      resultsDiv.innerHTML = `
+        <div class="mydictionary-error-container">
+          <div class="mydictionary-error-icon">⚠️</div>
+          <p class="mydictionary-error-message">${error.message}</p>
+        </div>
+      `;
+      newBtn.disabled = false;
+      newBtn.innerHTML = '🔍 ' + (this.t('sidebar.checkHardware', 'Check Hardware') || 'Check Hardware');
+    }
+  });
+};
+
+/**
+ * 绑定性能检测按钮事件 (下载提示页面)
  */
 UIManager.prototype.bindPerformanceCheckButton = function() {
   const checkBtn = this.sidebar.querySelector('#mydictionary-run-performance-check');
@@ -1646,10 +1714,15 @@ UIManager.prototype.bindPerformanceCheckButton = function() {
 
 /**
  * 显示性能检测结果
+ * @param {Object} data - 性能检测数据
+ * @param {String} target - 'main' 或 undefined (下载提示页)
  */
-UIManager.prototype.displayPerformanceResults = function(data) {
+UIManager.prototype.displayPerformanceResults = function(data, target = '') {
   const { level, capabilities, benchmark, recommendation } = data;
-  const resultsDiv = this.sidebar.querySelector('#mydictionary-performance-results');
+  const containerId = target === 'main'
+    ? '#mydictionary-performance-results-main'
+    : '#mydictionary-performance-results';
+  const resultsDiv = this.sidebar.querySelector(containerId);
 
   if (!resultsDiv) return;
 
