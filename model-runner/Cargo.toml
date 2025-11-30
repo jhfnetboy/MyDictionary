@@ -1,0 +1,55 @@
+[package]
+name = "model-runner"
+version = "0.1.0"
+edition = "2021"
+authors = ["Jason <jason@example.com>"]
+description = "Hugging Face 模型运行器 - TTS, Translation, Embedding"
+license = "MIT"
+
+[dependencies]
+# 异步运行时
+tokio = { version = "1", features = ["full"] }
+
+# HTTP 服务
+axum = "0.7"
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors"] }
+
+# Hugging Face Hub
+hf-hub = "0.3"
+
+# 序列化
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# 日志
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# 错误处理
+anyhow = "1"
+thiserror = "1"
+
+# 配置管理
+config = "0.14"
+
+# 文件操作
+tokio-util = { version = "0.7", features = ["io"] }
+
+# 进度条
+indicatif = "0.17"
+
+# 系统目录
+dirs = "5.0"
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bin]]
+name = "model-runner"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
