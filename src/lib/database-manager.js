@@ -32,10 +32,16 @@ class DatabaseManager {
     console.log('📦 Initializing wa-sqlite for Service Worker...');
 
     try {
-      // 1. 加载 wa-sqlite WASM 模块
-      const module = await SQLiteESMFactory();
+      // 1. 加载 wa-sqlite WASM 模块（增加内存限制）
+      const module = await SQLiteESMFactory({
+        // 增加 WASM 初始内存到 64MB
+        wasmMemory: new WebAssembly.Memory({
+          initial: 1024,  // 64MB (1024 * 64KB pages)
+          maximum: 2048   // 最大 128MB
+        })
+      });
       this.sqlite3 = SQLite.Factory(module);
-      console.log('✅ wa-sqlite WASM loaded');
+      console.log('✅ wa-sqlite WASM loaded (64MB memory)');
 
       // 2. 创建 IndexedDB VFS (支持 Service Worker)
       this.vfs = new IDBBatchAtomicVFS('wordnet-idb', {
@@ -163,7 +169,7 @@ class DatabaseManager {
 
   /**
    * 保存数据库到 IndexedDB (通过 wa-sqlite VFS)
-   * wa-sqlite 使用不同的方法写入数据库
+   * 新策略：使用 ATTACH DATABASE 从内存数据库迁移到 VFS
    */
   async saveDatabaseToStorage(dbData) {
     console.log('💾 Saving database to IndexedDB via wa-sqlite VFS...');
@@ -171,45 +177,114 @@ class DatabaseManager {
     try {
       await this.initSQLite();
 
-      // 1. 创建临时内存数据库
-      const tempDb = await this.sqlite3.open_v2(':memory:');
+      console.log('📝 Loading database into memory...');
 
-      // 2. 使用 deserialize 加载下载的数据
-      const dataPtr = this.sqlite3.module._malloc(dbData.length);
-      this.sqlite3.module.HEAPU8.set(dbData, dataPtr);
+      // 策略：先在内存中加载数据库，然后用 ATTACH + VACUUM INTO 复制到 VFS
+      // 这样可以避免直接操作 VFS 底层 API 的复杂性
 
-      const rc = this.sqlite3.module.ccall(
-        'sqlite3_deserialize',
-        'number',
-        ['number', 'string', 'number', 'number', 'number', 'number'],
-        [tempDb, 'main', dataPtr, dbData.length, dbData.length, 0]
+      // 1. 创建内存数据库并加载数据
+      // wa-sqlite 支持直接从 Uint8Array 加载数据库到内存
+      const memDb = await this.sqlite3.open_v2(':memory:');
+
+      console.log('📊 Deserializing database...');
+
+      // 2. 使用 SQLite 的 deserialize API（如果 wa-sqlite 支持）
+      // 否则需要通过其他方式导入数据
+
+      // 由于 wa-sqlite 没有 deserialize，我们采用 ATTACH 策略：
+      // 先将数据写入临时 VFS 文件，再 ATTACH 并复制
+
+      console.log('💾 Writing to temporary VFS file...');
+
+      // 创建临时文件名
+      const tempFile = 'temp-import.db';
+
+      // 直接用 VFS API 写入临时文件
+      const fileId = 3;
+      const flags = SQLite.SQLITE_OPEN_CREATE | SQLite.SQLITE_OPEN_READWRITE | SQLite.SQLITE_OPEN_MAIN_DB;
+      const pOutFlags = new DataView(new ArrayBuffer(4));
+
+      let rc = await this.vfs.xOpen(tempFile, fileId, flags, pOutFlags);
+      if (rc !== SQLite.SQLITE_OK) {
+        throw new Error(`xOpen temp file failed: ${rc}`);
+      }
+
+      // 写入数据
+      const CHUNK_SIZE = 1024 * 1024;
+      let offset = 0;
+
+      while (offset < dbData.length) {
+        const chunkSize = Math.min(CHUNK_SIZE, dbData.length - offset);
+        const chunk = dbData.subarray(offset, offset + chunkSize);
+
+        rc = await this.vfs.xWrite(fileId, chunk, offset);
+        if (rc !== SQLite.SQLITE_OK) {
+          throw new Error(`xWrite failed at ${offset}: ${rc}`);
+        }
+
+        offset += chunkSize;
+        if (offset % (10 * 1024 * 1024) === 0 || offset === dbData.length) {
+          console.log(`💾 ${Math.round((offset / dbData.length) * 100)}%`);
+        }
+      }
+
+      await this.vfs.xSync(fileId, SQLite.SQLITE_SYNC_NORMAL);
+      await this.vfs.xClose(fileId);
+
+      console.log('✅ Temp file written, copying to final database...');
+
+      // 等待 VFS 稳定
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // 3. 使用 SQLite ATTACH 和 VACUUM INTO 复制数据库
+      const srcDb = await this.sqlite3.open_v2(
+        tempFile,
+        SQLite.SQLITE_OPEN_READONLY,
+        this.vfs.name
       );
 
-      if (rc !== SQLite.SQLITE_OK) {
-        throw new Error(`sqlite3_deserialize failed with code ${rc}`);
+      // 使用 VACUUM INTO 复制整个数据库
+      const vacuumStmt = await this.sqlite3.prepare_v2(
+        srcDb,
+        `VACUUM INTO '${DB_NAME}'`
+      );
+
+      rc = await this.sqlite3.step(vacuumStmt);
+      await this.sqlite3.finalize(vacuumStmt);
+      await this.sqlite3.close(srcDb);
+
+      if (rc !== SQLite.SQLITE_DONE) {
+        throw new Error(`VACUUM INTO failed: ${rc}`);
       }
 
-      // 3. 使用 VACUUM INTO 复制到 VFS 管理的文件
-      const vacuumSql = `VACUUM INTO '${DB_NAME}'`;
-      const stmt = await this.sqlite3.prepare_v2(tempDb, vacuumSql);
-      await this.sqlite3.step(stmt);
+      console.log('✅ Database copied successfully');
+
+      // 4. 删除临时文件
+      await this.vfs.xDelete(tempFile, 0);
+
+      // 5. 等待并验证
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      console.log('🔍 Verifying...');
+
+      const verifyDb = await this.sqlite3.open_v2(
+        DB_NAME,
+        SQLite.SQLITE_OPEN_READONLY,
+        this.vfs.name
+      );
+
+      const stmt = await this.sqlite3.prepare_v2(verifyDb, 'SELECT COUNT(*) FROM synonyms');
+      if (await this.sqlite3.step(stmt) === SQLite.SQLITE_ROW) {
+        const count = this.sqlite3.column_int(stmt, 0);
+        console.log(`✅ Verified: ${count.toLocaleString()} rows`);
+      }
+
       await this.sqlite3.finalize(stmt);
+      await this.sqlite3.close(verifyDb);
 
-      await this.sqlite3.close(tempDb);
-
-      // 4. 验证保存成功
-      const db = await this.sqlite3.open_v2(DB_NAME, SQLite.SQLITE_OPEN_READONLY, this.vfs.name);
-      const countStmt = await this.sqlite3.prepare_v2(db, 'SELECT COUNT(*) FROM synonyms');
-
-      if (await this.sqlite3.step(countStmt) === SQLite.SQLITE_ROW) {
-        const count = this.sqlite3.column_int(countStmt, 0);
-        console.log(`✅ Database saved successfully with ${count} rows`);
-      }
-
-      await this.sqlite3.finalize(countStmt);
-      await this.sqlite3.close(db);
+      console.log('✅ Database import completed');
     } catch (error) {
-      console.error('❌ Failed to save database:', error);
+      console.error('❌ Database import failed:', error);
       throw error;
     }
   }
@@ -304,6 +379,48 @@ class DatabaseManager {
       this.db = null;
       this.isInitialized = false;
       console.log('🔒 Database connection closed');
+    }
+  }
+
+  /**
+   * 清空数据库（用于调试和重新下载）
+   */
+  async clearDatabase() {
+    console.log('🗑️ Clearing database...');
+
+    try {
+      // 1. 关闭现有连接
+      await this.close();
+
+      // 2. 初始化 SQLite 和 VFS
+      await this.initSQLite();
+
+      // 3. 删除数据库文件
+      try {
+        const rc = await this.vfs.xDelete(DB_NAME, 0);
+        if (rc === SQLite.SQLITE_OK) {
+          console.log('✅ Database file deleted from VFS');
+        }
+      } catch (deleteError) {
+        console.log('⚠️ Delete error (may not exist):', deleteError.message);
+      }
+
+      // 4. 清空 IndexedDB（完全重置 VFS）
+      if (this.vfs && typeof this.vfs.close === 'function') {
+        await this.vfs.close();
+      }
+
+      // 5. 重置状态
+      this.sqlite3 = null;
+      this.vfs = null;
+      this.db = null;
+      this.isInitialized = false;
+
+      console.log('✅ Database cleared successfully');
+      return true;
+    } catch (error) {
+      console.error('❌ Failed to clear database:', error);
+      return false;
     }
   }
 }

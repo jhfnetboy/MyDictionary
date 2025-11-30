@@ -4,7 +4,7 @@
  */
 
 import { pipeline, env } from '@xenova/transformers';
-import { databaseManager } from './src/lib/database-manager.js';
+import { synonymsManager } from './src/lib/synonyms-manager.js';
 
 // 修复 "global is not defined" 错误 (某些库期望 global 变量存在)
 if (typeof global === 'undefined') {
@@ -854,20 +854,19 @@ async function getSynonymsFromWordNet(word) {
   console.log(`📖 SQLite 同义词库查询: ${word}`);
 
   try {
-    // 检查数据库是否已下载
-    const isDbAvailable = await databaseManager.isDatabaseDownloaded();
+    // 检查同义词数据是否已下载
+    const isDbAvailable = await synonymsManager.isDataDownloaded();
 
     if (!isDbAvailable) {
       console.log('⚠️ WordNet 数据库未下载');
       return [];
     }
 
-    // 使用 SQLite 数据库查询
-    console.log('✅ 使用 WordNet SQLite 数据库查询');
-    const synonyms = await databaseManager.querySynonyms(word, 8);
+    // 使用 WordNet JSON 数据查询
+    const synonyms = await synonymsManager.querySynonyms(word, 8);
 
     if (synonyms && synonyms.length > 0) {
-      console.log(`📖 SQLite 找到 ${synonyms.length} 个同义词:`, synonyms.map(s => s.word));
+      console.log(`📖 找到 ${synonyms.length} 个同义词:`, synonyms.map(s => s.word));
       return synonyms;
     }
 
@@ -940,14 +939,14 @@ async function handleGetExamples(request, sendResponse) {
  */
 async function handleCheckDatabaseStatus(request, sendResponse) {
   try {
-    const isDownloaded = await databaseManager.isDatabaseDownloaded();
+    const isDownloaded = await synonymsManager.isDataDownloaded();
 
     sendResponse({
       success: true,
       data: {
         isDownloaded,
-        dbName: 'wordnet-synonyms.db',
-        dbSize: '30.62 MB',
+        dbName: 'synonyms.json.gz',
+        dbSize: '2.39 MB',
         wordCount: 126125,
         relationshipCount: 406196
       }
@@ -966,28 +965,27 @@ async function handleCheckDatabaseStatus(request, sendResponse) {
  */
 async function handleDownloadDatabase(request, sendResponse) {
   try {
-    console.log('📥 开始下载 WordNet 数据库...');
+    console.log('📥 开始下载 WordNet 同义词数据...');
 
-    // 下载数据库文件
-    const dbData = await databaseManager.downloadDatabase((progress) => {
-      // 这里可以通过消息发送进度更新
+    // 下载 JSON 数据
+    const synonymsData = await synonymsManager.downloadSynonyms((progress) => {
       console.log(`下载进度: ${progress.percentage}%`);
     });
 
     // 保存到 IndexedDB
-    await databaseManager.saveDatabaseToStorage(dbData);
+    await synonymsManager.saveSynonyms(synonymsData);
 
-    console.log('✅ 数据库下载并保存成功');
+    console.log('✅ 同义词数据下载并保存成功');
 
     sendResponse({
       success: true,
       data: {
-        message: 'Database downloaded successfully',
-        size: (dbData.length / 1024 / 1024).toFixed(2) + ' MB'
+        message: 'Synonyms data downloaded successfully',
+        wordCount: Object.keys(synonymsData).length
       }
     });
   } catch (error) {
-    console.error('❌ 数据库下载失败:', error);
+    console.error('❌ 数据下载失败:', error);
     sendResponse({
       success: false,
       error: error.message
@@ -997,9 +995,9 @@ async function handleDownloadDatabase(request, sendResponse) {
 
 console.log('🦝 MyDictionary Background Service Worker 已启动');
 
-// 启动时检查数据库状态
+// 启动时检查同义词数据状态
 (async () => {
-  const isDownloaded = await databaseManager.isDatabaseDownloaded();
+  const isDownloaded = await synonymsManager.isDataDownloaded();
   if (!isDownloaded) {
     console.log('⚠️ WordNet 数据库未下载，首次使用同义词功能时将提示下载');
   } else {

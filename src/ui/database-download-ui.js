@@ -16,35 +16,34 @@ export class DatabaseDownloadUI {
     this.container.innerHTML = `
       <div class="mydictionary-db-prompt">
         <div class="mydictionary-db-icon">📚</div>
-        <h3>Academic WordNet Database Required</h3>
+        <h3>Synonym Dictionary Required</h3>
         <p class="mydictionary-db-description">
-          To access the complete synonym dictionary with <strong>126,000+ words</strong> and <strong>400,000+ relationships</strong>,
-          you need to download the WordNet database.
+          Enable smart synonym suggestions with <strong>126K+ words</strong> from the academic WordNet database.
         </p>
         <div class="mydictionary-db-stats">
           <div class="mydictionary-db-stat">
-            <span class="label">Size:</span>
-            <span class="value">31 MB</span>
+            <span class="label">📦 Size:</span>
+            <span class="value">2.4 MB</span>
           </div>
           <div class="mydictionary-db-stat">
-            <span class="label">Type:</span>
-            <span class="value">One-time download</span>
+            <span class="label">📖 Words:</span>
+            <span class="value">126K+</span>
           </div>
           <div class="mydictionary-db-stat">
-            <span class="label">Storage:</span>
-            <span class="value">IndexedDB (offline)</span>
+            <span class="label">⚡ Speed:</span>
+            <span class="value">Instant</span>
           </div>
         </div>
         <div class="mydictionary-db-actions">
           <button id="download-db-btn" class="mydictionary-btn-primary">
-            📥 Download Database Now
+            📥 Download Now (2.4 MB)
           </button>
           <button id="cancel-db-btn" class="mydictionary-btn-secondary">
             Later
           </button>
         </div>
         <p class="mydictionary-db-note">
-          💡 After downloading, the database will be stored locally for offline use.
+          💡 One-time download. Works offline after installation.
         </p>
       </div>
     `;
@@ -70,34 +69,34 @@ export class DatabaseDownloadUI {
     this.container.innerHTML = `
       <div class="mydictionary-db-downloading">
         <div class="mydictionary-db-icon">⏳</div>
-        <h3>Downloading WordNet Database</h3>
+        <h3>📥 Downloading Synonym Data...</h3>
         <div class="mydictionary-progress-container">
           <div class="mydictionary-progress-bar">
             <div id="progress-fill" class="mydictionary-progress-fill" style="width: 0%"></div>
           </div>
           <div class="mydictionary-progress-text">
             <span id="progress-percentage">0%</span>
-            <span id="progress-size">0 MB / 31 MB</span>
+            <span id="progress-size">0 MB / 2.4 MB</span>
           </div>
         </div>
-        <p class="mydictionary-db-status" id="download-status">Initializing download...</p>
+        <p class="mydictionary-db-status" id="download-status">Initializing...</p>
       </div>
     `;
 
     try {
-      // 导入数据库管理器
-      const { databaseManager } = await import('../lib/database-manager.js');
+      // 导入同义词管理器
+      const { synonymsManager } = await import('../lib/synonyms-manager.js');
 
-      // 下载数据库
-      const dbData = await databaseManager.downloadDatabase((progress) => {
+      // 下载同义词数据
+      const synonymsData = await synonymsManager.downloadSynonyms((progress) => {
         this.updateProgress(progress);
       });
 
       // 更新状态
-      document.getElementById('download-status').textContent = 'Saving to local storage...';
+      document.getElementById('download-status').textContent = '💾 Saving to local storage...';
 
       // 保存到 IndexedDB
-      await databaseManager.saveDatabaseToStorage(dbData);
+      await synonymsManager.saveSynonyms(synonymsData);
 
       // 显示成功
       this.showSuccess();
