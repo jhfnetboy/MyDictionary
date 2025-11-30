@@ -49,31 +49,39 @@ class DatabaseManager {
         printErr: console.error,
 
         // 完全接管 WASM 实例化，避免内部 fetch 问题
-        instantiateWasm: async (imports, successCallback) => {
-          console.log('🔧 手动实例化 WASM...');
+        instantiateWasm: (imports, successCallback) => {
+          console.log('🔧 开始手动实例化 WASM...');
 
-          try {
-            // 直接用 fetch 加载（不带 credentials）
-            const response = await fetch(wasmUrl, { credentials: 'omit' });
-            if (!response.ok) {
-              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          // 异步执行实例化，但立即返回空对象（Emscripten 要求）
+          (async () => {
+            try {
+              // 直接用 fetch 加载（不带 credentials）
+              console.log(`📥 正在下载 WASM...`);
+              const response = await fetch(wasmUrl, { credentials: 'omit' });
+              if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+              }
+
+              const wasmBytes = await response.arrayBuffer();
+              console.log(`✅ WASM 下载完成: ${(wasmBytes.byteLength / 1024).toFixed(2)} KB`);
+
+              // 编译和实例化
+              console.log('🔨 正在编译 WASM...');
+              const result = await WebAssembly.instantiateStreaming(
+                new Response(wasmBytes, { headers: { 'Content-Type': 'application/wasm' } }),
+                imports
+              );
+
+              console.log('✅ WASM 实例化成功');
+              successCallback(result.instance, result.module);
+            } catch (error) {
+              console.error('❌ WASM 实例化失败:', error);
+              throw error;
             }
+          })();
 
-            const wasmBytes = await response.arrayBuffer();
-            console.log(`✅ WASM 下载完成: ${(wasmBytes.byteLength / 1024).toFixed(2)} KB`);
-
-            // 编译和实例化
-            const wasmModule = await WebAssembly.compile(wasmBytes);
-            const wasmInstance = await WebAssembly.instantiate(wasmModule, imports);
-
-            console.log('✅ WASM 实例化成功');
-            successCallback(wasmInstance, wasmModule);
-
-            return wasmInstance.exports;
-          } catch (error) {
-            console.error('❌ WASM 实例化失败:', error);
-            throw error;
-          }
+          // 立即返回空对象，表示异步实例化
+          return {};
         }
       });
 
