@@ -1,8 +1,8 @@
-# 🦝 MyDictionary
+# MyDictionary
 
 <div align="center">
 
-![Logo](./assets/logo.png)
+<img src="./assets/logo.png" width="40%" align="center" />
 
 **Local AI Dictionary · Translation · Synonyms · Examples · Academic Writing**
 
