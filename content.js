@@ -1098,7 +1098,22 @@ UIManager.prototype.initializeAcademicPhrasebank = async function() {
   console.log('📚 初始化学术短语库...');
 
   try {
-    // 向 background script 发送初始化请求
+    // 先检查数据库状态
+    const statusResponse = await chrome.runtime.sendMessage({
+      action: 'checkAcademicDatabaseStatus'
+    });
+
+    if (!statusResponse.success) {
+      throw new Error(statusResponse.error);
+    }
+
+    // 如果数据库未下载，显示下载提示
+    if (!statusResponse.data.isDownloaded) {
+      this.showAcademicDownloadPrompt();
+      return;
+    }
+
+    // 数据库已存在，直接初始化
     const response = await chrome.runtime.sendMessage({
       action: 'initializePhrasebank'
     });
@@ -1296,6 +1311,63 @@ UIManager.prototype.copyToClipboard = function(text) {
     console.log('✅ 已复制到剪贴板:', text);
   }).catch(err => {
     console.error('❌ 复制失败:', err);
+  });
+};
+
+/**
+ * 显示学术数据库下载提示
+ */
+UIManager.prototype.showAcademicDownloadPrompt = function() {
+  const phrasesContainer = this.sidebar.querySelector('#mydictionary-academic-phrases');
+  phrasesContainer.innerHTML = `
+    <div class="mydictionary-download-prompt">
+      <div class="mydictionary-download-icon">📚</div>
+      <h3>${this.t('sidebar.academicDatabase', 'Academic Phrasebank')}</h3>
+      <p class="mydictionary-download-description">
+        ${this.t('sidebar.academicDatabaseDesc', 'Download 120+ curated academic phrases for research writing')}
+      </p>
+      <div class="mydictionary-download-info">
+        <span>📦 ${this.t('sidebar.size', 'Size')}: ~50 KB</span>
+        <span>📊 ${this.t('sidebar.phrases', 'Phrases')}: 120+</span>
+      </div>
+      <button class="mydictionary-btn-primary" id="mydictionary-download-academic-btn">
+        📥 ${this.t('sidebar.downloadNow', 'Download Now')}
+      </button>
+      <div id="mydictionary-download-status" class="mydictionary-download-status"></div>
+    </div>
+  `;
+
+  // 绑定下载按钮
+  const downloadBtn = phrasesContainer.querySelector('#mydictionary-download-academic-btn');
+  const statusDiv = phrasesContainer.querySelector('#mydictionary-download-status');
+
+  downloadBtn.addEventListener('click', async () => {
+    downloadBtn.disabled = true;
+    downloadBtn.textContent = '⏳ Downloading...';
+    statusDiv.innerHTML = '<div class="mydictionary-spinner"></div>';
+
+    try {
+      const response = await chrome.runtime.sendMessage({
+        action: 'downloadAcademicDatabase'
+      });
+
+      if (response.success) {
+        statusDiv.innerHTML = `<div class="mydictionary-success">✅ ${response.data.message}</div>`;
+        this.phrasebankInitialized = true;
+
+        // 延迟后加载短语
+        setTimeout(() => {
+          this.handleSectionChange();
+        }, 1000);
+      } else {
+        throw new Error(response.error);
+      }
+    } catch (error) {
+      console.error('❌ 下载失败:', error);
+      statusDiv.innerHTML = `<div class="mydictionary-error">❌ Download failed: ${error.message}</div>`;
+      downloadBtn.disabled = false;
+      downloadBtn.textContent = '📥 Retry Download';
+    }
   });
 };
 

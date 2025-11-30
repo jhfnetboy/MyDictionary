@@ -1078,3 +1078,93 @@
   font-size: 13px;
   line-height: 1.5;
 }
+
+/* Academic Database Download Prompt */
+.mydictionary-download-prompt {
+  background: linear-gradient(135deg, #f8f9ff 0%, #fff8f0 100%);
+  padding: 32px 24px;
+  border-radius: 12px;
+  text-align: center;
+  margin: 20px 0;
+  border: 2px dashed #667eea;
+}
+
+.mydictionary-download-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  animation: mydictionary-float 3s ease-in-out infinite;
+}
+
+@keyframes mydictionary-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.mydictionary-download-prompt h3 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.mydictionary-download-prompt p {
+  margin: 8px 0 20px 0;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.mydictionary-download-info {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin: 20px 0;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.mydictionary-download-info span {
+  font-size: 13px;
+  color: #495057;
+  font-weight: 500;
+}
+
+.mydictionary-download-prompt .mydictionary-btn-primary {
+  max-width: 240px;
+  margin: 0 auto;
+  font-size: 15px;
+  padding: 14px 24px;
+}
+
+.mydictionary-download-status {
+  margin-top: 16px;
+  min-height: 24px;
+}
+
+.mydictionary-download-status.downloading {
+  color: #667eea;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.mydictionary-download-status .mydictionary-spinner {
+  width: 20px;
+  height: 20px;
+  border-width: 3px;
+}
+
+.mydictionary-success {
+  color: #2e7d32;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px;
+  background: #e8f5e9;
+  border-radius: 6px;
+  margin-top: 12px;
+}
