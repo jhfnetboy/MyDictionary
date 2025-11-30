@@ -147,7 +147,7 @@ class UIManager {
     };
 
     // Logo URL with cache busting (使用版本号作为查询参数)
-    const logoUrl = chrome.runtime.getURL(`assets/logo-64.png?v=${version}`);
+    const logoUrl = chrome.runtime.getURL(`assets/logo-tr.png?v=${version}`);
 
     this.sidebar.innerHTML = `
       <div class="mydictionary-header">
