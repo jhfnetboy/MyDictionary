@@ -37,9 +37,10 @@ class DatabaseManager {
       console.log('✅ wa-sqlite WASM loaded');
 
       // 2. 创建 IndexedDB VFS (支持 Service Worker)
-      this.vfs = new IDBBatchAtomicVFS('wordnet-idb');
-      await this.vfs.isReady();
-      console.log('✅ IndexedDB VFS ready');
+      this.vfs = new IDBBatchAtomicVFS('wordnet-idb', {
+        durability: 'relaxed'  // 更好的性能
+      });
+      console.log('✅ IndexedDB VFS created');
 
       // 3. 注册 VFS
       this.sqlite3.vfs_register(this.vfs, true);
