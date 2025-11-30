@@ -5,7 +5,7 @@
 
 import { pipeline, env } from '@xenova/transformers';
 import { synonymsManager } from './src/lib/synonyms-manager.js';
-import { phrasebankManager } from './src/lib/academic-phrasebank.js';
+import { academicDBManager } from './src/lib/academic-db-manager.js';
 import phrasebankData from './academic-phrasebank.json' assert { type: 'json' };
 
 // 修复 "global is not defined" 错误 (某些库期望 global 变量存在)
@@ -377,6 +377,14 @@ async function handleMessage(request, sender, sendResponse) {
 
     case 'searchPhrases':
       await handleSearchPhrases(request, sendResponse);
+      break;
+
+    case 'checkAcademicDatabaseStatus':
+      await handleCheckAcademicDatabaseStatus(request, sendResponse);
+      break;
+
+    case 'downloadAcademicDatabase':
+      await handleDownloadAcademicDatabase(request, sendResponse);
       break;
 
     default:
@@ -1014,9 +1022,8 @@ async function handleInitializePhrasebank(request, sendResponse) {
   console.log('📚 初始化学术短语库...');
 
   try {
-    // 使用预加载的 JSON 数据初始化
-    await phrasebankManager.initialize(phrasebankData);
-    const info = phrasebankManager.getInfo();
+    await academicDBManager.initialize();
+    const info = await academicDBManager.getInfo();
 
     console.log('✅ 学术短语库初始化成功');
     console.log(`📊 短语总数: ${info.totalPhrases}`);
@@ -1043,12 +1050,7 @@ async function handleGetPhrasesBySection(request, sendResponse) {
   console.log(`📑 获取论文部分短语: ${section}`);
 
   try {
-    // 确保已初始化
-    if (!phrasebankManager.isInitialized) {
-      await phrasebankManager.initialize(phrasebankData);
-    }
-
-    const phrases = phrasebankManager.getPhrasesBySection(section);
+    const phrases = await academicDBManager.getPhrasesBySection(section);
 
     console.log(`✅ 找到 ${phrases.length} 个短语`);
 
@@ -1074,12 +1076,7 @@ async function handleSearchPhrases(request, sendResponse) {
   console.log(`🔍 搜索学术短语: "${query}"`);
 
   try {
-    // 确保已初始化
-    if (!phrasebankManager.isInitialized) {
-      await phrasebankManager.initialize(phrasebankData);
-    }
-
-    const results = phrasebankManager.searchPhrases(query, {
+    const results = await academicDBManager.searchPhrases(query, {
       maxResults: 20
     });
 
@@ -1098,6 +1095,64 @@ async function handleSearchPhrases(request, sendResponse) {
   }
 }
 
+/**
+ * 处理检查学术数据库状态
+ */
+async function handleCheckAcademicDatabaseStatus(request, sendResponse) {
+  console.log('🔍 检查学术数据库状态...');
+
+  try {
+    const isDownloaded = await academicDBManager.isDataDownloaded();
+    const info = isDownloaded ? await academicDBManager.getInfo() : null;
+
+    sendResponse({
+      success: true,
+      data: {
+        isDownloaded,
+        totalPhrases: info ? info.totalPhrases : 0,
+        size: 50 // KB (估算)
+      }
+    });
+  } catch (error) {
+    console.error('❌ 检查学术数据库状态失败:', error);
+    sendResponse({
+      success: false,
+      error: error.message
+    });
+  }
+}
+
+/**
+ * 处理下载学术数据库
+ */
+async function handleDownloadAcademicDatabase(request, sendResponse) {
+  console.log('📥 开始下载学术数据库...');
+
+  try {
+    // 先清空现有数据
+    await academicDBManager.clearDatabase();
+
+    // 导入 JSON 数据到 IndexedDB
+    const count = await academicDBManager.importPhrases(phrasebankData);
+
+    console.log(`✅ 学术数据库下载完成，共 ${count} 条短语`);
+
+    sendResponse({
+      success: true,
+      data: {
+        totalPhrases: count,
+        message: `Successfully imported ${count} academic phrases`
+      }
+    });
+  } catch (error) {
+    console.error('❌ 下载学术数据库失败:', error);
+    sendResponse({
+      success: false,
+      error: error.message
+    });
+  }
+}
+
 console.log('🦝 MyDictionary Background Service Worker 已启动');
 
 // 启动时检查同义词数据状态
@@ -1107,5 +1162,14 @@ console.log('🦝 MyDictionary Background Service Worker 已启动');
     console.log('⚠️ WordNet 数据库未下载，首次使用同义词功能时将提示下载');
   } else {
     console.log('✅ WordNet 数据库已就绪');
+  }
+
+  // 检查学术数据库状态
+  const academicDownloaded = await academicDBManager.isDataDownloaded();
+  if (!academicDownloaded) {
+    console.log('⚠️ 学术短语库未下载，首次使用学术模式时将提示下载');
+  } else {
+    const info = await academicDBManager.getInfo();
+    console.log(`✅ 学术短语库已就绪 (${info.totalPhrases} 条短语)`);
   }
 })();
