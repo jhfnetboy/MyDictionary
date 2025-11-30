@@ -13,8 +13,9 @@ export class AcademicPhrasebankManager {
 
   /**
    * 初始化短语库
+   * @param {Object} data - 可选的预加载数据
    */
-  async initialize() {
+  async initialize(data = null) {
     if (this.isInitialized) {
       console.log('📚 Academic Phrasebank already initialized');
       return;
@@ -23,6 +24,18 @@ export class AcademicPhrasebankManager {
     console.log('📚 Initializing Academic Phrasebank...');
 
     try {
+      // 如果提供了数据，直接使用
+      if (data) {
+        this.phrasebankData = data;
+        this.isInitialized = true;
+        console.log('✅ Academic Phrasebank loaded from provided data');
+        console.log(`📊 Total phrases: ${this.phrasebankData.totalPhrases}`);
+
+        // 缓存到 localStorage
+        await this.saveToCache();
+        return;
+      }
+
       // 尝试从缓存加载
       const cached = await this.loadFromCache();
       if (cached) {
@@ -52,15 +65,16 @@ export class AcademicPhrasebankManager {
    */
   async loadFromFile() {
     try {
-      const response = await fetch(chrome.runtime.getURL('academic-phrasebank.json'));
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      this.phrasebankData = await response.json();
+      // 在 Service Worker 中，直接导入 JSON 数据
+      // 注意：这个方法会在 background.js 中被调用
+      const module = await import(chrome.runtime.getURL('academic-phrasebank.json'), {
+        assert: { type: 'json' }
+      });
+      this.phrasebankData = module.default;
       console.log('📖 Phrasebank loaded from file');
     } catch (error) {
       console.error('❌ Failed to load phrasebank from file:', error);
+      console.error('Error details:', error);
       throw error;
     }
   }

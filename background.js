@@ -6,6 +6,7 @@
 import { pipeline, env } from '@xenova/transformers';
 import { synonymsManager } from './src/lib/synonyms-manager.js';
 import { phrasebankManager } from './src/lib/academic-phrasebank.js';
+import phrasebankData from './academic-phrasebank.json' assert { type: 'json' };
 
 // 修复 "global is not defined" 错误 (某些库期望 global 变量存在)
 if (typeof global === 'undefined') {
@@ -1013,7 +1014,8 @@ async function handleInitializePhrasebank(request, sendResponse) {
   console.log('📚 初始化学术短语库...');
 
   try {
-    await phrasebankManager.initialize();
+    // 使用预加载的 JSON 数据初始化
+    await phrasebankManager.initialize(phrasebankData);
     const info = phrasebankManager.getInfo();
 
     console.log('✅ 学术短语库初始化成功');
@@ -1043,7 +1045,7 @@ async function handleGetPhrasesBySection(request, sendResponse) {
   try {
     // 确保已初始化
     if (!phrasebankManager.isInitialized) {
-      await phrasebankManager.initialize();
+      await phrasebankManager.initialize(phrasebankData);
     }
 
     const phrases = phrasebankManager.getPhrasesBySection(section);
@@ -1074,7 +1076,7 @@ async function handleSearchPhrases(request, sendResponse) {
   try {
     // 确保已初始化
     if (!phrasebankManager.isInitialized) {
-      await phrasebankManager.initialize();
+      await phrasebankManager.initialize(phrasebankData);
     }
 
     const results = phrasebankManager.searchPhrases(query, {
