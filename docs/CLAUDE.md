@@ -20,34 +20,69 @@ MyDictionary 是一个 Chrome 插件,利用本地运行的 AI 模型提供智能
   - **近义词列表**: 基于上下文的同义词推荐
   - **例句展示**: 相关的真实使用场景例句
 
+### 3. 学术写作模式 (Academic Writing Mode)
+- 侧边栏双模式切换: Translation ↔ Academic Writing
+- 学术短语库存储在 IndexedDB 中,采用按需下载模式
+- 提供 120+ 精选学术写作短语,涵盖:
+  - Introduction (引言)
+  - Methods (方法)
+  - Results (结果)
+  - Discussion (讨论)
+  - Conclusion (结论)
+  - Citations (引用动词)
+  - Transitions (转折词)
+- 每个短语包含:
+  - Academic Score (学术度评分 0-10)
+  - Frequency (使用频率: very_high, high, medium)
+  - Usage (使用说明)
+  - Examples (示例句子)
+- 功能:
+  - 按论文部分浏览短语
+  - 实时搜索过滤
+  - 一键复制短语
+
 ## Core Technology Stack
 
 - **前端框架**: Chrome Extension Manifest V3
 - **AI 库**: `@huggingface/transformers` (Transformers.js)
+- **数据存储**: IndexedDB (同义词数据库 + 学术短语库)
 - **推荐模型**:
   - Translation: `Xenova/nllb-200-distilled-600M` (多语言翻译,支持中英互译)
   - Synonyms: Local WordNet JSON Database (同义词推荐,完全离线)
   - Sentence Embedding: `Xenova/all-MiniLM-L6-v2` (例句检索)
+  - Academic Phrasebank: IndexedDB (学术短语库,按需下载)
 
 ## Project Architecture
 
 ```
 my-dictionary-plugin/
-├── manifest.json           // 插件配置文件 (Manifest V3)
-├── package.json            // 依赖管理
-├── background.js           // Service Worker: 模型加载和推理核心逻辑
-├── content.js              // Content Script: 监听选词、管理UI
-├── popup.html/.js          // 插件设置界面
+├── manifest.json                   // 插件配置文件 (Manifest V3)
+├── package.json                    // 依赖管理
+├── background.js                   // Service Worker: 模型加载和推理核心逻辑
+├── content.js                      // Content Script: 监听选词、管理UI
+├── popup.html/.js                  // 插件设置界面
+├── academic-phrasebank.json        // 学术短语库源数据 (120+ phrases)
+├── src/
+│   ├── config/
+│   │   └── i18n.json               // 国际化翻译配置
+│   ├── lib/
+│   │   ├── db-manager.js           // 同义词 IndexedDB 管理器
+│   │   ├── academic-db-manager.js  // 学术短语库 IndexedDB 管理器
+│   │   └── academic-phrasebank.js  // 学术短语库管理 (已废弃,迁移到 IndexedDB)
+│   └── ui/
+│       ├── sidebar.html            // 右侧滑动面板
+│       ├── sidebar.css             // 侧边栏样式 (含学术模式样式)
+│       ├── sidebar.js              // 侧边栏交互逻辑
+│       ├── tooltip.html            // 划词翻译小浮窗
+│       └── tooltip.css             // 浮窗样式
 ├── data/
-│   └── synonyms-db.json    // 本地同义词数据库 (WordNet 精选数据)
-├── ui/
-│   ├── sidebar.html        // 右侧滑动面板
-│   ├── sidebar.css         // 侧边栏样式
-│   ├── sidebar.js          // 侧边栏交互逻辑
-│   ├── tooltip.html        // 划词翻译小浮窗
-│   └── tooltip.css         // 浮窗样式
+│   └── synonyms-db.json            // 本地同义词数据库 (WordNet 精选数据)
+├── docs/
+│   ├── CLAUDE.md                   // 项目开发文档
+│   ├── academic-mode-design.md     // 学术模式设计文档
+│   └── academic-indexeddb-testing.md // IndexedDB 测试指南
 └── assets/
-    └── icons/              // 插件图标资源
+    └── icons/                      // 插件图标资源
 ```
 
 ## User Interaction Flow
@@ -292,3 +327,166 @@ pnpm run build
 - **模型加载时间**: < 3 秒 (首次) / < 500ms (缓存)
 - **推理延迟**: < 1 秒 (Fill-Mask) / < 500ms (Sentence Similarity)
 - **内存占用**: < 200MB (所有模型加载后)
+- **IndexedDB 查询**: < 100ms (学术短语搜索)
+
+## Academic IndexedDB Architecture
+
+### 数据库设计
+
+**Database Name**: `MyDictionary_Academic`
+**Version**: 1
+**Object Store**: `phrases`
+**Key Path**: `id`
+
+### 索引 (Indexes)
+
+| 索引名 | 字段 | 唯一性 | 用途 |
+|--------|------|--------|------|
+| `section` | section | false | 按论文部分查询 (introduction, methods, etc.) |
+| `subsection` | subsection | false | 按子分类查询 |
+| `phrase` | phrase | false | 短语全文搜索 |
+| `academicScore` | academicScore | false | 按学术度评分排序 |
+| `frequency` | frequency | false | 按使用频率过滤 |
+
+### 数据结构
+
+```javascript
+{
+  id: "intro_background_1",           // 唯一标识符
+  phrase: "This study aims to...",    // 学术短语
+  usage: "用于陈述研究目的",           // 使用说明
+  academicScore: 8.5,                  // 学术度评分 (0-10)
+  frequency: "very_high",              // 使用频率: very_high | high | medium
+  examples: [                          // 示例句子
+    "This study aims to investigate the relationship between..."
+  ],
+  section: "introduction",             // 论文部分
+  subsection: "background"             // 子分类
+}
+```
+
+### 核心方法 (academic-db-manager.js)
+
+**初始化**:
+```javascript
+await academicDBManager.initialize();
+// 创建 Object Store 和索引
+```
+
+**检查数据库状态**:
+```javascript
+const isDownloaded = await academicDBManager.isDataDownloaded();
+// 返回: true/false
+```
+
+**批量导入**:
+```javascript
+const count = await academicDBManager.importPhrases(phrasebankData);
+// 从 JSON 导入到 IndexedDB,返回导入数量
+```
+
+**按部分查询**:
+```javascript
+const phrases = await academicDBManager.getPhrasesBySection('introduction');
+// 使用 section 索引快速查询
+```
+
+**搜索短语**:
+```javascript
+const results = await academicDBManager.searchPhrases('study', {
+  section: 'introduction',  // 可选: 限定部分
+  minScore: 7.0,            // 可选: 最低评分
+  maxResults: 20            // 可选: 最多结果数
+});
+// 全文搜索,按 academicScore 降序排序
+```
+
+**数据库管理**:
+```javascript
+await academicDBManager.clearDatabase();    // 清空数据
+await academicDBManager.deleteDatabase();   // 删除数据库
+```
+
+### 消息通信协议
+
+**检查数据库状态**:
+```javascript
+chrome.runtime.sendMessage({
+  action: 'checkAcademicDatabaseStatus'
+}, (response) => {
+  // response.data: { isDownloaded, totalPhrases, size }
+});
+```
+
+**下载数据库**:
+```javascript
+chrome.runtime.sendMessage({
+  action: 'downloadAcademicDatabase'
+}, (response) => {
+  // response.data: { totalPhrases, message }
+});
+```
+
+**初始化短语库**:
+```javascript
+chrome.runtime.sendMessage({
+  action: 'initializePhrasebank'
+}, (response) => {
+  // response.data: { totalPhrases, isInitialized, dbName, dbVersion }
+});
+```
+
+**按部分获取短语**:
+```javascript
+chrome.runtime.sendMessage({
+  action: 'getPhrasesBySection',
+  section: 'introduction'
+}, (response) => {
+  // response.data: [phrase objects]
+});
+```
+
+**搜索短语**:
+```javascript
+chrome.runtime.sendMessage({
+  action: 'searchPhrases',
+  query: 'research'
+}, (response) => {
+  // response.data: [phrase objects] (最多20个)
+});
+```
+
+### 用户体验流程
+
+**首次使用** (数据未下载):
+```
+1. 用户切换到 Academic Writing 标签
+2. UI 显示下载提示 (📚 图标 + 描述 + 下载按钮)
+3. 用户点击 "📥 Download Now"
+4. 后台从 academic-phrasebank.json 批量导入到 IndexedDB
+5. 显示成功消息: "✅ Successfully downloaded 120+ academic phrases!"
+6. 自动加载 Introduction 部分的短语
+```
+
+**已下载** (正常使用):
+```
+1. 用户切换到 Academic Writing 标签
+2. 自动检测数据库已存在
+3. 直接显示 Section 选择器和短语列表
+4. 用户可浏览不同部分、搜索、复制短语
+```
+
+### 性能优化策略
+
+1. **索引查询**: 所有查询使用 IndexedDB 索引,避免全表扫描
+2. **结果限制**: 搜索默认限制 20 条结果,减少内存占用
+3. **按需加载**: 仅在用户切换到 Academic Writing 标签时初始化
+4. **异步操作**: 所有数据库操作异步,不阻塞 UI
+5. **缓存管理**: IndexedDB 持久化存储,无需重复下载
+
+### 数据扩展计划
+
+- **当前规模**: 120+ 短语 (~50 KB)
+- **短期目标**: 500+ 短语,添加更多学科领域
+- **长期目标**: 2000+ 短语,支持多语言学术写作
+- **数据来源**: Manchester Academic Phrasebank + 自定义精选
