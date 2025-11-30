@@ -1324,6 +1324,24 @@ UIManager.prototype.showAcademicDownloadPrompt = function() {
   const phrasesContainer = this.sidebar.querySelector('#mydictionary-academic-phrases');
   phrasesContainer.innerHTML = `
     <div class="mydictionary-download-prompt">
+      <!-- 硬件检测部分 -->
+      <div class="mydictionary-performance-section" id="mydictionary-performance-section">
+        <div class="mydictionary-performance-header">
+          <h3>⚡ ${this.t('sidebar.performanceCheck', 'Performance Check')}</h3>
+          <button class="mydictionary-btn-secondary mydictionary-btn-small" id="mydictionary-run-performance-check">
+            🔍 ${this.t('sidebar.checkHardware', 'Check Hardware')}
+          </button>
+        </div>
+        <div id="mydictionary-performance-results" class="mydictionary-performance-results" style="display: none;">
+          <!-- 性能检测结果将在这里显示 -->
+        </div>
+      </div>
+
+      <div class="mydictionary-divider">
+        <span></span>
+      </div>
+
+      <!-- 学术短语库下载 -->
       <div class="mydictionary-download-icon">📚</div>
       <h3>${this.t('sidebar.academicDatabase', 'Academic Phrasebank')}</h3>
       <p class="mydictionary-download-description">
@@ -1355,6 +1373,9 @@ UIManager.prototype.showAcademicDownloadPrompt = function() {
       </div>
     </div>
   `;
+
+  // 绑定性能检测按钮
+  this.bindPerformanceCheckButton();
 
   // 绑定下载按钮
   const downloadBtn = phrasesContainer.querySelector('#mydictionary-download-academic-btn');
@@ -1573,6 +1594,169 @@ UIManager.prototype.handleGetExamples = async function() {
       </div>
     `;
   }
+};
+
+/**
+ * 绑定性能检测按钮事件
+ */
+UIManager.prototype.bindPerformanceCheckButton = function() {
+  const checkBtn = this.sidebar.querySelector('#mydictionary-run-performance-check');
+  const resultsDiv = this.sidebar.querySelector('#mydictionary-performance-results');
+
+  if (!checkBtn) return;
+
+  checkBtn.addEventListener('click', async () => {
+    // 显示加载状态
+    checkBtn.disabled = true;
+    checkBtn.innerHTML = '⏳ ' + (this.t('sidebar.checking', 'Checking...') || 'Checking...');
+    resultsDiv.style.display = 'block';
+    resultsDiv.innerHTML = `
+      <div class="mydictionary-loading-container">
+        <div class="mydictionary-spinner"></div>
+        <p>${this.t('sidebar.analyzingHardware', 'Analyzing your hardware...')}</p>
+      </div>
+    `;
+
+    try {
+      const response = await chrome.runtime.sendMessage({
+        action: 'detectPerformance'
+      });
+
+      if (response.success) {
+        this.displayPerformanceResults(response.data);
+        // 恢复按钮状态
+        checkBtn.disabled = false;
+        checkBtn.innerHTML = '✅ ' + (this.t('sidebar.checkComplete', 'Check Complete') || 'Check Complete');
+      } else {
+        throw new Error(response.error || 'Performance check failed');
+      }
+    } catch (error) {
+      console.error('❌ 性能检测失败:', error);
+      resultsDiv.innerHTML = `
+        <div class="mydictionary-error-container">
+          <div class="mydictionary-error-icon">⚠️</div>
+          <p class="mydictionary-error-message">${error.message}</p>
+        </div>
+      `;
+      checkBtn.disabled = false;
+      checkBtn.innerHTML = '🔍 ' + (this.t('sidebar.checkHardware', 'Check Hardware') || 'Check Hardware');
+    }
+  });
+};
+
+/**
+ * 显示性能检测结果
+ */
+UIManager.prototype.displayPerformanceResults = function(data) {
+  const { level, capabilities, benchmark, recommendation } = data;
+  const resultsDiv = this.sidebar.querySelector('#mydictionary-performance-results');
+
+  if (!resultsDiv) return;
+
+  // 性能等级图标和颜色
+  const levelConfig = {
+    high: { icon: '🚀', color: '#10b981', label: 'High Performance' },
+    medium: { icon: '👍', color: '#f59e0b', label: 'Medium Performance' },
+    low: { icon: '💡', color: '#6b7280', label: 'Low Performance' }
+  };
+
+  const config = levelConfig[level] || levelConfig.medium;
+
+  // 硬件信息卡片
+  const hardwareHTML = `
+    <div class="mydictionary-performance-card">
+      <div class="mydictionary-performance-level" style="color: ${config.color};">
+        <span class="mydictionary-performance-icon">${config.icon}</span>
+        <span class="mydictionary-performance-label">${config.label}</span>
+      </div>
+      <div class="mydictionary-hardware-specs">
+        <div class="mydictionary-spec-item">
+          <span class="mydictionary-spec-label">💻 CPU Cores:</span>
+          <span class="mydictionary-spec-value">${capabilities.cpuCores}</span>
+        </div>
+        <div class="mydictionary-spec-item">
+          <span class="mydictionary-spec-label">💾 Memory:</span>
+          <span class="mydictionary-spec-value">${capabilities.memory} GB</span>
+        </div>
+        <div class="mydictionary-spec-item">
+          <span class="mydictionary-spec-label">🎮 WebGPU:</span>
+          <span class="mydictionary-spec-value">${capabilities.webgpu ? '✅ Supported' : '❌ Not Available'}</span>
+        </div>
+        <div class="mydictionary-spec-item">
+          <span class="mydictionary-spec-label">🎨 WebGL:</span>
+          <span class="mydictionary-spec-value">${capabilities.webgl ? '✅ Supported' : '❌ Not Available'}</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // 基准测试结果
+  const benchmarkHTML = `
+    <div class="mydictionary-benchmark-card">
+      <h4>📊 Benchmark Results</h4>
+      <div class="mydictionary-benchmark-scores">
+        <div class="mydictionary-score-item">
+          <span class="mydictionary-score-label">CPU Score:</span>
+          <span class="mydictionary-score-value">${benchmark.cpuScore.toFixed(1)}/100</span>
+        </div>
+        <div class="mydictionary-score-item">
+          <span class="mydictionary-score-label">Memory Score:</span>
+          <span class="mydictionary-score-value">${benchmark.memoryScore.toFixed(1)}/100</span>
+        </div>
+        <div class="mydictionary-score-item">
+          <span class="mydictionary-score-label">Total Score:</span>
+          <span class="mydictionary-score-value">${benchmark.totalScore.toFixed(1)}/100</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // 推荐配置
+  const featuresHTML = recommendation.features
+    .map(f => `<li class="mydictionary-feature-item">${f}</li>`)
+    .join('');
+
+  const recommendationHTML = `
+    <div class="mydictionary-recommendation-card">
+      <h4>💡 Recommendation</h4>
+      <div class="mydictionary-recommendation-message">
+        ${recommendation.message}
+      </div>
+      <div class="mydictionary-suggested-model">
+        <strong>🎯 Suggested Model:</strong> ${recommendation.suggestedModel}
+      </div>
+      <ul class="mydictionary-features-list">
+        ${featuresHTML}
+      </ul>
+      ${recommendation.downloadModelPrompt ? `
+        <button class="mydictionary-btn-primary mydictionary-btn-small" id="mydictionary-download-model-btn">
+          📥 Download ${recommendation.suggestedModel.split(' ')[0]} Model
+        </button>
+      ` : ''}
+    </div>
+  `;
+
+  // 组合所有内容
+  resultsDiv.innerHTML = hardwareHTML + benchmarkHTML + recommendationHTML;
+
+  // 如果有模型下载按钮，绑定事件
+  if (recommendation.downloadModelPrompt) {
+    const downloadModelBtn = resultsDiv.querySelector('#mydictionary-download-model-btn');
+    if (downloadModelBtn) {
+      downloadModelBtn.addEventListener('click', () => {
+        this.handleModelDownload(recommendation.suggestedModel);
+      });
+    }
+  }
+};
+
+/**
+ * 处理模型下载 (占位符,待实现)
+ */
+UIManager.prototype.handleModelDownload = function(modelName) {
+  console.log('📥 准备下载模型:', modelName);
+  alert(`Model download feature coming soon!\nModel: ${modelName}`);
+  // TODO: 实现模型下载功能
 };
 
 console.log('✅ MyDictionary Content Script 初始化完成');
