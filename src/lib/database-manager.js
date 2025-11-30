@@ -4,7 +4,7 @@
  */
 
 // GitHub Release URL for WordNet database
-const WORDNET_DB_URL = 'https://github.com/jhfnetboy/MyDictionary/releases/download/v0.2.0/wordnet-synonyms.db';
+const WORDNET_DB_URL = 'https://github.com/jhfnetboy/MyDictionary/releases/download/v0.2.0-beta/wordnet-synonyms.db';
 const DB_NAME = 'wordnet-synonyms.db';
 const DB_SIZE_MB = 31;
 
