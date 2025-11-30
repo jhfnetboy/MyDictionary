@@ -31,6 +31,8 @@
 | **📚 Academic Database** | [Manchester Phrasebank](https://www.phrasebank.manchester.ac.uk/) | 2,500+ curated phrases · 5 paper sections · University-verified expressions | ✅ Academic-grade |
 | **🔍 Synonym Engine** | DistilBERT-base-uncased | Lightweight BERT variant · Context-aware recommendations · 65MB optimized model | 🚀 Fast inference |
 | **💬 Example Generator** | MiniLM-L6-v2 | Sentence transformers · Semantic similarity matching · 23MB ultra-light | ⚡ <100ms |
+| **🔊 TTS Engine** | [SpeechT5 ONNX](https://huggingface.co/Xenova/speecht5_tts) | Microsoft SpeechT5 · Browser-native TTS · 120MB model · WebGPU accelerated | 🎵 Real-time |
+| **🎙️ TTS Server (Optional)** | [Kokoro-82M](https://github.com/jhfnetboy/Candle-local-AI-Server) | TTS Arena #1 · 82M params · Rust Candle · Port 9527 | 🏆 Native quality |
 
 ### ✨ Features
 
@@ -40,6 +42,7 @@
 - 📚 **Synonym Suggestions** - Context-aware intelligent recommendations powered by DistilBERT
 - 💬 **Example Sentences** - Real-world usage examples from authentic sources
 - 🎓 **Academic Writing** - 2,500+ academic phrases + AI semantic search for research papers
+- 🔊 **Text-to-Speech** - Browser-native TTS (SpeechT5) + optional high-quality server (Kokoro-82M)
 - ⚡ **On-Demand Download** - Only 300MB by default, other models downloaded as needed
 - 🎯 **Hardware Detection** - Auto-recommends optimal models based on your device capabilities
 
@@ -47,10 +50,14 @@
 
 #### Installation
 
-1. Clone the repository:
+1. Clone the repository (with submodules):
 ```bash
-git clone https://github.com/yourusername/MyDictionary.git
+# Clone with TTS server submodule
+git clone --recurse-submodules https://github.com/yourusername/MyDictionary.git
 cd MyDictionary
+
+# Or if already cloned, initialize submodules
+git submodule update --init --recursive
 ```
 
 2. Install dependencies:
@@ -58,10 +65,30 @@ cd MyDictionary
 pnpm install
 ```
 
-3. Load in Chrome:
+3. Build the extension:
+```bash
+pnpm run build
+```
+
+4. Load in Chrome:
    - Open Chrome and navigate to `chrome://extensions/`
    - Enable "Developer mode"
-   - Click "Load unpacked" and select the project directory
+   - Click "Load unpacked" and select the `dist/` directory
+
+#### Optional: Install High-Quality TTS Server
+
+For native-speaker quality TTS (Kokoro-82M, ranked #1 on TTS Arena):
+
+```bash
+cd tts-server
+git checkout dev
+cargo build --release
+
+# Start server (port 9527)
+./target/release/kokoro-tts-server
+```
+
+See [tts-server/README.md](./tts-server/README.md) for detailed instructions.
 
 #### Usage
 
@@ -95,8 +122,12 @@ Models are downloaded automatically when you use the corresponding features:
 | Academic Phrases | Phrasebank JSON | 1.1MB | Switch to Academic mode | JSON database |
 | **🧠 AI Semantic Search** | **BGE-Base-EN-v1.5** | **270MB** | **Click "Semantic Search" tab** | **BAAI Embeddings** |
 | AI Semantic (Lite) | BGE-Small-EN-v1.5 | 130MB | Low-end devices | BAAI Embeddings |
+| **🔊 TTS (Browser)** | **SpeechT5 ONNX** | **120MB** | **Click 🔊 button** | **Microsoft SpeechT5** |
+| 🔊 TTS (High Quality) | Kokoro-82M | 90MB | Install local server (optional) | Rust Candle |
 
-**Total**: 300MB (default) → **970MB** (with AI semantic search) → 1.9GB (full installation)
+**Total**: 300MB (default) → **970MB** (with AI semantic search) → **1.1GB** (with TTS) → 2.1GB (full installation)
+
+> 💡 **High-Quality TTS**: Install optional [Candle TTS Server](./tts-server) for native-speaker quality (Kokoro-82M, TTS Arena #1)
 
 ### 🎯 Core Functions
 
@@ -122,6 +153,17 @@ Models are downloaded automatically when you use the corresponding features:
 - **Dual Search Modes**: Keyword search (instant) + AI semantic search (intelligent)
 - **Copy & Paste**: One-click copy to your paper
 - **Performance Detection**: Auto-recommends BGE-Base (high-end) or BGE-Small (efficient)
+
+#### 5. Text-to-Speech (TTS) 🔊
+- **Browser-Native**: SpeechT5 TTS runs 100% in browser (120MB ONNX model)
+- **Smart Loading**: Lazy download on first use, permanently cached offline
+- **Academic Phrases**: Click 🔊 button next to any phrase to hear native pronunciation
+- **Button States**: Visual feedback (🔊 → ⏳ → ⏸️)
+- **Optional High-Quality**: Install [Kokoro-82M server](./tts-server) for native-speaker quality
+  - **TTS Arena #1**: Ranked higher than OpenAI TTS and XTTS v2
+  - **Lightweight**: Only 82M parameters, runs on CPU
+  - **Rust Candle**: Fast inference with minimal memory
+  - **Port 9527**: Local server, no internet required
 
 ### 🛠️ Tech Stack
 

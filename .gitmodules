@@ -1,0 +1,4 @@
+[submodule "tts-server"]
+	path = tts-server
+	url = https://github.com/jhfnetboy/Candle-local-AI-Server.git
+	branch = dev
