@@ -30,7 +30,7 @@ const i18n = {
     serverMessageConnected: 'Local TTS server is running at http://localhost:9527. Download latest version: ',
     serverMessageDisconnected: 'Local TTS server is not running. Download and start the server to use offline TTS with 54 premium voices.',
     serverMessageChecking: 'Connecting to local TTS server...',
-    releaseLink: 'v0.1.0 Release'
+    releaseLink: 'Latest Release'
   },
   zh: {
     pageTitle: 'TTS 语音设置',
@@ -54,7 +54,7 @@ const i18n = {
     serverMessageConnected: '本地 TTS 服务器正在运行: http://localhost:9527。下载最新版本: ',
     serverMessageDisconnected: '本地 TTS 服务器未运行。下载并启动服务器即可使用 54 种高质量离线语音。',
     serverMessageChecking: '正在连接本地 TTS 服务器...',
-    releaseLink: 'v0.1.0 发布版'
+    releaseLink: '最新版本'
   }
 };
 
