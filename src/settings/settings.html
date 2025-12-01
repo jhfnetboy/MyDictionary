@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MyDictionary 设置</title>
+  <title>MyDictionary Settings</title>
   <style>
     * {
       margin: 0;
@@ -31,6 +31,25 @@
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       padding: 30px;
+      position: relative;
+    }
+
+    .lang-switch {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .lang-switch:hover {
+      background: rgba(255, 255, 255, 0.3);
     }
 
     .header h1 {
@@ -170,40 +189,42 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1><span class="emoji">🎵</span> TTS 语音设置</h1>
-      <p>选择你喜欢的 TTS 声音</p>
+      <button class="lang-switch" id="lang-switch">中文</button>
+      <h1 id="page-title"><span class="emoji">🎵</span> TTS Voice Settings</h1>
+      <p id="page-desc">Select your preferred text-to-speech voice</p>
     </div>
 
     <div class="content">
       <div class="section">
         <div class="section-title">
           <span class="emoji">🇬🇧</span>
-          英式英语 (British English)
+          <span id="section-british">British English</span>
         </div>
-        <div class="section-desc">
-          英式发音对元音和辅音的区分更清晰,更适合学习英文单词发音
+        <div class="section-desc" id="desc-british">
+          Clear pronunciation with distinct vowels and consonants, ideal for learning English word pronunciation
         </div>
         <div id="british-voices" class="voice-grid"></div>
 
         <div class="recommended">
-          <strong>💡 推荐:</strong> George 和 Daniel 的发音最清晰,适合英文单词学习
+          <strong>💡 <span id="label-recommended">Recommended:</span></strong>
+          <span id="recommended-text">George and Daniel have the clearest pronunciation, best for English word learning</span>
         </div>
       </div>
 
       <div class="section">
         <div class="section-title">
           <span class="emoji">🇺🇸</span>
-          美式英语 (American English)
+          <span id="section-american">American English</span>
         </div>
-        <div class="section-desc">
-          标准美式发音,适合日常英语学习
+        <div class="section-desc" id="desc-american">
+          Standard American pronunciation, suitable for everyday English learning
         </div>
         <div id="american-voices" class="voice-grid"></div>
       </div>
 
       <div class="section">
         <button class="save-button" id="save-button">
-          <span class="emoji">💾</span> 保存设置
+          <span class="emoji">💾</span> <span id="btn-save">Save Settings</span>
         </button>
         <div class="status" id="status"></div>
       </div>

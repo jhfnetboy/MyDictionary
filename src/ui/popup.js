@@ -181,10 +181,9 @@ document.getElementById('open-sidebar-btn').addEventListener('click', async () =
 });
 
 
-// 设置按钮
+// 设置按钮 - 打开设置页面
 document.getElementById('settings-btn').addEventListener('click', () => {
-  const msg = currentLang === 'zh' ? '设置功能即将推出!' : 'Settings feature coming soon!';
-  alert(msg);
+  chrome.runtime.openOptionsPage();
 });
 
 // 初始化
