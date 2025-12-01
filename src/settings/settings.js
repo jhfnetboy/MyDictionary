@@ -27,9 +27,10 @@ const i18n = {
     serverConnected: 'Connected',
     serverDisconnected: 'Not Connected',
     serverChecking: 'Checking...',
-    serverMessageConnected: 'Local TTS server is running at http://localhost:9527',
+    serverMessageConnected: 'Local TTS server is running at http://localhost:9527. Download latest version: ',
     serverMessageDisconnected: 'Local TTS server is not running. Download and start the server to use offline TTS with 54 premium voices.',
-    serverMessageChecking: 'Connecting to local TTS server...'
+    serverMessageChecking: 'Connecting to local TTS server...',
+    releaseLink: 'v0.1.0 Release'
   },
   zh: {
     pageTitle: 'TTS 语音设置',
@@ -50,9 +51,10 @@ const i18n = {
     serverConnected: '已连接',
     serverDisconnected: '未连接',
     serverChecking: '检测中...',
-    serverMessageConnected: '本地 TTS 服务器正在运行: http://localhost:9527',
+    serverMessageConnected: '本地 TTS 服务器正在运行: http://localhost:9527。下载最新版本: ',
     serverMessageDisconnected: '本地 TTS 服务器未运行。下载并启动服务器即可使用 54 种高质量离线语音。',
-    serverMessageChecking: '正在连接本地 TTS 服务器...'
+    serverMessageChecking: '正在连接本地 TTS 服务器...',
+    releaseLink: 'v0.1.0 发布版'
   }
 };
 
@@ -243,7 +245,11 @@ async function checkServerStatus() {
       // Server is running
       statusDot.className = 'status-dot connected';
       statusText.textContent = t('serverConnected');
-      serverMessage.textContent = t('serverMessageConnected');
+
+      // Add release link to message
+      serverMessage.innerHTML = t('serverMessageConnected') +
+        `<a href="https://github.com/jhfnetboy/Candle-local-AI-Server/releases/latest" target="_blank" style="color: #667eea; text-decoration: underline;">${t('releaseLink')}</a>`;
+
       serverActions.style.display = 'none';
       console.log('✅ TTS Server connected');
     } else {

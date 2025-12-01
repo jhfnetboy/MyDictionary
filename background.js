@@ -421,6 +421,12 @@ async function handleMessage(request, sender, sendResponse) {
       await handleCheckTTSStatus(request, sendResponse);
       break;
 
+    case 'openOptions':
+      // 打开设置页面
+      chrome.runtime.openOptionsPage();
+      sendResponse({ success: true });
+      break;
+
     default:
       sendResponse({
         success: false,

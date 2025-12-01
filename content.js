@@ -798,7 +798,8 @@ class UIManager {
     const openTTSSettingsBtn = output.querySelector('#mydictionary-open-tts-settings-btn');
     if (openTTSSettingsBtn) {
       openTTSSettingsBtn.addEventListener('click', () => {
-        chrome.runtime.openOptionsPage();
+        // Content script不能直接调用openOptionsPage,需要通过background
+        chrome.runtime.sendMessage({ action: 'openOptions' });
       });
     }
 
