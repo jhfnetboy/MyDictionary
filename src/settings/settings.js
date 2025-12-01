@@ -13,28 +13,46 @@ const i18n = {
     pageDesc: 'Select your preferred text-to-speech voice',
     sectionBritish: 'British English',
     sectionAmerican: 'American English',
+    sectionServer: 'TTS Server Status',
     descBritish: 'Clear pronunciation with distinct vowels and consonants, ideal for learning English word pronunciation',
     descAmerican: 'Standard American pronunciation, suitable for everyday English learning',
     labelRecommended: 'Recommended:',
     recommendedText: 'George and Daniel have the clearest pronunciation, best for English word learning',
     btnSave: 'Save Settings',
+    btnDownload: 'Download TTS Server',
+    btnHelp: 'Setup Guide',
     statusSuccess: '✅ Settings saved successfully!',
     categoryMale: 'Male',
-    categoryFemale: 'Female'
+    categoryFemale: 'Female',
+    serverConnected: 'Connected',
+    serverDisconnected: 'Not Connected',
+    serverChecking: 'Checking...',
+    serverMessageConnected: 'Local TTS server is running at http://localhost:9527',
+    serverMessageDisconnected: 'Local TTS server is not running. Download and start the server to use offline TTS with 54 premium voices.',
+    serverMessageChecking: 'Connecting to local TTS server...'
   },
   zh: {
     pageTitle: 'TTS 语音设置',
     pageDesc: '选择你喜欢的 TTS 声音',
     sectionBritish: '英式英语',
     sectionAmerican: '美式英语',
+    sectionServer: 'TTS 服务器状态',
     descBritish: '英式发音对元音和辅音的区分更清晰,更适合学习英文单词发音',
     descAmerican: '标准美式发音,适合日常英语学习',
     labelRecommended: '推荐:',
     recommendedText: 'George 和 Daniel 的发音最清晰,适合英文单词学习',
     btnSave: '保存设置',
+    btnDownload: '下载 TTS 服务器',
+    btnHelp: '安装指南',
     statusSuccess: '✅ 设置已保存!',
     categoryMale: '男声',
-    categoryFemale: '女声'
+    categoryFemale: '女声',
+    serverConnected: '已连接',
+    serverDisconnected: '未连接',
+    serverChecking: '检测中...',
+    serverMessageConnected: '本地 TTS 服务器正在运行: http://localhost:9527',
+    serverMessageDisconnected: '本地 TTS 服务器未运行。下载并启动服务器即可使用 54 种高质量离线语音。',
+    serverMessageChecking: '正在连接本地 TTS 服务器...'
   }
 };
 
@@ -86,6 +104,7 @@ function t(key) {
 function updateUIText() {
   document.getElementById('page-title').innerHTML = `<span class="emoji">🎵</span> ${t('pageTitle')}`;
   document.getElementById('page-desc').textContent = t('pageDesc');
+  document.getElementById('section-server').textContent = t('sectionServer');
   document.getElementById('section-british').textContent = t('sectionBritish');
   document.getElementById('section-american').textContent = t('sectionAmerican');
   document.getElementById('desc-british').textContent = t('descBritish');
@@ -93,6 +112,8 @@ function updateUIText() {
   document.getElementById('label-recommended').textContent = t('labelRecommended');
   document.getElementById('recommended-text').textContent = t('recommendedText');
   document.getElementById('btn-save').textContent = t('btnSave');
+  document.getElementById('btn-download').textContent = t('btnDownload');
+  document.getElementById('btn-help').textContent = t('btnHelp');
   document.getElementById('lang-switch').textContent = currentLang === 'en' ? '中文' : 'English';
 }
 
@@ -194,17 +215,65 @@ function renderVoices() {
   });
 }
 
+// Check TTS server status
+async function checkServerStatus() {
+  const statusDot = document.getElementById('status-dot');
+  const statusText = document.getElementById('status-text');
+  const serverMessage = document.getElementById('server-message');
+  const serverActions = document.getElementById('server-actions');
+
+  // Set checking state
+  statusDot.className = 'status-dot checking';
+  statusText.textContent = t('serverChecking');
+  serverMessage.textContent = t('serverMessageChecking');
+  serverActions.style.display = 'none';
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
+
+    const response = await fetch('http://localhost:9527/health', {
+      method: 'GET',
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      // Server is running
+      statusDot.className = 'status-dot connected';
+      statusText.textContent = t('serverConnected');
+      serverMessage.textContent = t('serverMessageConnected');
+      serverActions.style.display = 'none';
+      console.log('✅ TTS Server connected');
+    } else {
+      throw new Error('Server responded with error');
+    }
+  } catch (error) {
+    // Server is not running
+    statusDot.className = 'status-dot disconnected';
+    statusText.textContent = t('serverDisconnected');
+    serverMessage.textContent = t('serverMessageDisconnected');
+    serverActions.style.display = 'flex';
+    console.log('❌ TTS Server not connected:', error.message);
+  }
+}
+
 // Initialize
 async function init() {
   await loadSettings();
   updateUIText();
   renderVoices();
+  await checkServerStatus();
 
   // Language switch button
   document.getElementById('lang-switch').addEventListener('click', switchLanguage);
 
   // Save button
   document.getElementById('save-button').addEventListener('click', saveSettings);
+
+  // Refresh server status every 10 seconds
+  setInterval(checkServerStatus, 10000);
 
   console.log('✅ Settings page initialized');
 }
