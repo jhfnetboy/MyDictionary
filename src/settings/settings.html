@@ -184,6 +184,105 @@
     .recommended strong {
       color: #f57c00;
     }
+
+    /* Server Status Styles */
+    .server-status-card {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 16px;
+    }
+
+    .server-status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .status-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #999;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .status-dot.connected {
+      background: #10b981;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+    }
+
+    .status-dot.disconnected {
+      background: #ef4444;
+      animation: none;
+    }
+
+    .status-dot.checking {
+      background: #f59e0b;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .status-text {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .server-status-details {
+      color: #666;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .server-status-details p {
+      margin: 8px 0;
+    }
+
+    .server-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .download-button,
+    .help-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .download-button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .download-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .help-button {
+      background: white;
+      border: 2px solid #667eea;
+      color: #667eea;
+    }
+
+    .help-button:hover {
+      background: #f0f4ff;
+    }
   </style>
 </head>
 <body>
@@ -195,6 +294,38 @@
     </div>
 
     <div class="content">
+      <!-- TTS Server Status Section -->
+      <div class="section" id="server-status-section">
+        <div class="section-title">
+          <span class="emoji">🖥️</span>
+          <span id="section-server">TTS Server Status</span>
+        </div>
+        <div class="server-status-card" id="server-status-card">
+          <div class="server-status-indicator">
+            <div class="status-dot" id="status-dot"></div>
+            <span class="status-text" id="status-text">Checking...</span>
+          </div>
+          <div class="server-status-details" id="server-status-details">
+            <p id="server-message">Connecting to local TTS server...</p>
+          </div>
+          <div class="server-actions" id="server-actions" style="display: none;">
+            <a href="https://github.com/jhfnetboy/Candle-local-AI-Server/releases/latest"
+               target="_blank"
+               class="download-button"
+               id="download-button">
+              <span class="emoji">⬇️</span>
+              <span id="btn-download">Download TTS Server</span>
+            </a>
+            <a href="https://github.com/jhfnetboy/Candle-local-AI-Server#readme"
+               target="_blank"
+               class="help-button">
+              <span class="emoji">📖</span>
+              <span id="btn-help">Setup Guide</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
       <div class="section">
         <div class="section-title">
           <span class="emoji">🇬🇧</span>
