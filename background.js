@@ -831,14 +831,41 @@ async function handleSemanticSearchPhrases(request, sendResponse) {
   console.log('🧠 开始语义搜索:', query);
 
   try {
-    // 1. 检查模型是否可用
+    // 1. 检查模型是否可用，如果未加载但已下载则自动加载
     if (!self.academicModel) {
-      console.warn('⚠️ 学术模型未加载');
-      sendResponse({
-        success: false,
-        error: '请先下载 BGE 模型以使用语义搜索功能'
-      });
-      return;
+      console.warn('⚠️ 学术模型未在内存中，检查是否已下载...');
+
+      // 检查 storage 中是否有下载记录
+      const result = await chrome.storage.local.get(['downloadedModels']);
+      const downloadedModels = result.downloadedModels || [];
+      const hasModel = downloadedModels.includes('bge-base') || downloadedModels.includes('bge-small');
+
+      if (hasModel) {
+        // 模型已下载但未加载，尝试自动加载
+        console.log('📥 检测到已下载的模型，正在加载到内存...');
+        try {
+          const modelId = downloadedModels.includes('bge-base') ? 'bge-base' : 'bge-small';
+          const transformersModelId = modelId === 'bge-base' ?
+            'Xenova/bge-base-en-v1.5' : 'Xenova/bge-small-en-v1.5';
+
+          self.academicModel = await pipeline('feature-extraction', transformersModelId);
+          console.log('✅ 模型加载成功');
+        } catch (loadError) {
+          console.error('❌ 模型加载失败:', loadError);
+          sendResponse({
+            success: false,
+            error: '模型加载失败，请重新下载模型'
+          });
+          return;
+        }
+      } else {
+        // 模型未下载
+        sendResponse({
+          success: false,
+          error: '请先下载 BGE 模型以使用语义搜索功能'
+        });
+        return;
+      }
     }
 
     // 2. 获取所有学术短语

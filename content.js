@@ -1671,13 +1671,61 @@ UIManager.prototype.showAcademicDownloadPrompt = function() {
  */
 UIManager.prototype.showAcademicError = function(message) {
   const phrasesContainer = this.sidebar.querySelector('#mydictionary-academic-phrases');
+
+  // 检查是否是模型相关错误，如果是则添加下载按钮
+  const isModelError = message.includes('BGE') || message.includes('模型');
+
   phrasesContainer.innerHTML = `
     <div class="mydictionary-error-container">
       <div class="mydictionary-error-icon">⚠️</div>
       <h4>Error</h4>
       <p class="mydictionary-error-message">${message}</p>
+      ${isModelError ? `
+        <button class="mydictionary-btn-primary mydictionary-btn-small" id="mydictionary-error-download-btn" style="margin-top: 12px;">
+          📥 ${this.t('sidebar.downloadModel', 'Download')} BGE-Base ${this.t('sidebar.model', 'Model')}
+        </button>
+      ` : ''}
     </div>
   `;
+
+  // 如果是模型错误，添加下载按钮事件
+  if (isModelError) {
+    setTimeout(() => {
+      const downloadBtn = phrasesContainer.querySelector('#mydictionary-error-download-btn');
+      if (downloadBtn) {
+        downloadBtn.addEventListener('click', async () => {
+          downloadBtn.disabled = true;
+          downloadBtn.textContent = '⏳ 正在下载...';
+
+          try {
+            const response = await chrome.runtime.sendMessage({
+              action: 'downloadModel',
+              modelId: 'bge-base',
+              modelName: 'BGE-Base'
+            });
+
+            if (response.success) {
+              phrasesContainer.innerHTML = `
+                <div class="mydictionary-success-container">
+                  <div class="mydictionary-success-icon">✅</div>
+                  <h4>${this.t('messages.downloadComplete', 'Download Complete')}</h4>
+                  <p>现在可以使用语义搜索了！请重新输入查询。</p>
+                </div>
+              `;
+              this.showStatus('✅ 模型下载完成', 'success');
+            } else {
+              throw new Error(response.message || '下载失败');
+            }
+          } catch (error) {
+            console.error('❌ 模型下载失败:', error);
+            downloadBtn.disabled = false;
+            downloadBtn.textContent = `📥 ${this.t('sidebar.downloadModel', 'Download')} BGE-Base ${this.t('sidebar.model', 'Model')}`;
+            this.showStatus(`❌ 下载失败: ${error.message}`, 'error');
+          }
+        });
+      }
+    }, 0);
+  }
 };
 
 /**
