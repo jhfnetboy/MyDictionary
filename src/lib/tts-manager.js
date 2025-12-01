@@ -22,10 +22,53 @@ export class TTSManager {
     this.lastServerCheck = 0;
     this.serverCheckInterval = 30000; // 30秒检查一次
 
+    // TTS 设置 (从 chrome.storage 加载)
+    this.settings = {
+      voice: 'bm_george', // 默认英式男声
+    };
+
     console.log('🔊 TTS 初始化 (自动模式: 本地优先 → 浏览器回退)');
+
+    // 加载设置
+    this.loadSettings();
 
     // 初次检查本地服务器
     this.checkLocalServer();
+  }
+
+  /**
+   * 从 storage 加载设置
+   */
+  async loadSettings() {
+    try {
+      const result = await chrome.storage.sync.get(['ttsSettings']);
+      if (result.ttsSettings) {
+        this.settings = { ...this.settings, ...result.ttsSettings };
+        console.log('✅ TTS 设置已加载:', this.settings);
+      }
+    } catch (error) {
+      console.warn('⚠️ 加载 TTS 设置失败:', error);
+    }
+  }
+
+  /**
+   * 保存设置到 storage
+   */
+  async saveSettings(newSettings) {
+    this.settings = { ...this.settings, ...newSettings };
+    try {
+      await chrome.storage.sync.set({ ttsSettings: this.settings });
+      console.log('✅ TTS 设置已保存:', this.settings);
+    } catch (error) {
+      console.error('❌ 保存 TTS 设置失败:', error);
+    }
+  }
+
+  /**
+   * 获取当前设置
+   */
+  getSettings() {
+    return { ...this.settings };
   }
 
   /**
@@ -280,7 +323,8 @@ export class TTSManager {
         },
         body: JSON.stringify({
           text: text,
-          format: 'wav'
+          format: 'wav',
+          voice: this.settings.voice  // 使用设置的声音
         }),
         signal: controller.signal
       });

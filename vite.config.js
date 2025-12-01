@@ -53,6 +53,11 @@ export default defineConfig({
           src: 'src/offscreen/*',
           dest: 'src/offscreen',
         },
+        // 复制设置页面
+        {
+          src: 'src/settings/*',
+          dest: 'src/settings',
+        },
         // 复制图标
         {
           src: 'assets/icons/*',

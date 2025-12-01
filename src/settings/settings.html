@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyDictionary 设置</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      opacity: 0.9;
+      font-size: 14px;
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    .section {
+      margin-bottom: 30px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-desc {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .voice-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    .voice-card {
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: white;
+    }
+
+    .voice-card:hover {
+      border-color: #667eea;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+    }
+
+    .voice-card.selected {
+      border-color: #667eea;
+      background: #f0f4ff;
+    }
+
+    .voice-name {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .voice-desc {
+      font-size: 13px;
+      color: #666;
+    }
+
+    .voice-category {
+      font-size: 12px;
+      color: #999;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .save-button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+
+    .save-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .save-button:active {
+      transform: translateY(0);
+    }
+
+    .status {
+      text-align: center;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 16px;
+      display: none;
+    }
+
+    .status.success {
+      background: #e8f5e9;
+      color: #2e7d32;
+      display: block;
+    }
+
+    .emoji {
+      font-size: 20px;
+    }
+
+    .recommended {
+      background: #fff3e0;
+      border: 1px solid #ffb74d;
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    .recommended strong {
+      color: #f57c00;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1><span class="emoji">🎵</span> TTS 语音设置</h1>
+      <p>选择你喜欢的 TTS 声音</p>
+    </div>
+
+    <div class="content">
+      <div class="section">
+        <div class="section-title">
+          <span class="emoji">🇬🇧</span>
+          英式英语 (British English)
+        </div>
+        <div class="section-desc">
+          英式发音对元音和辅音的区分更清晰,更适合学习英文单词发音
+        </div>
+        <div id="british-voices" class="voice-grid"></div>
+
+        <div class="recommended">
+          <strong>💡 推荐:</strong> George 和 Daniel 的发音最清晰,适合英文单词学习
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">
+          <span class="emoji">🇺🇸</span>
+          美式英语 (American English)
+        </div>
+        <div class="section-desc">
+          标准美式发音,适合日常英语学习
+        </div>
+        <div id="american-voices" class="voice-grid"></div>
+      </div>
+
+      <div class="section">
+        <button class="save-button" id="save-button">
+          <span class="emoji">💾</span> 保存设置
+        </button>
+        <div class="status" id="status"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="settings.js"></script>
+</body>
+</html>
