@@ -775,10 +775,20 @@ async function handleDownloadModel(request, sendResponse) {
 
   } catch (error) {
     console.error(`❌ 模型下载失败:`, error);
+
+    // 提供更友好的错误信息
+    let errorMessage = error.message || 'Failed to download model';
+
+    if (errorMessage.includes('fetch')) {
+      errorMessage = '网络错误：无法从 Hugging Face 下载模型文件。请检查网络连接或稍后重试。';
+    } else if (errorMessage.includes('CORS')) {
+      errorMessage = '跨域错误：模型下载被浏览器阻止。请确保使用最新版本的浏览器。';
+    }
+
     sendResponse({
       success: false,
-      message: error.message || 'Failed to download model',
-      error: error.message || 'Failed to download model'
+      message: errorMessage,
+      error: errorMessage
     });
   }
 }

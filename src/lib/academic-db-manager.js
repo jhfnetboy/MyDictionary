@@ -334,6 +334,30 @@ export class AcademicDBManager {
       };
     });
   }
+
+  /**
+   * 获取所有短语（用于语义搜索）
+   */
+  async getAllPhrases() {
+    await this.initialize();
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([this.storeName], 'readonly');
+      const objectStore = transaction.objectStore(this.storeName);
+      const request = objectStore.getAll();
+
+      request.onsuccess = () => {
+        const allPhrases = request.result;
+        console.log(`📚 Retrieved ${allPhrases.length} phrases for semantic search`);
+        resolve(allPhrases);
+      };
+
+      request.onerror = () => {
+        console.error('❌ Failed to get all phrases:', request.error);
+        reject(request.error);
+      };
+    });
+  }
 }
 
 // 创建单例
