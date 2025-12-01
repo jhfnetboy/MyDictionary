@@ -758,6 +758,14 @@ class UIManager {
         </div>
 
         <div class="mydictionary-settings-section">
+          <h4>🎵 ${this.t('sidebar.ttsSettings') || 'TTS Voice Settings'}</h4>
+          <p>${this.t('sidebar.ttsSettingsDesc') || 'Configure text-to-speech voice and preferences'}</p>
+          <button class="mydictionary-btn-primary" id="mydictionary-open-tts-settings-btn" style="margin-top: 8px;">
+            ⚙️ ${this.t('sidebar.openTTSSettings') || 'Open Voice Settings'}
+          </button>
+        </div>
+
+        <div class="mydictionary-settings-section">
           <h4>📦 ${this.t('sidebar.modelManagement') || 'Model Management'}</h4>
           <p>${this.t('sidebar.modelInfo') || 'Models are downloaded automatically when needed'}</p>
 
@@ -785,6 +793,14 @@ class UIManager {
         </button>
       </div>
     `;
+
+    // 绑定打开TTS设置按钮
+    const openTTSSettingsBtn = output.querySelector('#mydictionary-open-tts-settings-btn');
+    if (openTTSSettingsBtn) {
+      openTTSSettingsBtn.addEventListener('click', () => {
+        chrome.runtime.openOptionsPage();
+      });
+    }
 
     // 绑定关闭按钮
     const closeBtn = output.querySelector('#mydictionary-close-settings-btn');

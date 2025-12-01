@@ -86,7 +86,10 @@
       "semanticSearch": "Semantic Search",
       "semanticSearchHint": "AI will find phrases with similar meanings",
       "semanticSearchRequiresModel": "Semantic search requires downloading the BGE model first",
-      "similarity": "Similarity"
+      "similarity": "Similarity",
+      "ttsSettings": "TTS Voice Settings",
+      "ttsSettingsDesc": "Configure text-to-speech voice and preferences",
+      "openTTSSettings": "Open Voice Settings"
     },
     "performance": {
       "high": {
@@ -225,7 +228,10 @@
       "semanticSearch": "语义搜索",
       "semanticSearchHint": "AI 将查找含义相似的短语",
       "semanticSearchRequiresModel": "语义搜索需要先下载 BGE 模型",
-      "similarity": "相似度"
+      "similarity": "相似度",
+      "ttsSettings": "TTS 语音设置",
+      "ttsSettingsDesc": "配置文本转语音的声音和偏好设置",
+      "openTTSSettings": "打开语音设置"
     },
     "performance": {
       "high": {
