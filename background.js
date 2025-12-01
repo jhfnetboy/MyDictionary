@@ -777,6 +777,7 @@ async function handleDownloadModel(request, sendResponse) {
     console.error(`❌ 模型下载失败:`, error);
     sendResponse({
       success: false,
+      message: error.message || 'Failed to download model',
       error: error.message || 'Failed to download model'
     });
   }

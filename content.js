@@ -1402,9 +1402,48 @@ UIManager.prototype.switchSearchMode = async function(mode) {
     const isModelDownloaded = await this.checkModelDownloaded('bge-base') ||
                                await this.checkModelDownloaded('bge-small');
     if (!isModelDownloaded) {
-      searchHint.innerHTML = `⚠️ ${this.t('sidebar.semanticSearchRequiresModel', 'Semantic search requires downloading the BGE model first')}`;
+      searchHint.innerHTML = `
+        ⚠️ ${this.t('sidebar.semanticSearchRequiresModel', 'Semantic search requires downloading the BGE model first')}
+        <br>
+        <button class="mydictionary-btn-primary mydictionary-btn-small" id="mydictionary-download-bge-btn" style="margin-top: 8px;">
+          📥 ${this.t('sidebar.downloadModel', 'Download')} BGE-Base ${this.t('sidebar.model', 'Model')}
+        </button>
+      `;
       searchHint.style.background = '#fef3c7';
       searchHint.style.borderColor = '#f59e0b';
+
+      // 添加下载按钮事件监听
+      setTimeout(() => {
+        const downloadBtn = this.sidebar.querySelector('#mydictionary-download-bge-btn');
+        if (downloadBtn) {
+          downloadBtn.addEventListener('click', async () => {
+            downloadBtn.disabled = true;
+            downloadBtn.textContent = '⏳ 正在下载...';
+
+            try {
+              const response = await chrome.runtime.sendMessage({
+                action: 'downloadModel',
+                modelId: 'bge-base',
+                modelName: 'BGE-Base'
+              });
+
+              if (response.success) {
+                searchHint.innerHTML = `💡 ${this.t('sidebar.semanticSearchHint', 'AI will find phrases with similar meanings')}`;
+                searchHint.style.background = '#f0f9ff';
+                searchHint.style.borderColor = '#667eea';
+                this.showStatus('✅ 模型下载完成', 'success');
+              } else {
+                throw new Error(response.message || '下载失败');
+              }
+            } catch (error) {
+              console.error('❌ 模型下载失败:', error);
+              downloadBtn.disabled = false;
+              downloadBtn.textContent = `📥 ${this.t('sidebar.downloadModel', 'Download')} BGE-Base ${this.t('sidebar.model', 'Model')}`;
+              this.showStatus(`❌ 下载失败: ${error.message}`, 'error');
+            }
+          });
+        }
+      }, 0);
     } else {
       searchHint.innerHTML = `💡 ${this.t('sidebar.semanticSearchHint', 'AI will find phrases with similar meanings')}`;
       searchHint.style.background = '#f0f9ff';
