@@ -27,7 +27,7 @@ export class TTSManager {
       voice: 'bm_george', // 默认英式男声
     };
 
-    console.log('🔊 TTS 初始化 (自动模式: 本地优先 → 浏览器回退)');
+    console.log('🔊 TTS 初始化 (仅使用本地 TTS 服务器)');
 
     // 加载设置
     this.loadSettings();
@@ -266,7 +266,7 @@ export class TTSManager {
   }
 
   /**
-   * 播放文本 (自动模式: 本地优先 → 浏览器回退)
+   * 播放文本 (仅使用本地 TTS 服务器)
    * @param {string} text - 要朗读的文本
    * @param {Function} onEnd - 播放结束回调
    * @param {Function} onError - 错误回调
@@ -281,23 +281,13 @@ export class TTSManager {
       // 检查本地服务器（带缓存）
       const hasLocalServer = await this.checkLocalServer();
 
-      if (hasLocalServer) {
-        // 优先使用本地服务器
-        console.log('🎵 使用本地 Rust TTS 服务器');
-        try {
-          await this.speakViaLocalServer(text, onEnd, onError);
-          return; // 成功则直接返回
-        } catch (localError) {
-          console.warn('⚠️ 本地服务器失败，回退到浏览器 TTS:', localError.message);
-          // 标记服务器不可用
-          this.localServerAvailable = false;
-          // 继续使用浏览器 TTS
-        }
+      if (!hasLocalServer) {
+        throw new Error('TTS 服务器未运行。请先启动本地 TTS 服务器。');
       }
 
-      // 使用浏览器 TTS (回退或默认)
-      console.log('🎵 使用浏览器 TTS (SpeechT5)');
-      await this.speakViaBrowser(text, onEnd, onError);
+      // 使用本地服务器
+      console.log('🎵 使用本地 Rust TTS 服务器');
+      await this.speakViaLocalServer(text, onEnd, onError);
 
     } catch (error) {
       console.error('❌ 播放失败:', error);
@@ -396,40 +386,6 @@ export class TTSManager {
     }
   }
 
-  /**
-   * 通过浏览器 TTS 播放
-   */
-  async speakViaBrowser(text, onEnd = null, onError = null) {
-    try {
-      // 确保 Offscreen Document 已创建
-      await this.ensureOffscreenDocument();
-
-      // 生成音频
-      const audioData = await this.synthesize(text);
-
-      // 将 Float32Array 转换为可传输的格式
-      const audioArray = Array.from(audioData.audio); // Float32Array -> Array
-      const sampleRate = audioData.sampling_rate;
-
-      // 发送到 Offscreen Document 播放
-      const response = await chrome.runtime.sendMessage({
-        action: 'playAudio',
-        audioArray: audioArray,
-        sampleRate: sampleRate
-      });
-
-      if (response && response.success) {
-        this.isPlaying = true;
-        console.log('🎵 音频已发送到 Offscreen Document (浏览器 TTS)');
-      } else {
-        throw new Error(response?.error || 'Failed to play audio');
-      }
-
-    } catch (error) {
-      console.error('❌ 浏览器 TTS 播放失败:', error);
-      throw error;
-    }
-  }
 
   /**
    * 停止播放
@@ -468,6 +424,14 @@ export class TTSManager {
       isReady: this.isReady,
       isLoading: this.isLoading
     };
+  }
+
+  /**
+   * 检查 TTS 是否可用
+   * @returns {Promise<boolean>} TTS 是否可用
+   */
+  async isAvailable() {
+    return await this.checkLocalServer();
   }
 }
 

@@ -479,6 +479,10 @@ async function handleMessage(request, sender, sendResponse) {
       await handleCheckTTSStatus(request, sendResponse);
       break;
 
+    case 'checkTTSAvailable':
+      await handleCheckTTSAvailable(request, sendResponse);
+      break;
+
     case 'getDictionaryStatus':
       await handleGetDictionaryStatus(request, sendResponse);
       break;
@@ -1932,6 +1936,28 @@ async function handleCheckTTSStatus(request, sendResponse) {
     console.error('❌ 检查 TTS 状态失败:', error);
     sendResponse({
       success: false,
+      error: error.message
+    });
+  }
+}
+
+/**
+ * 检查 TTS 是否可用
+ */
+async function handleCheckTTSAvailable(request, sendResponse) {
+  try {
+    const isAvailable = await ttsManager.isAvailable();
+
+    sendResponse({
+      success: true,
+      available: isAvailable
+    });
+
+  } catch (error) {
+    console.error('❌ 检查 TTS 可用性失败:', error);
+    sendResponse({
+      success: false,
+      available: false,
       error: error.message
     });
   }

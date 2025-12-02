@@ -975,40 +975,32 @@ class UIManager {
         <div style="background: #fff3e0; padding: 16px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #ff9800;">
           <p style="margin: 0; line-height: 1.6; color: #e65100;">
             ${this.currentLang === 'zh'
-              ? '⚠️ TTS 服务暂不可用'
-              : '⚠️ TTS Service Unavailable'}
+              ? '⚠️ TTS 服务器未运行'
+              : '⚠️ TTS Server Not Running'}
+          </p>
+          <p style="margin: 8px 0 0; font-size: 13px; color: #666;">
+            ${errorMessage}
           </p>
         </div>
 
-        <div style="margin-bottom: 20px; font-size: 14px; line-height: 1.6; color: #666;">
-          ${this.currentLang === 'zh'
-            ? '您有以下两种选择获得高质量语音播放:'
-            : 'You have two options for high-quality voice playback:'}
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-          <div style="padding: 16px; background: #f0f4ff; border-radius: 8px; border-left: 4px solid #667eea;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-              <span style="font-size: 24px;">🖥️</span>
-              <strong>${this.currentLang === 'zh' ? '选项 1: 本地 TTS 服务器' : 'Option 1: Local TTS Server'}</strong>
-            </div>
-            <div style="font-size: 13px; color: #555; line-height: 1.5;">
-              ${this.currentLang === 'zh'
-                ? '• 54 种高质量语音<br>• 完全离线<br>• 快速响应<br>• 推荐用于日常学习'
-                : '• 54 premium voices<br>• Fully offline<br>• Fast response<br>• Recommended for daily use'}
-            </div>
+        <div style="padding: 16px; background: #f0f4ff; border-radius: 8px; border-left: 4px solid #667eea; margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+            <span style="font-size: 24px;">🖥️</span>
+            <strong>${this.currentLang === 'zh' ? '本地 TTS 服务器' : 'Local TTS Server'}</strong>
           </div>
-
-          <div style="padding: 16px; background: #f0fdf4; border-radius: 8px; border-left: 4px solid #10b981;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-              <span style="font-size: 24px;">🌐</span>
-              <strong>${this.currentLang === 'zh' ? '选项 2: 浏览器内置 TTS' : 'Option 2: Browser Built-in TTS'}</strong>
-            </div>
-            <div style="font-size: 13px; color: #555; line-height: 1.5;">
-              ${this.currentLang === 'zh'
-                ? '• 无需下载<br>• 系统自带语音<br>• 音质一般<br>• 适合临时使用'
-                : '• No download needed<br>• System voices<br>• Standard quality<br>• Good for occasional use'}
-            </div>
+          <div style="font-size: 13px; color: #555; line-height: 1.5; margin-bottom: 12px;">
+            ${this.currentLang === 'zh'
+              ? '• 54 种高质量语音<br>• 完全离线，无隐私泄露<br>• 快速响应（< 1秒）<br>• 支持流式播放'
+              : '• 54 premium voices<br>• Fully offline, privacy-first<br>• Fast response (< 1s)<br>• Streaming playback'}
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 6px; font-size: 13px;">
+            <strong style="color: #667eea;">${this.currentLang === 'zh' ? '🚀 启动步骤:' : '🚀 Quick Start:'}</strong>
+            <ol style="margin: 8px 0 0; padding-left: 20px; line-height: 1.6;">
+              <li>${this.currentLang === 'zh' ? '前往 TTS 设置页面' : 'Go to TTS Settings'}</li>
+              <li>${this.currentLang === 'zh' ? '下载并安装 TTS 服务器' : 'Download and install TTS server'}</li>
+              <li>${this.currentLang === 'zh' ? '启动服务器（自动运行端口 9527）' : 'Start server (auto-runs on port 9527)'}</li>
+              <li>${this.currentLang === 'zh' ? '刷新此页面，小喇叭即可使用' : 'Refresh page, speaker button enabled'}</li>
+            </ol>
           </div>
         </div>
 
@@ -2363,6 +2355,9 @@ class TTSButtonHelper {
       btn.setAttribute('data-btn-id', buttonId);
     }
 
+    // 检查 TTS 是否可用
+    this.checkAndUpdateButtonState(btn);
+
     // 添加点击事件
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
@@ -2373,10 +2368,39 @@ class TTSButtonHelper {
   }
 
   /**
+   * 检查并更新按钮状态
+   */
+  async checkAndUpdateButtonState(btn) {
+    try {
+      const response = await chrome.runtime.sendMessage({
+        action: 'checkTTSAvailable'
+      });
+
+      if (!response.success || !response.available) {
+        // TTS 不可用，禁用按钮
+        btn.disabled = true;
+        btn.classList.add('disabled');
+        btn.title = '请先启动 TTS 服务器';
+      }
+    } catch (error) {
+      console.error('❌ 检查 TTS 可用性失败:', error);
+      btn.disabled = true;
+      btn.classList.add('disabled');
+      btn.title = '请先启动 TTS 服务器';
+    }
+  }
+
+  /**
    * 处理按钮点击
    */
   async handleClick(btn, text) {
     try {
+      // 如果按钮禁用（TTS 不可用），显示配置对话框
+      if (btn.disabled && btn.classList.contains('disabled')) {
+        this.showTTSConfigDialog('TTS 服务器未运行');
+        return;
+      }
+
       // 如果正在播放，停止
       if (btn.classList.contains('playing')) {
         this.stopTTS(btn);
@@ -2418,9 +2442,10 @@ class TTSButtonHelper {
 
       // 恢复按钮状态
       btn.innerHTML = '🔊';
-      btn.disabled = false;
+      btn.disabled = true;
+      btn.classList.add('disabled');
       btn.classList.remove('loading', 'playing', 'error');
-      btn.title = 'Read aloud';
+      btn.title = '请先启动 TTS 服务器';
 
       // 显示 TTS 配置引导对话框
       this.showTTSConfigDialog(error.message);
