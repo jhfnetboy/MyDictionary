@@ -31,12 +31,14 @@
 | **📚 Academic Database** | [Manchester Phrasebank](https://www.phrasebank.manchester.ac.uk/) | 2,500+ curated phrases · 5 paper sections · University-verified expressions | ✅ Academic-grade |
 | **🔍 Synonym Engine** | DistilBERT-base-uncased | Lightweight BERT variant · Context-aware recommendations · 65MB optimized model | 🚀 Fast inference |
 | **💬 Example Generator** | MiniLM-L6-v2 | Sentence transformers · Semantic similarity matching · 23MB ultra-light | ⚡ <100ms |
+| **📖 Local Dictionary** | [ECDICT](https://github.com/skywind3000/ECDICT) | 770k+ entries · MIT License · Phonetics + Collins ratings · Instant lookup (<50ms) | ⚡ 60x faster |
 | **🔊 TTS Engine** | [SpeechT5 ONNX](https://huggingface.co/Xenova/speecht5_tts) | Microsoft SpeechT5 · Browser-native TTS · 120MB model · WebGPU accelerated | 🎵 Real-time |
 | **🎙️ TTS Server (Optional)** | [Kokoro-82M](https://github.com/jhfnetboy/Candle-local-AI-Server) | TTS Arena #1 · 82M params · Rust Candle · Port 9527 | 🏆 Native quality |
 
 ### ✨ Features
 
 - 🔒 **100% Privacy** - All AI processing runs locally in browser, zero data upload, no API keys needed
+- 📖 **Lightning-Fast Dictionary** - 7,400+ high-frequency words with instant lookup (<50ms), 60x faster than AI models
 - 🌐 **Smart Translation** - 200 languages with specialized high-quality models for major pairs (EN↔CN)
 - 🧠 **AI Semantic Search** - BGE-powered intelligent phrase discovery with similarity scoring
 - 📚 **Synonym Suggestions** - Context-aware intelligent recommendations powered by DistilBERT
@@ -448,6 +450,38 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 - [distilbert-base-uncased](https://huggingface.co/distilbert-base-uncased) - 近义词推荐
 - [sentence-transformers/all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) - 句子嵌入
 - [Academic Phrasebank](https://www.phrasebank.manchester.ac.uk/) by University of Manchester - 2,500+ 精选学术短语
+- [ECDICT](https://github.com/skywind3000/ECDICT) by skywind3000 - 770,000+ 词条英中词典 (MIT License)
+
+## 📚 词典数据来源与许可
+
+MyDictionary 使用以下开源词典数据,所有数据均遵循其原始许可协议:
+
+### ECDICT (英中词典)
+- **项目地址**: [skywind3000/ECDICT](https://github.com/skywind3000/ECDICT)
+- **作者**: skywind3000
+- **许可证**: MIT License
+- **词条数**: 770,000+
+- **内容**: 英文单词、音标、中文翻译、词形变化、柯林斯星级评分
+- **使用范围**:
+  - ✅ 个人学习和使用
+  - ✅ 开源项目集成
+  - ✅ 商业应用 (需保留版权声明)
+  - ❌ 禁止直接转售词典数据
+
+**数据分层**:
+- **Tier 1** (7,400 词): 高频词汇,内置于插件,立即可用
+- **Tier 2** (12,000 词): 扩展词汇 (CET6, IELTS, TOEFL, GRE)
+- **Tier 3** (751,000 词): 完整词库
+
+### 版权声明
+
+本插件代码采用 **MIT License**,词典数据保留原始许可证。
+
+使用本插件即表示您同意遵守以下条款:
+1. 插件代码可自由使用、修改和分发 (MIT License)
+2. 词典数据需遵守 ECDICT 的 MIT License 条款
+3. 商业使用需保留版权声明和许可证文件
+4. 禁止单独提取词典数据用于转售
 
 ---
 

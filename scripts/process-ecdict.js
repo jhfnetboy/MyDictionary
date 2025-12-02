@@ -82,35 +82,59 @@ console.log('🔄 数据清洗和分层...');
 
 const allEntries = records.map(cleanEntry);
 
-// Tier 1: 高频词汇 (5000 词)
-// 优先级: CET4 > 柯林斯5星 > 柯林斯4星 > 牛津核心 > BNC频率
-const tier1 = allEntries
-  .filter(entry => {
-    // 必须有中文翻译
-    if (!entry.translation) return false;
+// Tier 1: 高频词汇 (8000 词)
+// 优先级: 柯林斯星级 > BNC频率 > CET4 > 高考
+const tier1Candidates = allEntries.filter(entry => {
+  // 必须有中文翻译
+  if (!entry.translation) return false;
 
-    // 高优先级: CET4, 柯林斯5星, 牛津核心
-    if (entry.tags.includes('cet4')) return true;
-    if (entry.collins >= 4) return true;
-    if (entry.oxford) return true;
+  // 必入选: 柯林斯 4-5 星 (含所有基础高频词)
+  if (entry.collins >= 4) return true;
 
-    // 高考词汇
-    if (entry.tags.includes('gk')) return true;
+  // 必入选: CET4 词汇
+  if (entry.tags.includes('cet4')) return true;
 
-    return false;
-  })
+  // 必入选: 牛津核心词汇
+  if (entry.oxford) return true;
+
+  // 备选: 柯林斯 3 星词汇
+  if (entry.collins === 3) return true;
+
+  // 备选: 高考词汇
+  if (entry.tags.includes('gk')) return true;
+
+  // 备选: BNC < 2000 的高频词
+  if (entry.bnc > 0 && entry.bnc < 2000) return true;
+
+  // 备选: CET6 词汇
+  if (entry.tags.includes('cet6')) return true;
+
+  return false;
+});
+
+console.log(`   候选词汇: ${tier1Candidates.length} 词`);
+
+const tier1 = tier1Candidates
   .sort((a, b) => {
-    // 排序优先级
-    if (a.tags.includes('cet4') && !b.tags.includes('cet4')) return -1;
-    if (!a.tags.includes('cet4') && b.tags.includes('cet4')) return 1;
-
+    // 1. 柯林斯星级优先 (保证基础词在前)
     if (a.collins !== b.collins) return b.collins - a.collins;
+
+    // 2. BNC 频率 (值越小越常用)
+    const aBnc = a.bnc || 99999;
+    const bBnc = b.bnc || 99999;
+    if (aBnc !== bBnc) return aBnc - bBnc;
+
+    // 3. CET4 优先
+    const aCet4 = a.tags.includes('cet4') ? 1 : 0;
+    const bCet4 = b.tags.includes('cet4') ? 1 : 0;
+    if (aCet4 !== bCet4) return bCet4 - aCet4;
+
+    // 4. 牛津核心
     if (a.oxford !== b.oxford) return b.oxford ? 1 : -1;
-    if (a.bnc !== b.bnc) return a.bnc - b.bnc; // BNC 值越小越常用
 
     return 0;
   })
-  .slice(0, 5000);
+  .slice(0, 8000); // 扩大到 8000 词
 
 console.log(`✅ Tier 1 (高频词汇): ${tier1.length} 词`);
 
@@ -188,7 +212,7 @@ const metadata = {
     tier1: {
       count: tier1.length,
       size: `${tier1Size} MB`,
-      description: '高频词汇 (CET4, 柯林斯4-5星, 牛津核心, 高考)',
+      description: '高频词汇 (柯林斯4-5星 + BNC高频, CET4, 牛津核心, 高考)',
       file: 'tier1-common.json'
     },
     tier2: {

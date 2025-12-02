@@ -2,23 +2,23 @@
   "version": "1.0.0",
   "source": "ECDICT (skywind3000)",
   "license": "MIT",
-  "generatedAt": "2025-12-02T04:56:18.421Z",
+  "generatedAt": "2025-12-02T05:12:47.499Z",
   "tiers": {
     "tier1": {
-      "count": 5000,
-      "size": "2.84 MB",
-      "description": "高频词汇 (CET4, 柯林斯4-5星, 牛津核心, 高考)",
+      "count": 7406,
+      "size": "4.00 MB",
+      "description": "高频词汇 (柯林斯4-5星 + BNC高频, CET4, 牛津核心, 高考)",
       "file": "tier1-common.json"
     },
     "tier2": {
-      "count": 12384,
-      "size": "1.27 MB",
+      "count": 10141,
+      "size": "1.01 MB",
       "description": "扩展词汇 (CET6, IELTS, TOEFL, GRE, 柯林斯3星)",
       "file": "tier2-extended.json.gz"
     },
     "tier3": {
-      "count": 751355,
-      "size": "22.96 MB",
+      "count": 751192,
+      "size": "22.95 MB",
       "description": "完整词库 (所有词条)",
       "file": "tier3-full.json.gz"
     }
