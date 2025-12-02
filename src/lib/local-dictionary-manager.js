@@ -62,9 +62,17 @@ export class LocalDictionaryManager {
   }
 
   /**
-   * 加载 Tier 1 到内存
+   * 加载 Tier 1 到内存 (仅在未下载完整词库时使用)
    */
   async loadTier1() {
+    // 检查是否已安装完整词库
+    const fullInstalled = await this._isFullDictionaryInstalled();
+    if (fullInstalled) {
+      console.log('✅ 完整词库已安装,跳过 Tier1 加载');
+      this.cacheLoaded = false; // 不使用内存缓存
+      return;
+    }
+
     if (this.cacheLoaded) {
       console.log('📦 Tier 1 已在内存中');
       return;
@@ -99,17 +107,40 @@ export class LocalDictionaryManager {
 
       await tx.complete;
 
-      // 缓存到内存
+      // 缓存到内存 (Tier1 模式)
       this.tier1Cache = new Map(tier1Data.map(e => [e.word.toLowerCase(), e]));
       this.cacheLoaded = true;
 
       const loadTime = performance.now() - startTime;
       console.log(`✅ Tier 1 加载完成 (${loadTime.toFixed(2)}ms)`);
       console.log(`   内存缓存: ${this.tier1Cache.size} 词`);
+      console.log(`   💡 提示: 下载完整词库可获得 768k+ 词条`);
 
     } catch (error) {
       console.error('❌ Tier 1 加载失败:', error);
       throw error;
+    }
+  }
+
+  /**
+   * 检查是否已安装完整词库
+   * @private
+   */
+  async _isFullDictionaryInstalled() {
+    try {
+      const tx = this.db.transaction(['metadata'], 'readonly');
+      const store = tx.objectStore('metadata');
+      const request = store.get('full');
+
+      return new Promise((resolve) => {
+        request.onsuccess = () => {
+          const meta = request.result;
+          resolve(meta && meta.installed);
+        };
+        request.onerror = () => resolve(false);
+      });
+    } catch (error) {
+      return false;
     }
   }
 

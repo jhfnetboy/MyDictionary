@@ -334,9 +334,14 @@ class UIManager {
     const langSwitchBtn = this.sidebar.querySelector('#mydictionary-lang-switch-btn');
     langSwitchBtn.addEventListener('click', () => this.switchLanguage());
 
-    // 设置按钮
+    // 设置按钮 - 直接打开设置页面
     const settingsBtn = this.sidebar.querySelector('#mydictionary-settings-btn');
-    settingsBtn.addEventListener('click', () => this.showSettings());
+    settingsBtn.addEventListener('click', () => {
+      chrome.runtime.sendMessage({
+        action: 'openTab',
+        url: chrome.runtime.getURL('src/settings/settings.html')
+      });
+    });
 
     // 翻译按钮
     const translateBtn = this.sidebar.querySelector('#mydictionary-translate-btn');
@@ -575,10 +580,17 @@ class UIManager {
       if (response.success) {
         console.log('✅ 翻译成功，准备显示结果');
 
-        // 显示翻译结果
-        const translationText = response.data?.translation || 'No translation';
-        const latency = response.data?.latency || 0;
-        const modelId = response.data?.modelId || 'unknown';
+        // 兼容本地词典和 AI 翻译的不同数据结构
+        const isLocalDict = response.source === 'local-dictionary';
+        const translationText = isLocalDict
+          ? response.translation
+          : (response.data?.translation || 'No translation');
+        const latency = isLocalDict
+          ? (response.lookupTime || 0)
+          : (response.data?.latency || 0);
+        const modelId = isLocalDict
+          ? 'local-dictionary'
+          : (response.data?.modelId || 'unknown');
 
         console.log('📝 翻译结果:', translationText);
 
@@ -600,7 +612,7 @@ class UIManager {
             </button>
           </div>
           <div class="mydictionary-meta">
-            <span>⏱️ ${latency}ms</span>
+            <span>⏱️ ${latency.toFixed(2)}ms</span>
             <span>📦 ${modelId}</span>
           </div>
         `;
@@ -619,12 +631,17 @@ class UIManager {
         // 显示功能按钮（仅英文支持同义词和例句）
         const featureButtons = this.sidebar.querySelector('#mydictionary-feature-buttons');
         if (featureButtons) {
-          if (response.data.targetLang === 'en' || response.data.sourceLang === 'en') {
+          // 本地词典总是英译中,支持同义词和例句
+          if (isLocalDict || response.data?.targetLang === 'en' || response.data?.sourceLang === 'en') {
             featureButtons.style.display = 'flex';
           } else {
             featureButtons.style.display = 'none';
           }
         }
+      } else if (response.error === 'DICTIONARY_NOT_FOUND') {
+        console.log('📖 词典未找到,建议下载完整词库');
+        // 引导用户下载完整词库
+        this.showDictionaryNotFoundDialog(response);
       } else if (response.error === 'MODEL_NOT_INSTALLED') {
         console.log('⚠️ 模型未安装');
         // 模型未安装,提示用户下载
@@ -876,6 +893,146 @@ class UIManager {
 
     const cancelBtn = output.querySelector('#mydictionary-cancel-btn');
     cancelBtn.addEventListener('click', () => {
+      output.innerHTML = `<div class="mydictionary-placeholder">${this.t('sidebar.result')}...</div>`;
+    });
+  }
+
+  /**
+   * 显示词典未找到对话框,引导用户下载完整词库
+   */
+  showDictionaryNotFoundDialog(responseData) {
+    const output = this.sidebar.querySelector('#mydictionary-output');
+
+    const { message, dictionary } = responseData;
+
+    output.innerHTML = `
+      <div class="mydictionary-model-dialog">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="font-size: 48px; margin-bottom: 12px;">📚</div>
+          <h3>${this.currentLang === 'zh' ? '词典未找到' : 'Dictionary Not Found'}</h3>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+          <p style="margin: 0; line-height: 1.6;">${message}</p>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-bottom: 16px; font-size: 13px;">
+          <div style="flex: 1; text-align: center; padding: 12px; background: #e3f2fd; border-radius: 6px;">
+            <div style="font-size: 24px; margin-bottom: 4px;">📖</div>
+            <div style="font-weight: 600;">${this.currentLang === 'zh' ? '当前' : 'Current'}</div>
+            <div>${dictionary.currentSize.toLocaleString()} ${this.currentLang === 'zh' ? '词' : 'words'}</div>
+          </div>
+          <div style="flex: 1; text-align: center; padding: 12px; background: #e8f5e9; border-radius: 6px;">
+            <div style="font-size: 24px; margin-bottom: 4px;">🌐</div>
+            <div style="font-weight: 600;">${this.currentLang === 'zh' ? '完整版' : 'Full'}</div>
+            <div>${dictionary.recommendedSize.toLocaleString()} ${this.currentLang === 'zh' ? '词' : 'words'}</div>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 16px; color: #666; font-size: 13px;">
+          ${this.currentLang === 'zh' ? '下载大小' : 'Download size'}: ${dictionary.downloadSize}
+        </div>
+
+        <button id="mydictionary-download-dictionary-btn" class="mydictionary-btn-primary" style="width: 100%; margin-bottom: 8px;">
+          📥 ${this.currentLang === 'zh' ? '下载完整词库' : 'Download Full Dictionary'}
+        </button>
+        <button id="mydictionary-close-dialog-btn" class="mydictionary-btn-secondary" style="width: 100%;">
+          ${this.currentLang === 'zh' ? '关闭' : 'Close'}
+        </button>
+      </div>
+    `;
+
+    // 绑定下载按钮 - 跳转到词典管理页面
+    const downloadBtn = output.querySelector('#mydictionary-download-dictionary-btn');
+    downloadBtn.addEventListener('click', () => {
+      // 打开词典管理页面
+      chrome.runtime.sendMessage({
+        action: 'openTab',
+        url: chrome.runtime.getURL('src/ui/dictionary-manager.html')
+      });
+    });
+
+    // 绑定关闭按钮
+    const closeBtn = output.querySelector('#mydictionary-close-dialog-btn');
+    closeBtn.addEventListener('click', () => {
+      output.innerHTML = `<div class="mydictionary-placeholder">${this.t('sidebar.result')}...</div>`;
+    });
+  }
+
+  /**
+   * 显示 TTS 配置引导对话框
+   */
+  showTTSConfigDialog(errorMessage) {
+    const output = this.sidebar.querySelector('#mydictionary-output');
+
+    output.innerHTML = `
+      <div class="mydictionary-model-dialog">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="font-size: 48px; margin-bottom: 12px;">🔊</div>
+          <h3>${this.currentLang === 'zh' ? 'TTS 语音播放' : 'Text-to-Speech'}</h3>
+        </div>
+
+        <div style="background: #fff3e0; padding: 16px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #ff9800;">
+          <p style="margin: 0; line-height: 1.6; color: #e65100;">
+            ${this.currentLang === 'zh'
+              ? '⚠️ TTS 服务暂不可用'
+              : '⚠️ TTS Service Unavailable'}
+          </p>
+        </div>
+
+        <div style="margin-bottom: 20px; font-size: 14px; line-height: 1.6; color: #666;">
+          ${this.currentLang === 'zh'
+            ? '您有以下两种选择获得高质量语音播放:'
+            : 'You have two options for high-quality voice playback:'}
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+          <div style="padding: 16px; background: #f0f4ff; border-radius: 8px; border-left: 4px solid #667eea;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+              <span style="font-size: 24px;">🖥️</span>
+              <strong>${this.currentLang === 'zh' ? '选项 1: 本地 TTS 服务器' : 'Option 1: Local TTS Server'}</strong>
+            </div>
+            <div style="font-size: 13px; color: #555; line-height: 1.5;">
+              ${this.currentLang === 'zh'
+                ? '• 54 种高质量语音<br>• 完全离线<br>• 快速响应<br>• 推荐用于日常学习'
+                : '• 54 premium voices<br>• Fully offline<br>• Fast response<br>• Recommended for daily use'}
+            </div>
+          </div>
+
+          <div style="padding: 16px; background: #f0fdf4; border-radius: 8px; border-left: 4px solid #10b981;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+              <span style="font-size: 24px;">🌐</span>
+              <strong>${this.currentLang === 'zh' ? '选项 2: 浏览器内置 TTS' : 'Option 2: Browser Built-in TTS'}</strong>
+            </div>
+            <div style="font-size: 13px; color: #555; line-height: 1.5;">
+              ${this.currentLang === 'zh'
+                ? '• 无需下载<br>• 系统自带语音<br>• 音质一般<br>• 适合临时使用'
+                : '• No download needed<br>• System voices<br>• Standard quality<br>• Good for occasional use'}
+            </div>
+          </div>
+        </div>
+
+        <button id="mydictionary-open-tts-settings-btn" class="mydictionary-btn-primary" style="width: 100%; margin-bottom: 8px;">
+          ⚙️ ${this.currentLang === 'zh' ? '打开 TTS 设置' : 'Open TTS Settings'}
+        </button>
+        <button id="mydictionary-close-tts-dialog-btn" class="mydictionary-btn-secondary" style="width: 100%;">
+          ${this.currentLang === 'zh' ? '关闭' : 'Close'}
+        </button>
+      </div>
+    `;
+
+    // 绑定设置按钮
+    const settingsBtn = output.querySelector('#mydictionary-open-tts-settings-btn');
+    settingsBtn.addEventListener('click', () => {
+      chrome.runtime.sendMessage({
+        action: 'openTab',
+        url: chrome.runtime.getURL('src/settings/settings.html')
+      });
+    });
+
+    // 绑定关闭按钮
+    const closeBtn = output.querySelector('#mydictionary-close-tts-dialog-btn');
+    closeBtn.addEventListener('click', () => {
       output.innerHTML = `<div class="mydictionary-placeholder">${this.t('sidebar.result')}...</div>`;
     });
   }
@@ -2080,7 +2237,8 @@ UIManager.prototype.checkModelDownloaded = async function(modelId) {
       action: 'checkModelDownloaded',
       modelId: modelId
     });
-    return response.success && response.isDownloaded;
+    // 支持两种响应格式: isDownloaded 或 downloaded
+    return response.success && (response.isDownloaded || response.downloaded);
   } catch (error) {
     console.error('❌ 检查模型下载状态失败:', error);
     return false;
@@ -2258,18 +2416,14 @@ class TTSButtonHelper {
     } catch (error) {
       console.error('❌ TTS 按钮错误:', error);
 
-      // 显示错误状态
-      btn.innerHTML = '❌';
-      btn.classList.remove('loading', 'playing');
-      btn.classList.add('error');
+      // 恢复按钮状态
+      btn.innerHTML = '🔊';
+      btn.disabled = false;
+      btn.classList.remove('loading', 'playing', 'error');
+      btn.title = 'Read aloud';
 
-      // 2秒后恢复
-      setTimeout(() => {
-        btn.innerHTML = '🔊';
-        btn.disabled = false;
-        btn.classList.remove('error');
-        btn.title = 'Read aloud';
-      }, 2000);
+      // 显示 TTS 配置引导对话框
+      this.showTTSConfigDialog(error.message);
     }
   }
 

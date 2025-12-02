@@ -9,11 +9,15 @@ let currentLang = 'en';  // Default to English
 // i18n translations
 const i18n = {
   en: {
-    pageTitle: 'TTS Voice Settings',
-    pageDesc: 'Select your preferred text-to-speech voice',
+    pageTitle: 'Resource Management',
+    pageDesc: 'Manage dictionaries, AI models, and TTS settings',
     sectionBritish: 'British English',
     sectionAmerican: 'American English',
     sectionServer: 'TTS Server Status',
+    sectionResources: 'Resource Management',
+    descResources: 'Manage local dictionaries and AI translation models',
+    btnDictionaryManager: 'Dictionary Manager',
+    btnModelManager: 'Model Manager',
     descBritish: 'Clear pronunciation with distinct vowels and consonants, ideal for learning English word pronunciation',
     descAmerican: 'Standard American pronunciation, suitable for everyday English learning',
     labelRecommended: 'Recommended:',
@@ -33,11 +37,15 @@ const i18n = {
     releaseLink: 'Latest Release'
   },
   zh: {
-    pageTitle: 'TTS 语音设置',
-    pageDesc: '选择你喜欢的 TTS 声音',
+    pageTitle: '资源管理',
+    pageDesc: '管理词典、AI 模型和 TTS 设置',
     sectionBritish: '英式英语',
     sectionAmerican: '美式英语',
     sectionServer: 'TTS 服务器状态',
+    sectionResources: '资源管理',
+    descResources: '管理本地词典和 AI 翻译模型',
+    btnDictionaryManager: '词典管理',
+    btnModelManager: '模型管理',
     descBritish: '英式发音对元音和辅音的区分更清晰,更适合学习英文单词发音',
     descAmerican: '标准美式发音,适合日常英语学习',
     labelRecommended: '推荐:',
@@ -104,9 +112,13 @@ function t(key) {
 
 // Update UI text based on current language
 function updateUIText() {
-  document.getElementById('page-title').innerHTML = `<span class="emoji">🎵</span> ${t('pageTitle')}`;
+  document.getElementById('page-title').innerHTML = `<span class="emoji">⚙️</span> ${t('pageTitle')}`;
   document.getElementById('page-desc').textContent = t('pageDesc');
   document.getElementById('section-server').textContent = t('sectionServer');
+  document.getElementById('section-resources').textContent = t('sectionResources');
+  document.getElementById('desc-resources').textContent = t('descResources');
+  document.getElementById('btn-dictionary-manager').textContent = t('btnDictionaryManager');
+  document.getElementById('btn-model-manager-text').textContent = t('btnModelManager');
   document.getElementById('section-british').textContent = t('sectionBritish');
   document.getElementById('section-american').textContent = t('sectionAmerican');
   document.getElementById('desc-british').textContent = t('descBritish');
@@ -274,6 +286,13 @@ async function init() {
 
   // Language switch button
   document.getElementById('lang-switch').addEventListener('click', switchLanguage);
+
+  // Model manager button
+  document.getElementById('btn-model-manager').addEventListener('click', () => {
+    chrome.tabs.create({
+      url: chrome.runtime.getURL('src/ui/model-manager.html')
+    });
+  });
 
   // Save button
   document.getElementById('save-button').addEventListener('click', saveSettings);

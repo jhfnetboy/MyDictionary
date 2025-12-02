@@ -77,6 +77,20 @@ export default defineConfig({
           src: 'public/synonyms.json.gz',
           dest: '.',
         },
+        // 复制学术短语库
+        {
+          src: 'academic-phrasebank.json',
+          dest: '.',
+        },
+        // 复制词典文件
+        {
+          src: 'data/dictionary/tier1-common.json',
+          dest: 'data/dictionary',
+        },
+        {
+          src: 'data/dictionary/metadata.json',
+          dest: 'data/dictionary',
+        },
         // 关键:复制 Transformers.js 的 ONNX/WASM 运行时文件
         {
           src: 'node_modules/@xenova/transformers/dist/*.wasm',

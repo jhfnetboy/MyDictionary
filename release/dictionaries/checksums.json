@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "releaseDate": "2025-12-02",
+  "tiers": {
+    "tier2": {
+      "filename": "tier2-extended.json.gz",
+      "size": 1048576,
+      "sizeHuman": "1.0 MB",
+      "count": 11928,
+      "description": "扩展词库 (CET6, IELTS, TOEFL, GRE)",
+      "sha256": "placeholder_will_be_generated"
+    },
+    "tier3": {
+      "filename": "tier3-full.json.gz",
+      "size": 24076422,
+      "sizeHuman": "23 MB",
+      "count": 751192,
+      "description": "完整词库 (全部词条)",
+      "sha256": "placeholder_will_be_generated"
+    }
+  },
+  "source": "ECDICT by skywind3000",
+  "license": "MIT",
+  "homepage": "https://github.com/jhfnetboy/MyDictionary"
+}

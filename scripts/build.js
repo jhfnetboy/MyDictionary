@@ -31,7 +31,8 @@ const filesToCopy = [
   { src: 'assets', dest: 'assets' },
   { src: 'data/synonyms.json.gz', dest: 'synonyms.json.gz' },
   { src: 'academic-phrasebank.json', dest: 'academic-phrasebank.json' },
-  { src: 'data/dictionary', dest: 'data/dictionary' }, // 本地词典数据
+  { src: 'data/dictionary/tier1-common.json', dest: 'data/dictionary/tier1-common.json' }, // 仅包含 Tier1
+  { src: 'data/dictionary/metadata.json', dest: 'data/dictionary/metadata.json' },
   { src: 'node_modules/@xenova/transformers', dest: 'transformers' },
 ];
 

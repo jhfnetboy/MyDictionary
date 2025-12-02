@@ -117,6 +117,7 @@
     "popup": {
       "title": "MyDictionary Settings",
       "openSidebar": "Open Sidebar",
+      "dictionaryManager": "Dictionary Manager",
       "settings": "Settings",
       "shortcut": "Shortcut:",
       "usage": "Usage:",
@@ -259,6 +260,7 @@
     "popup": {
       "title": "我的词典设置",
       "openSidebar": "打开翻译面板",
+      "dictionaryManager": "词典管理",
       "settings": "设置",
       "shortcut": "快捷键:",
       "usage": "使用方式:",

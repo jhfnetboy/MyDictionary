@@ -41,6 +41,7 @@ function t(key) {
 function updateUI() {
   document.getElementById('app-title').textContent = t('appName');
   document.getElementById('btn-open-sidebar').textContent = t('popup.openSidebar') || 'Open Sidebar';
+  document.getElementById('btn-dictionary').textContent = t('popup.dictionaryManager') || 'Dictionary Manager';
   document.getElementById('btn-settings').textContent = t('popup.settings');
   document.getElementById('label-shortcut').textContent = t('popup.shortcut') || 'Shortcut:';
   document.getElementById('label-usage').textContent = t('popup.usage') || 'Usage:';
@@ -180,6 +181,13 @@ document.getElementById('open-sidebar-btn').addEventListener('click', async () =
   }
 });
 
+
+// 词典管理按钮 - 打开词典管理器
+document.getElementById('dictionary-manager-btn').addEventListener('click', () => {
+  chrome.tabs.create({
+    url: chrome.runtime.getURL('src/ui/dictionary-manager.html')
+  });
+});
 
 // 设置按钮 - 打开设置页面
 document.getElementById('settings-btn').addEventListener('click', () => {

@@ -9,6 +9,7 @@ import { academicDBManager } from './src/lib/academic-db-manager.js';
 import { performanceDetector } from './src/lib/performance-detector.js';
 import { ttsManager } from './src/lib/tts-manager.js';
 import { LocalDictionaryManager } from './src/lib/local-dictionary-manager.js';
+import { dictDownloader } from './src/lib/dictionary-downloader.js';
 import phrasebankData from './academic-phrasebank.json' assert { type: 'json' };
 
 // 修复 "global is not defined" 错误 (某些库期望 global 变量存在)
@@ -19,7 +20,7 @@ if (typeof global === 'undefined') {
 // 配置 Transformers.js 使用本地 WASM 文件
 // 注意: 必须在 chrome.runtime 就绪后才能调用 getURL
 if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL) {
-  env.backends.onnx.wasm.wasmPaths = chrome.runtime.getURL('transformers/dist/');
+  env.backends.onnx.wasm.wasmPaths = chrome.runtime.getURL('transformers/');
 }
 
 // 禁用多线程以避免 Service Worker 中的 Atomics.wait 错误
@@ -316,7 +317,7 @@ self.addEventListener('activate', async (event) => {
     (async () => {
       // 确保 WASM 路径已配置
       if (!env.backends.onnx.wasm.wasmPaths) {
-        env.backends.onnx.wasm.wasmPaths = chrome.runtime.getURL('transformers/dist/');
+        env.backends.onnx.wasm.wasmPaths = chrome.runtime.getURL('transformers/');
         console.log('📦 WASM 路径已配置:', env.backends.onnx.wasm.wasmPaths);
       }
 
@@ -446,6 +447,22 @@ async function handleMessage(request, sender, sendResponse) {
       await handleCheckModelDownloaded(request, sendResponse);
       break;
 
+    case 'deleteModel':
+      await handleDeleteModel(request, sendResponse);
+      break;
+
+    case 'downloadSynonyms':
+      await handleDownloadSynonyms(request, sendResponse);
+      break;
+
+    case 'checkSynonymsDownloaded':
+      await handleCheckSynonymsDownloaded(request, sendResponse);
+      break;
+
+    case 'deleteSynonyms':
+      await handleDeleteSynonyms(request, sendResponse);
+      break;
+
     case 'semanticSearchPhrases':
       await handleSemanticSearchPhrases(request, sendResponse);
       break;
@@ -462,9 +479,27 @@ async function handleMessage(request, sender, sendResponse) {
       await handleCheckTTSStatus(request, sendResponse);
       break;
 
+    case 'getDictionaryStatus':
+      await handleGetDictionaryStatus(request, sendResponse);
+      break;
+
+    case 'downloadDictionary':
+      await handleDownloadDictionary(request, sendResponse);
+      break;
+
+    case 'deleteDictionary':
+      await handleDeleteDictionary(request, sendResponse);
+      break;
+
     case 'openOptions':
       // 打开设置页面
       chrome.runtime.openOptionsPage();
+      sendResponse({ success: true });
+      break;
+
+    case 'openTab':
+      // 打开指定 URL 的新标签页
+      chrome.tabs.create({ url: request.url });
       sendResponse({ success: true });
       break;
 
@@ -533,7 +568,34 @@ async function handleTranslation(request, sendResponse) {
           });
           return;
         } else {
-          console.log(`📖 本地词典未找到，使用 AI 模型`);
+          console.log(`📖 本地词典未找到: "${text}"`);
+
+          // 检查是否已安装完整词库
+          const fullDictInstalled = await localDictManager._isFullDictionaryInstalled();
+
+          if (!fullDictInstalled) {
+            // 未安装完整词库,引导用户下载
+            console.log(`💡 建议下载完整词库 (768k 词)`);
+            sendResponse({
+              success: false,
+              error: 'DICTIONARY_NOT_FOUND',
+              suggestion: 'DOWNLOAD_FULL_DICTIONARY',
+              message: queryType === 'SINGLE_WORD'
+                ? `"${text}" 不在基础词库中 (7,406 词)\n\n建议下载完整词库 (768,739 词) 获得更全面的词汇覆盖`
+                : `部分单词不在基础词库中\n\n建议下载完整词库以获得更好的查询体验`,
+              dictionary: {
+                current: 'tier1',
+                currentSize: 7406,
+                recommended: 'full',
+                recommendedSize: 768739,
+                downloadSize: '26 MB'
+              }
+            });
+            return;
+          } else {
+            // 已安装完整词库但仍未找到,可能是生僻词或专有名词,使用 AI 翻译
+            console.log(`📖 完整词库也未找到，使用 AI 模型`);
+          }
         }
       } catch (error) {
         console.error('⚠️ 本地词典查询失败，回退到 AI 模型:', error);
@@ -792,7 +854,25 @@ async function handleCheckModelStatus(request, sendResponse) {
  * 处理模型下载请求
  */
 async function handleDownloadModel(request, sendResponse) {
-  const { modelId, modelName } = request;
+  let { modelId, modelName, modelType } = request;
+
+  // 支持新的 modelType 参数 (从 model-manager.js)
+  if (!modelId && modelType) {
+    // 映射 modelType 到 modelId
+    const typeToIdMap = {
+      'translation': 'translation-en-zh',
+      'semantic': 'minilm-l6'
+    };
+    modelId = typeToIdMap[modelType] || modelType;
+  }
+
+  if (!modelId) {
+    sendResponse({
+      success: false,
+      error: 'Missing modelId or modelType parameter'
+    });
+    return;
+  }
 
   console.log(`📥 开始下载模型: ${modelName || modelId} (ID: ${modelId})`);
 
@@ -894,7 +974,25 @@ async function handleDownloadModel(request, sendResponse) {
  * 检查模型是否已下载
  */
 async function handleCheckModelDownloaded(request, sendResponse) {
-  const { modelId } = request;
+  let { modelId, modelType } = request;
+
+  // 支持新的 modelType 参数
+  if (!modelId && modelType) {
+    const typeToIdMap = {
+      'translation': 'translation-en-zh',
+      'semantic': 'minilm-l6'
+    };
+    modelId = typeToIdMap[modelType] || modelType;
+  }
+
+  if (!modelId) {
+    sendResponse({
+      success: false,
+      downloaded: false,
+      error: 'Missing modelId or modelType parameter'
+    });
+    return;
+  }
 
   try {
     // 检查全局状态中是否已加载模型
@@ -904,6 +1002,9 @@ async function handleCheckModelDownloaded(request, sendResponse) {
       isDownloaded = !!self.academicModel;
     } else if (modelId === 'minilm-l6' || modelId === 'minilm') {
       isDownloaded = !!self.semanticModel;
+    } else if (modelId.startsWith('translation-')) {
+      // 检查翻译模型
+      isDownloaded = await modelManager.isModelInstalled(modelId);
     }
 
     // 如果内存中没有，检查 localStorage 中的下载记录
@@ -917,11 +1018,146 @@ async function handleCheckModelDownloaded(request, sendResponse) {
 
     sendResponse({
       success: true,
-      isDownloaded: isDownloaded
+      downloaded: isDownloaded
     });
 
   } catch (error) {
     console.error('❌ 检查模型状态失败:', error);
+    sendResponse({
+      success: false,
+      downloaded: false,
+      error: error.message
+    });
+  }
+}
+
+/**
+ * 删除模型
+ */
+async function handleDeleteModel(request, sendResponse) {
+  let { modelId, modelType } = request;
+
+  // 支持新的 modelType 参数
+  if (!modelId && modelType) {
+    const typeToIdMap = {
+      'translation': 'translation-en-zh',
+      'semantic': 'minilm-l6'
+    };
+    modelId = typeToIdMap[modelType] || modelType;
+  }
+
+  if (!modelId) {
+    sendResponse({
+      success: false,
+      error: 'Missing modelId or modelType parameter'
+    });
+    return;
+  }
+
+  console.log(`🗑️ 删除模型: ${modelId}`);
+
+  try {
+    // 从内存清除模型
+    if (modelId === 'minilm-l6' || modelId === 'minilm') {
+      self.semanticModel = null;
+      console.log('✅ 已清除语义搜索模型');
+    } else if (modelId === 'bge-small' || modelId === 'bge-base') {
+      self.academicModel = null;
+      console.log('✅ 已清除学术模型');
+    } else if (modelId.startsWith('translation-')) {
+      // 清除翻译模型 (通过 modelManager)
+      if (modelManager && typeof modelManager.unloadModel === 'function') {
+        await modelManager.unloadModel(modelId);
+      }
+      console.log('✅ 已清除翻译模型');
+    }
+
+    // 从 storage 删除下载记录
+    const result = await chrome.storage.local.get(['downloadedModels']);
+    let downloadedModels = result.downloadedModels || [];
+    downloadedModels = downloadedModels.filter(id => id !== modelId);
+    await chrome.storage.local.set({ downloadedModels });
+
+    console.log(`✅ 模型 ${modelId} 已删除`);
+
+    sendResponse({
+      success: true,
+      message: '模型删除成功'
+    });
+
+  } catch (error) {
+    console.error('❌ 删除模型失败:', error);
+    sendResponse({
+      success: false,
+      error: error.message
+    });
+  }
+}
+
+/**
+ * 下载 WordNet 同义词库
+ */
+async function handleDownloadSynonyms(request, sendResponse) {
+  console.log('📥 开始下载 WordNet 同义词数据...');
+
+  try {
+    const synonymsData = await synonymsManager.downloadSynonyms((progress) => {
+      console.log(`下载进度: ${progress.percentage}%`);
+    });
+
+    if (synonymsData) {
+      console.log(`✅ WordNet 下载成功`);
+      sendResponse({
+        success: true,
+        message: 'WordNet 同义词库下载成功'
+      });
+    } else {
+      throw new Error('下载失败');
+    }
+  } catch (error) {
+    console.error('❌ 下载 WordNet 失败:', error);
+    sendResponse({
+      success: false,
+      error: error.message
+    });
+  }
+}
+
+/**
+ * 检查 WordNet 是否已下载
+ */
+async function handleCheckSynonymsDownloaded(request, sendResponse) {
+  try {
+    const isDownloaded = await synonymsManager.isDataDownloaded();
+    sendResponse({
+      success: true,
+      downloaded: isDownloaded
+    });
+  } catch (error) {
+    console.error('❌ 检查 WordNet 状态失败:', error);
+    sendResponse({
+      success: false,
+      downloaded: false,
+      error: error.message
+    });
+  }
+}
+
+/**
+ * 删除 WordNet 同义词库
+ */
+async function handleDeleteSynonyms(request, sendResponse) {
+  console.log('🗑️ 删除 WordNet 同义词数据...');
+
+  try {
+    await synonymsManager.clearData();
+    console.log('✅ WordNet 已删除');
+    sendResponse({
+      success: true,
+      message: 'WordNet 同义词库删除成功'
+    });
+  } catch (error) {
+    console.error('❌ 删除 WordNet 失败:', error);
     sendResponse({
       success: false,
       error: error.message
@@ -1712,12 +1948,108 @@ console.log('🦝 MyDictionary Background Service Worker 已启动');
     console.log('✅ WordNet 数据库已就绪');
   }
 
-  // 检查学术数据库状态
+  // 检查学术数据库状态并自动加载内置数据
   const academicDownloaded = await academicDBManager.isDataDownloaded();
   if (!academicDownloaded) {
-    console.log('⚠️ 学术短语库未下载，首次使用学术模式时将提示下载');
+    console.log('📚 学术短语库未加载，正在加载内置数据...');
+    try {
+      // 加载内置的 academic-phrasebank.json
+      const response = await fetch(chrome.runtime.getURL('academic-phrasebank.json'));
+      const phrasesData = await response.json();
+      await academicDBManager.importPhrases(phrasesData);
+      console.log(`✅ 学术短语库已自动加载 (${phrasesData.length} 条短语)`);
+    } catch (error) {
+      console.error('❌ 加载内置学术短语库失败:', error);
+    }
   } else {
     const info = await academicDBManager.getInfo();
     console.log(`✅ 学术短语库已就绪 (${info.totalPhrases} 条短语)`);
   }
 })();
+
+/**
+ * 获取词典状态
+ */
+async function handleGetDictionaryStatus(request, sendResponse) {
+  try {
+    const status = await dictDownloader.getStatus();
+    sendResponse({
+      success: true,
+      status: status
+    });
+  } catch (error) {
+    console.error('获取词典状态失败:', error);
+    sendResponse({
+      success: false,
+      error: error.message
+    });
+  }
+}
+
+/**
+ * 下载词典
+ */
+async function handleDownloadDictionary(request, sendResponse) {
+  const { tier } = request;
+
+  console.log(`📥 开始下载 ${tier}...`);
+
+  try {
+    // 初始化下载器
+    await dictDownloader.init();
+
+    // 下载词典 (带进度回调)
+    const result = await dictDownloader.download(tier, (progress) => {
+      // 发送进度更新到前端
+      chrome.runtime.sendMessage({
+        action: 'downloadProgress',
+        data: progress
+      }).catch(() => {
+        // 忽略错误 (UI 可能已关闭)
+      });
+    });
+
+    console.log(`✅ ${tier} 下载完成:`, result);
+
+    sendResponse({
+      success: true,
+      tier: result.tier,
+      count: result.count
+    });
+
+  } catch (error) {
+    console.error(`❌ 下载 ${tier} 失败:`, error);
+    sendResponse({
+      success: false,
+      error: error.message
+    });
+  }
+}
+
+/**
+ * 删除词典
+ */
+async function handleDeleteDictionary(request, sendResponse) {
+  const { tier } = request;
+
+  console.log(`🗑️ 开始删除 ${tier}...`);
+
+  try {
+    await dictDownloader.init();
+    await dictDownloader.uninstall(tier);
+
+    console.log(`✅ ${tier} 已删除`);
+
+    sendResponse({
+      success: true,
+      tier: tier
+    });
+
+  } catch (error) {
+    console.error(`❌ 删除 ${tier} 失败:`, error);
+    sendResponse({
+      success: false,
+      error: error.message
+    });
+  }
+}

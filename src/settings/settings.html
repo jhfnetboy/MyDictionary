@@ -289,11 +289,34 @@
   <div class="container">
     <div class="header">
       <button class="lang-switch" id="lang-switch">中文</button>
-      <h1 id="page-title"><span class="emoji">🎵</span> TTS Voice Settings</h1>
-      <p id="page-desc">Select your preferred text-to-speech voice</p>
+      <h1 id="page-title"><span class="emoji">⚙️</span> Resource Management</h1>
+      <p id="page-desc">Manage dictionaries, AI models, and TTS settings</p>
     </div>
 
     <div class="content">
+      <!-- Resource Management Section -->
+      <div class="section">
+        <div class="section-title">
+          <span class="emoji">📦</span>
+          <span id="section-resources">Resource Management</span>
+        </div>
+        <div class="section-desc" id="desc-resources">
+          Manage local dictionaries and AI translation models
+        </div>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <a href="../ui/dictionary-manager.html"
+             class="download-button"
+             style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+            <span class="emoji">📚</span>
+            <span id="btn-dictionary-manager">Dictionary Manager</span>
+          </a>
+          <button class="download-button" id="btn-model-manager" style="display: inline-flex; align-items: center; gap: 8px;">
+            <span class="emoji">🤖</span>
+            <span id="btn-model-manager-text">Model Manager</span>
+          </button>
+        </div>
+      </div>
+
       <!-- TTS Server Status Section -->
       <div class="section" id="server-status-section">
         <div class="section-title">
