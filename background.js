@@ -18,7 +18,7 @@ if (typeof global === 'undefined') {
 // 配置 Transformers.js 使用本地 WASM 文件
 // 注意: 必须在 chrome.runtime 就绪后才能调用 getURL
 if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL) {
-  env.backends.onnx.wasm.wasmPaths = chrome.runtime.getURL('transformers/');
+  env.backends.onnx.wasm.wasmPaths = chrome.runtime.getURL('transformers/dist/');
 }
 
 // 禁用多线程以避免 Service Worker 中的 Atomics.wait 错误
@@ -295,7 +295,7 @@ self.addEventListener('activate', async (event) => {
     (async () => {
       // 确保 WASM 路径已配置
       if (!env.backends.onnx.wasm.wasmPaths) {
-        env.backends.onnx.wasm.wasmPaths = chrome.runtime.getURL('transformers/');
+        env.backends.onnx.wasm.wasmPaths = chrome.runtime.getURL('transformers/dist/');
         console.log('📦 WASM 路径已配置:', env.backends.onnx.wasm.wasmPaths);
       }
 
