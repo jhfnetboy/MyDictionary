@@ -1032,6 +1032,7 @@ class UIManager {
 
 // 创建全局 UI 管理器实例
 const uiManager = new UIManager();
+window.uiManager = uiManager;  // 确保全局可访问
 
 /**
  * 监听来自 Background Script 的消息
@@ -2399,7 +2400,15 @@ class TTSButtonHelper {
     try {
       // 如果按钮禁用（TTS 不可用），显示配置对话框
       if (btn.disabled && btn.classList.contains('disabled')) {
-        this.showTTSConfigDialog('TTS 服务器未运行');
+        if (window.uiManager && typeof window.uiManager.showTTSConfigDialog === 'function') {
+          window.uiManager.showTTSConfigDialog('TTS 服务器未运行');
+        } else {
+          // 如果 uiManager 不可用，直接跳转到设置页面
+          chrome.runtime.sendMessage({
+            action: 'openTab',
+            url: chrome.runtime.getURL('src/settings/settings.html')
+          });
+        }
         return;
       }
 
@@ -2448,7 +2457,15 @@ class TTSButtonHelper {
       btn.title = 'TTS 服务器未运行 - 点击查看设置';
 
       // 显示 TTS 配置引导对话框（不在console输出错误）
-      this.showTTSConfigDialog(error.message);
+      if (window.uiManager && typeof window.uiManager.showTTSConfigDialog === 'function') {
+        window.uiManager.showTTSConfigDialog(error.message);
+      } else {
+        // 如果 uiManager 不可用，直接跳转到设置页面
+        chrome.runtime.sendMessage({
+          action: 'openTab',
+          url: chrome.runtime.getURL('src/settings/settings.html')
+        });
+      }
     }
   }
 
