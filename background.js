@@ -1093,9 +1093,6 @@ async function createContextMenus() {
   }
 }
 
-// 启动时创建右键菜单
-createContextMenus();
-
 /**
  * 注意: 扩展图标点击事件由 popup.html 处理
  * 当 manifest.json 中配置了 default_popup 时，action.onClicked 不会触发

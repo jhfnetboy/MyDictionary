@@ -29,7 +29,9 @@ const filesToCopy = [
   { src: 'content.js', dest: 'content.js' },
   { src: 'src', dest: 'src' },
   { src: 'assets', dest: 'assets' },
-  { src: 'node_modules/@xenova/transformers', dest: 'node_modules/@xenova/transformers' },
+  { src: 'data/synonyms.json.gz', dest: 'synonyms.json.gz' },
+  { src: 'academic-phrasebank.json', dest: 'academic-phrasebank.json' },
+  { src: 'node_modules/@xenova/transformers', dest: 'transformers' },
 ];
 
 // 递归复制目录
