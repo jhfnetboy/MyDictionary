@@ -290,7 +290,6 @@ export class TTSManager {
       await this.speakViaLocalServer(text, onEnd, onError);
 
     } catch (error) {
-      console.error('❌ 播放失败:', error);
       this.isPlaying = false;
       if (onError) onError(error);
       throw error;

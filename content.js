@@ -2377,16 +2377,18 @@ class TTSButtonHelper {
       });
 
       if (!response.success || !response.available) {
-        // TTS 不可用，禁用按钮
+        // TTS 不可用，禁用按钮并显示红叉
+        btn.innerHTML = '🔇';  // 静音图标表示TTS不可用
         btn.disabled = true;
         btn.classList.add('disabled');
-        btn.title = '请先启动 TTS 服务器';
+        btn.title = 'TTS 服务器未运行 - 点击查看设置';
       }
     } catch (error) {
-      console.error('❌ 检查 TTS 可用性失败:', error);
+      // TTS 不可用，禁用按钮并显示红叉（不在console输出错误）
+      btn.innerHTML = '🔇';  // 静音图标表示TTS不可用
       btn.disabled = true;
       btn.classList.add('disabled');
-      btn.title = '请先启动 TTS 服务器';
+      btn.title = 'TTS 服务器未运行 - 点击查看设置';
     }
   }
 
@@ -2438,16 +2440,14 @@ class TTSButtonHelper {
       }
 
     } catch (error) {
-      console.error('❌ TTS 按钮错误:', error);
-
-      // 恢复按钮状态
-      btn.innerHTML = '🔊';
+      // 恢复按钮状态为禁用
+      btn.innerHTML = '🔇';  // 静音图标
       btn.disabled = true;
       btn.classList.add('disabled');
       btn.classList.remove('loading', 'playing', 'error');
-      btn.title = '请先启动 TTS 服务器';
+      btn.title = 'TTS 服务器未运行 - 点击查看设置';
 
-      // 显示 TTS 配置引导对话框
+      // 显示 TTS 配置引导对话框（不在console输出错误）
       this.showTTSConfigDialog(error.message);
     }
   }

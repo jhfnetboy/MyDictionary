@@ -1872,7 +1872,6 @@ async function handleSpeakText(request, sendResponse) {
       },
       // onError callback
       (error) => {
-        console.error('❌ TTS 播放错误:', error);
         chrome.runtime.sendMessage({
           type: 'TTS_PLAYBACK_ERROR',
           error: error.message
@@ -1886,7 +1885,7 @@ async function handleSpeakText(request, sendResponse) {
     });
 
   } catch (error) {
-    console.error('❌ TTS 处理失败:', error);
+    // 返回错误信息给 content.js 显示对话框
     sendResponse({
       success: false,
       error: error.message
