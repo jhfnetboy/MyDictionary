@@ -8,6 +8,7 @@ import { synonymsManager } from './src/lib/synonyms-manager.js';
 import { academicDBManager } from './src/lib/academic-db-manager.js';
 import { performanceDetector } from './src/lib/performance-detector.js';
 import { ttsManager } from './src/lib/tts-manager.js';
+import { LocalDictionaryManager } from './src/lib/local-dictionary-manager.js';
 import phrasebankData from './academic-phrasebank.json' assert { type: 'json' };
 
 // 修复 "global is not defined" 错误 (某些库期望 global 变量存在)
@@ -258,6 +259,7 @@ class ModelManager {
 
 // 创建全局模型管理器实例
 const modelManager = new ModelManager();
+const localDictManager = new LocalDictionaryManager();
 
 // 插件安装时初始化
 chrome.runtime.onInstalled.addListener(async (details) => {
@@ -271,6 +273,15 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     // 初始化配置
     await modelManager.initialize();
 
+    // 初始化本地词典
+    try {
+      await localDictManager.init();
+      await localDictManager.loadTier1();
+      console.log('✅ 本地词典已初始化');
+    } catch (error) {
+      console.error('⚠️ 本地词典初始化失败:', error);
+    }
+
     // 创建右键菜单
     await createContextMenus();
 
@@ -283,6 +294,16 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     console.log('🌐 界面语言已重置为英文');
 
     await modelManager.initialize();
+
+    // 初始化本地词典 (更新时)
+    try {
+      await localDictManager.init();
+      await localDictManager.loadTier1();
+      console.log('✅ 本地词典已加载');
+    } catch (error) {
+      console.error('⚠️ 本地词典加载失败:', error);
+    }
+
     await createContextMenus();
   }
 });
@@ -300,6 +321,16 @@ self.addEventListener('activate', async (event) => {
       }
 
       await modelManager.initialize();
+
+      // 初始化本地词典
+      try {
+        await localDictManager.init();
+        await localDictManager.loadTier1();
+        console.log('✅ 本地词典就绪');
+      } catch (error) {
+        console.error('⚠️ 本地词典初始化失败:', error);
+      }
+
       await createContextMenus();
     })()
   );
@@ -309,6 +340,16 @@ self.addEventListener('activate', async (event) => {
 (async () => {
   try {
     await modelManager.initialize();
+
+    // 初始化本地词典
+    try {
+      await localDictManager.init();
+      await localDictManager.loadTier1();
+      console.log('✅ 本地词典启动完成');
+    } catch (error) {
+      console.error('⚠️ 本地词典启动失败:', error);
+    }
+
     await createContextMenus();
   } catch (error) {
     console.warn('⚠️ 启动时初始化失败，将在 activate 事件中重试:', error);
@@ -443,6 +484,62 @@ async function handleTranslation(request, sendResponse) {
 
   console.log(`🔄 翻译请求: ${sourceLang} → ${targetLang}`);
   console.log(`📝 原文: ${text.substring(0, 50)}...`);
+
+  // 🚀 智能路由: 英译中的单词/短语优先使用本地词典
+  if (sourceLang === 'en' && targetLang === 'zh') {
+    const queryType = LocalDictionaryManager.getQueryType(text);
+    console.log(`🔍 查询类型: ${queryType}`);
+
+    if (queryType === 'SINGLE_WORD' || queryType === 'PHRASE') {
+      try {
+        const startTime = performance.now();
+        let dictResult;
+
+        if (queryType === 'SINGLE_WORD') {
+          dictResult = await localDictManager.lookup(text.trim());
+        } else {
+          // 短语: 查询每个单词
+          dictResult = await localDictManager.lookupPhrase(text.trim());
+        }
+
+        if (dictResult) {
+          const lookupTime = performance.now() - startTime;
+          console.log(`✅ 本地词典命中 (${lookupTime.toFixed(2)}ms)`);
+
+          // 格式化结果
+          let formattedText;
+          if (Array.isArray(dictResult)) {
+            // 短语: 合并各单词结果
+            formattedText = dictResult.map(entry =>
+              LocalDictionaryManager.formatEntry(entry)
+            ).join('\n\n---\n\n');
+          } else {
+            // 单词
+            formattedText = LocalDictionaryManager.formatEntry(dictResult);
+          }
+
+          // 添加词典来源标识
+          const source = Array.isArray(dictResult)
+            ? dictResult[0].source
+            : dictResult.source;
+          formattedText += `\n\n💡 来源: 本地词典 (${source})`;
+
+          sendResponse({
+            success: true,
+            translation: formattedText,
+            source: 'local-dictionary',
+            lookupTime: lookupTime,
+            stats: localDictManager.getStats()
+          });
+          return;
+        } else {
+          console.log(`📖 本地词典未找到，使用 AI 模型`);
+        }
+      } catch (error) {
+        console.error('⚠️ 本地词典查询失败，回退到 AI 模型:', error);
+      }
+    }
+  }
 
   // 确定需要的模型
   let modelId;

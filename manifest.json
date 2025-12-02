@@ -79,7 +79,9 @@
         "transformers/src/*.js",
         "transformers/*.json",
         "synonyms.json.gz",
-        "academic-phrasebank.json"
+        "academic-phrasebank.json",
+        "data/dictionary/*.json",
+        "data/dictionary/*.gz"
       ],
       "matches": ["<all_urls>"]
     }

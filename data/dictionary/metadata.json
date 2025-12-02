@@ -1,0 +1,33 @@
+{
+  "version": "1.0.0",
+  "source": "ECDICT (skywind3000)",
+  "license": "MIT",
+  "generatedAt": "2025-12-02T04:56:18.421Z",
+  "tiers": {
+    "tier1": {
+      "count": 5000,
+      "size": "2.84 MB",
+      "description": "高频词汇 (CET4, 柯林斯4-5星, 牛津核心, 高考)",
+      "file": "tier1-common.json"
+    },
+    "tier2": {
+      "count": 12384,
+      "size": "1.27 MB",
+      "description": "扩展词汇 (CET6, IELTS, TOEFL, GRE, 柯林斯3星)",
+      "file": "tier2-extended.json.gz"
+    },
+    "tier3": {
+      "count": 751355,
+      "size": "22.96 MB",
+      "description": "完整词库 (所有词条)",
+      "file": "tier3-full.json.gz"
+    }
+  },
+  "statistics": {
+    "total": 770611,
+    "withTranslation": 768739,
+    "withPhonetic": 218065,
+    "withCollins": 13633,
+    "oxford": 0
+  }
+}
