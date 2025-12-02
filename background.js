@@ -2036,6 +2036,23 @@ async function handleDownloadDictionary(request, sendResponse) {
 
     console.log(`✅ ${tier} 下载完成:`, result);
 
+    // 重新初始化词典管理器以加载新数据
+    await localDictManager.initialize();
+    console.log('✅ 词典管理器已重新初始化');
+
+    // 通知所有 content scripts 词典已更新
+    chrome.tabs.query({}, (tabs) => {
+      tabs.forEach(tab => {
+        chrome.tabs.sendMessage(tab.id, {
+          type: 'DICTIONARY_UPDATED',
+          tier: result.tier,
+          count: result.count
+        }).catch(() => {
+          // 忽略错误（某些标签页可能没有 content script）
+        });
+      });
+    });
+
     sendResponse({
       success: true,
       tier: result.tier,
@@ -2064,6 +2081,10 @@ async function handleDeleteDictionary(request, sendResponse) {
     await dictDownloader.uninstall(tier);
 
     console.log(`✅ ${tier} 已删除`);
+
+    // 重新初始化词典管理器
+    await localDictManager.initialize();
+    console.log('✅ 词典管理器已重新初始化');
 
     sendResponse({
       success: true,

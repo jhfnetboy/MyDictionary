@@ -23,6 +23,7 @@ class UIManager {
     this.lastTranslation = null; // 保存最后一次翻译的详细信息
     this.currentMode = 'translation'; // 当前模式: translation | academic
     this.phrasebankInitialized = false; // 学术短语库是否已初始化
+    this.currentText = null; // 当前正在查询的文本
     this.loadLanguage();
   }
 
@@ -527,6 +528,9 @@ class UIManager {
       this.showStatus(this.t('messages.noTextSelected'), 'warning');
       return;
     }
+
+    // 保存当前查询文本
+    this.currentText = text;
 
     console.log('🔒 设置 isTranslating = true');
     this.isTranslating = true;
@@ -1038,22 +1042,45 @@ window.uiManager = uiManager;  // 确保全局可访问
  * 监听来自 Background Script 的消息
  */
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('📨 Content 收到消息:', request.action);
+  console.log('📨 Content 收到消息:', request.action || request.type);
 
   // 使用异步处理
   (async () => {
     try {
-      switch (request.action) {
-        case 'openSidebar':
-          await uiManager.showSidebar(request.text);
-          break;
+      // 处理 action 类型消息
+      if (request.action) {
+        switch (request.action) {
+          case 'openSidebar':
+            await uiManager.showSidebar(request.text);
+            break;
 
-        case 'toggleSidebar':
-          await uiManager.toggleSidebar();
-          break;
+          case 'toggleSidebar':
+            await uiManager.toggleSidebar();
+            break;
 
-        default:
-          console.log('未知的操作:', request.action);
+          default:
+            console.log('未知的操作:', request.action);
+        }
+      }
+
+      // 处理 type 类型消息
+      if (request.type) {
+        switch (request.type) {
+          case 'DICTIONARY_UPDATED':
+            // 词典已更新，如果有当前查询文本则重新查询
+            console.log('✅ 词典已更新:', request.tier, '词条数:', request.count);
+            if (uiManager.currentText && uiManager.sidebarVisible) {
+              console.log('🔄 自动重新查询:', uiManager.currentText);
+              // 延迟一下确保数据库已完全初始化
+              setTimeout(() => {
+                uiManager.handleTranslate();
+              }, 500);
+            }
+            break;
+
+          default:
+            console.log('未知的消息类型:', request.type);
+        }
       }
 
       sendResponse({ success: true });
