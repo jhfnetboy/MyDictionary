@@ -262,6 +262,9 @@ class ModelManager {
 const modelManager = new ModelManager();
 const localDictManager = new LocalDictionaryManager();
 
+// 全局初始化状态标志
+let isInitialized = false;
+
 // 插件安装时初始化
 chrome.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === 'install') {
@@ -523,6 +526,17 @@ async function handleTranslation(request, sendResponse) {
 
   console.log(`🔄 翻译请求: ${sourceLang} → ${targetLang}`);
   console.log(`📝 原文: ${text.substring(0, 50)}...`);
+
+  // 检查初始化状态
+  if (!isInitialized) {
+    console.warn('⏳ 数据库初始化中，请稍候...');
+    sendResponse({
+      success: false,
+      error: 'INITIALIZING',
+      message: '数据库初始化中，请稍候片刻后重试...'
+    });
+    return;
+  }
 
   // 🚀 智能路由: 英译中的单词/短语优先使用本地词典
   if (sourceLang === 'en' && targetLang === 'zh') {
@@ -1990,6 +2004,10 @@ console.log('🦝 MyDictionary Background Service Worker 已启动');
     const info = await academicDBManager.getInfo();
     console.log(`✅ 学术短语库已就绪 (${info.totalPhrases} 条短语)`);
   }
+
+  // 设置初始化完成标志
+  isInitialized = true;
+  console.log('✅ MyDictionary 初始化完成，可以接受查询请求');
 })();
 
 /**

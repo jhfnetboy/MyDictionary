@@ -642,6 +642,16 @@ class UIManager {
             featureButtons.style.display = 'none';
           }
         }
+      } else if (response.error === 'INITIALIZING') {
+        console.log('⏳ 数据库初始化中，自动重试...');
+        // 显示初始化提示
+        this.showStatus('⏳ 数据库初始化中，正在自动重试...', 'info');
+        // 延迟 2 秒后自动重试
+        setTimeout(() => {
+          console.log('🔄 自动重试查询...');
+          this.handleTranslate();
+        }, 2000);
+        return; // 不设置 isTranslating = false，保持等待状态
       } else if (response.error === 'DICTIONARY_NOT_FOUND') {
         console.log('📖 词典未找到,建议下载完整词库');
         // 引导用户下载完整词库
