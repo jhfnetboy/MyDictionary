@@ -1119,24 +1119,35 @@ async function handleDownloadSynonyms(request, sendResponse) {
   console.log('📥 开始下载 WordNet 同义词数据...');
 
   try {
+    // 步骤 1: 下载数据
+    console.log('📥 步骤 1/2: 下载数据...');
     const synonymsData = await synonymsManager.downloadSynonyms((progress) => {
-      console.log(`下载进度: ${progress.percentage}%`);
+      console.log(`📥 下载进度: ${progress.percentage}% (${progress.loadedMB}MB / ${progress.totalMB}MB)`);
     });
 
-    if (synonymsData) {
-      console.log(`✅ WordNet 下载成功`);
-      sendResponse({
-        success: true,
-        message: 'WordNet 同义词库下载成功'
-      });
-    } else {
-      throw new Error('下载失败');
+    if (!synonymsData) {
+      throw new Error('下载返回空数据');
     }
+
+    console.log(`✅ 下载完成，共 ${Object.keys(synonymsData).length.toLocaleString()} 个单词`);
+
+    // 步骤 2: 保存到 IndexedDB
+    console.log('💾 步骤 2/2: 保存到数据库...');
+    await synonymsManager.saveSynonyms(synonymsData);
+
+    console.log('✅ WordNet 同义词库安装完成！');
+    sendResponse({
+      success: true,
+      message: 'WordNet 同义词库下载并保存成功',
+      wordCount: Object.keys(synonymsData).length
+    });
+
   } catch (error) {
     console.error('❌ 下载 WordNet 失败:', error);
+    console.error('错误堆栈:', error.stack);
     sendResponse({
       success: false,
-      error: error.message
+      error: error.message || '未知错误'
     });
   }
 }
