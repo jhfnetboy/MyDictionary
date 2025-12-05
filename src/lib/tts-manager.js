@@ -297,89 +297,204 @@ export class TTSManager {
   }
 
   /**
+   * 估算文本的 token 数量（粗略估算）
+   * 英文: 1 word ≈ 1.3 tokens
+   * 中文: 1 char ≈ 1 token
+   */
+  estimateTokens(text) {
+    // 分离中英文
+    const chineseChars = text.match(/[\u4e00-\u9fa5]/g) || [];
+    const englishWords = text.replace(/[\u4e00-\u9fa5]/g, '').trim().split(/\s+/).filter(w => w.length > 0);
+
+    return chineseChars.length + Math.ceil(englishWords.length * 1.3);
+  }
+
+  /**
+   * 将长文本分割成较小的段落
+   * @param {string} text - 原始文本
+   * @param {number} maxTokens - 每段最大 token 数
+   * @returns {string[]} 文本段落数组
+   */
+  splitTextIntoChunks(text, maxTokens = 400) {
+    const estimatedTokens = this.estimateTokens(text);
+
+    // 如果文本不长，直接返回
+    if (estimatedTokens <= maxTokens) {
+      return [text];
+    }
+
+    console.log(`📏 文本过长 (约 ${estimatedTokens} tokens)，分割成多段处理`);
+
+    // 按句子分割（支持中英文）
+    const sentences = text.match(/[^.!?。!?]+[.!?。!?]+|[^.!?。!?]+$/g) || [text];
+
+    const chunks = [];
+    let currentChunk = '';
+    let currentTokens = 0;
+
+    for (const sentence of sentences) {
+      const sentenceTokens = this.estimateTokens(sentence);
+
+      // 如果单句就超过限制,需要进一步分割
+      if (sentenceTokens > maxTokens) {
+        // 保存当前 chunk
+        if (currentChunk) {
+          chunks.push(currentChunk.trim());
+          currentChunk = '';
+          currentTokens = 0;
+        }
+
+        // 按逗号或分号分割长句
+        const subSentences = sentence.match(/[^,;，；]+[,;，；]+|[^,;，；]+$/g) || [sentence];
+        for (const sub of subSentences) {
+          const subTokens = this.estimateTokens(sub);
+          if (currentTokens + subTokens > maxTokens && currentChunk) {
+            chunks.push(currentChunk.trim());
+            currentChunk = sub;
+            currentTokens = subTokens;
+          } else {
+            currentChunk += sub;
+            currentTokens += subTokens;
+          }
+        }
+      } else {
+        // 正常句子，累加到 chunk
+        if (currentTokens + sentenceTokens > maxTokens && currentChunk) {
+          chunks.push(currentChunk.trim());
+          currentChunk = sentence;
+          currentTokens = sentenceTokens;
+        } else {
+          currentChunk += ' ' + sentence;
+          currentTokens += sentenceTokens;
+        }
+      }
+    }
+
+    // 添加最后的 chunk
+    if (currentChunk) {
+      chunks.push(currentChunk.trim());
+    }
+
+    console.log(`✂️ 文本已分割成 ${chunks.length} 段`);
+    return chunks;
+  }
+
+  /**
    * 通过本地 Rust 服务器播放
    */
   async speakViaLocalServer(text, onEnd = null, onError = null) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
-
     try {
-      // 调用本地服务器 /synthesize API
-      const response = await fetch(`${this.localServerUrl}/synthesize`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          text: text,
-          format: 'wav',
-          voice: this.settings.voice  // 使用设置的声音
-        }),
-        signal: controller.signal
-      });
+      // 将长文本分割成多段
+      const chunks = this.splitTextIntoChunks(text, 400);
 
-      clearTimeout(timeoutId);
+      // 如果有多段，依次播放
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        console.log(`🎵 播放第 ${i + 1}/${chunks.length} 段: "${chunk.substring(0, 50)}..."`);
 
-      if (!response.ok) {
-        throw new Error(`Server returned ${response.status}`);
-      }
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
 
-      // 解析 JSON 响应 (新 API 返回 URL)
-      const result = await response.json();
-
-      if (!result.url) {
-        throw new Error('服务器未返回音频 URL');
-      }
-
-      console.log(`🎵 音频 URL: ${result.url} (缓存${result.cached ? '命中' : '未命中'})`);
-
-      // 确保 Offscreen Document 已创建
-      await this.ensureOffscreenDocument();
-
-      // 等待一小段时间确保 offscreen document 完全加载
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      // 发送 URL 到 Offscreen Document 播放 (带重试)
-      let playResponse = null;
-      let retries = 3;
-
-      while (retries > 0) {
         try {
-          playResponse = await chrome.runtime.sendMessage({
-            action: 'playAudioFromUrl',
-            url: result.url
+          // 调用本地服务器 /synthesize API
+          const response = await fetch(`${this.localServerUrl}/synthesize`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              text: chunk,
+              format: 'wav',
+              voice: this.settings.voice  // 使用设置的声音
+            }),
+            signal: controller.signal
           });
-          break; // 成功则跳出
-        } catch (err) {
-          retries--;
-          if (retries === 0) throw err;
 
-          console.warn(`⚠️ Offscreen 消息失败,重试... (剩余 ${retries} 次)`);
-          // 重新创建 offscreen document
-          this.offscreenReady = false;
+          clearTimeout(timeoutId);
+
+          if (!response.ok) {
+            throw new Error(`Server returned ${response.status}`);
+          }
+
+          // 解析 JSON 响应 (新 API 返回 URL)
+          const result = await response.json();
+
+          if (!result.url) {
+            throw new Error('服务器未返回音频 URL');
+          }
+
+          console.log(`🎵 音频 URL: ${result.url} (缓存${result.cached ? '命中' : '未命中'})`);
+
+          // 确保 Offscreen Document 已创建
           await this.ensureOffscreenDocument();
-          await new Promise(resolve => setTimeout(resolve, 200));
-        }
-      }
 
-      if (playResponse && playResponse.success) {
-        this.isPlaying = true;
-        console.log('✅ 音频已发送到 Offscreen Document (本地 TTS)');
-        if (onEnd) {
-          // 监听播放结束
-          chrome.runtime.onMessage.addListener(function listener(message) {
-            if (message.action === 'audioEnded') {
-              chrome.runtime.onMessage.removeListener(listener);
-              onEnd();
+          // 等待一小段时间确保 offscreen document 完全加载
+          await new Promise(resolve => setTimeout(resolve, 100));
+
+          // 发送 URL 到 Offscreen Document 播放 (带重试)
+          let playResponse = null;
+          let retries = 3;
+
+          while (retries > 0) {
+            try {
+              playResponse = await chrome.runtime.sendMessage({
+                action: 'playAudioFromUrl',
+                url: result.url
+              });
+              break; // 成功则跳出
+            } catch (err) {
+              retries--;
+              if (retries === 0) throw err;
+
+              console.warn(`⚠️ Offscreen 消息失败,重试... (剩余 ${retries} 次)`);
+              // 重新创建 offscreen document
+              this.offscreenReady = false;
+              await this.ensureOffscreenDocument();
+              await new Promise(resolve => setTimeout(resolve, 200));
             }
-          });
+          }
+
+          if (playResponse && playResponse.success) {
+            this.isPlaying = true;
+            console.log(`✅ 第 ${i + 1} 段音频已发送到 Offscreen Document`);
+
+            // 等待当前段播放完成再播放下一段
+            if (i < chunks.length - 1) {
+              // 不是最后一段，等待播放完成
+              await new Promise((resolve) => {
+                const listener = (message) => {
+                  if (message.action === 'audioEnded') {
+                    chrome.runtime.onMessage.removeListener(listener);
+                    resolve();
+                  }
+                };
+                chrome.runtime.onMessage.addListener(listener);
+              });
+
+              // 段落之间短暂停顿
+              await new Promise(resolve => setTimeout(resolve, 300));
+            } else {
+              // 最后一段，调用 onEnd 回调
+              if (onEnd) {
+                chrome.runtime.onMessage.addListener(function listener(message) {
+                  if (message.action === 'audioEnded') {
+                    chrome.runtime.onMessage.removeListener(listener);
+                    onEnd();
+                  }
+                });
+              }
+            }
+          } else {
+            throw new Error(playResponse?.error || 'Failed to play audio');
+          }
+
+        } catch (error) {
+          clearTimeout(timeoutId);
+          throw error;
         }
-      } else {
-        throw new Error(playResponse?.error || 'Failed to play audio');
       }
 
     } catch (error) {
-      clearTimeout(timeoutId);
       console.error('❌ 本地服务器播放失败:', error);
       throw error;
     }
