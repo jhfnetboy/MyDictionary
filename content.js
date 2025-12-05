@@ -979,6 +979,21 @@ class UIManager {
   showTTSConfigDialog(errorMessage) {
     const output = this.sidebar.querySelector('#mydictionary-output');
 
+    // 根据错误信息判断错误类型
+    const isFetchError = errorMessage && errorMessage.includes('Failed to fetch');
+    const isServerError = errorMessage && (errorMessage.includes('500') || errorMessage.includes('崩溃') || errorMessage.includes('crash'));
+
+    let errorIcon = '⚠️';
+    let errorTitle = this.currentLang === 'zh' ? 'TTS 服务器未运行' : 'TTS Server Not Running';
+
+    if (isServerError) {
+      errorIcon = '❌';
+      errorTitle = this.currentLang === 'zh' ? 'TTS 合成失败' : 'TTS Synthesis Failed';
+    } else if (isFetchError) {
+      errorIcon = '🔌';
+      errorTitle = this.currentLang === 'zh' ? 'TTS 服务器未连接' : 'TTS Server Not Connected';
+    }
+
     output.innerHTML = `
       <div class="mydictionary-model-dialog">
         <div style="text-align: center; margin-bottom: 20px;">
@@ -988,12 +1003,10 @@ class UIManager {
 
         <div style="background: #fff3e0; padding: 16px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #ff9800;">
           <p style="margin: 0; line-height: 1.6; color: #e65100;">
-            ${this.currentLang === 'zh'
-              ? '⚠️ TTS 服务器未运行'
-              : '⚠️ TTS Server Not Running'}
+            ${errorIcon} ${errorTitle}
           </p>
           <p style="margin: 8px 0 0; font-size: 13px; color: #666;">
-            ${errorMessage}
+            ${errorMessage || ''}
           </p>
         </div>
 
