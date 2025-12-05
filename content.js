@@ -2483,12 +2483,12 @@ class TTSButtonHelper {
       });
 
       if (response.success) {
-        // 设置播放状态
-        btn.innerHTML = '⏸️';
+        // 显示"正在合成"状态
+        btn.innerHTML = '🔊';
         btn.disabled = false;
         btn.classList.remove('loading');
         btn.classList.add('playing');
-        btn.title = 'Stop';
+        btn.title = response.message || '正在合成并播放...';
 
         // 添加到活跃按钮列表
         const btnId = btn.getAttribute('data-btn-id') || `btn-${Date.now()}`;
@@ -2560,7 +2560,20 @@ class TTSButtonHelper {
    */
   listenToBackgroundEvents() {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      if (message.type === 'TTS_PLAYBACK_ENDED') {
+      if (message.type === 'TTS_SYNTHESIS_STARTED') {
+        // 开始合成，显示总段数
+        console.log(`🎵 开始合成 ${message.totalChunks} 段文本`);
+        for (const [btnId, btn] of this.activeButtons.entries()) {
+          btn.title = `正在合成 (共 ${message.totalChunks} 段)...`;
+        }
+      } else if (message.type === 'TTS_CHUNK_PROGRESS') {
+        // 显示当前段进度
+        console.log(`🎵 正在处理第 ${message.currentChunk}/${message.totalChunks} 段`);
+        for (const [btnId, btn] of this.activeButtons.entries()) {
+          btn.innerHTML = '🔊';
+          btn.title = `正在处理 ${message.currentChunk}/${message.totalChunks} 段...`;
+        }
+      } else if (message.type === 'TTS_PLAYBACK_ENDED') {
         // 重置所有播放中的按钮
         for (const [btnId, btn] of this.activeButtons.entries()) {
           this.resetButton(btn);

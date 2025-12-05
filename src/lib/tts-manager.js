@@ -384,16 +384,29 @@ export class TTSManager {
    */
   async speakViaLocalServer(text, onEnd = null, onError = null) {
     try {
-      // 将长文本分割成多段
-      const chunks = this.splitTextIntoChunks(text, 400);
+      // 将长文本分割成多段（使用更保守的限制，留出安全余量）
+      const chunks = this.splitTextIntoChunks(text, 300);
+
+      // 通知前端总段数
+      chrome.runtime.sendMessage({
+        type: 'TTS_SYNTHESIS_STARTED',
+        totalChunks: chunks.length
+      }).catch(() => {});
 
       // 如果有多段，依次播放
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
         console.log(`🎵 播放第 ${i + 1}/${chunks.length} 段: "${chunk.substring(0, 50)}..."`);
 
+        // 通知前端当前段进度
+        chrome.runtime.sendMessage({
+          type: 'TTS_CHUNK_PROGRESS',
+          currentChunk: i + 1,
+          totalChunks: chunks.length
+        }).catch(() => {});
+
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60秒超时（长文本需要更多时间）
 
         try {
           // 调用本地服务器 /synthesize API

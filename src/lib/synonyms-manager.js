@@ -146,6 +146,7 @@ class SynonymsManager {
       const data = JSON.parse(jsonText);
 
       console.log(`✅ Parsed ${Object.keys(data).length.toLocaleString()} words`);
+      console.log('📤 Returning data to caller...');
 
       return data;
     } catch (error) {

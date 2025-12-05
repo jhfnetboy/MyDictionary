@@ -1117,6 +1117,7 @@ async function handleDeleteModel(request, sendResponse) {
  */
 async function handleDownloadSynonyms(request, sendResponse) {
   console.log('📥 开始下载 WordNet 同义词数据...');
+  console.log('🔍 DEBUG: handleDownloadSynonyms 函数已调用');
 
   try {
     // 步骤 1: 下载数据
@@ -1124,6 +1125,8 @@ async function handleDownloadSynonyms(request, sendResponse) {
     const synonymsData = await synonymsManager.downloadSynonyms((progress) => {
       console.log(`📥 下载进度: ${progress.percentage}% (${progress.loadedMB}MB / ${progress.totalMB}MB)`);
     });
+
+    console.log('🔍 DEBUG: downloadSynonyms 返回结果:', synonymsData ? `${Object.keys(synonymsData).length} 个单词` : 'null');
 
     if (!synonymsData) {
       throw new Error('下载返回空数据');
@@ -1133,7 +1136,9 @@ async function handleDownloadSynonyms(request, sendResponse) {
 
     // 步骤 2: 保存到 IndexedDB
     console.log('💾 步骤 2/2: 保存到数据库...');
+    console.log('🔍 DEBUG: 即将调用 saveSynonyms...');
     await synonymsManager.saveSynonyms(synonymsData);
+    console.log('🔍 DEBUG: saveSynonyms 调用完成');
 
     console.log('✅ WordNet 同义词库安装完成！');
     sendResponse({
@@ -1884,8 +1889,14 @@ async function handleSpeakText(request, sendResponse) {
 
     console.log(`🔊 TTS 请求: "${text.substring(0, 50)}..."`);
 
-    // 生成并播放语音
-    await ttsManager.speak(
+    // 立即返回响应，避免消息通道超时
+    sendResponse({
+      success: true,
+      message: '正在合成语音...'
+    });
+
+    // 异步生成并播放语音（不阻塞响应）
+    ttsManager.speak(
       text,
       // onEnd callback
       () => {
@@ -1897,16 +1908,20 @@ async function handleSpeakText(request, sendResponse) {
       },
       // onError callback
       (error) => {
+        console.log('❌ TTS 播放错误:', error.message);
+        // 通知 content script 播放错误
         chrome.runtime.sendMessage({
           type: 'TTS_PLAYBACK_ERROR',
           error: error.message
         }).catch(() => {});
       }
-    );
-
-    sendResponse({
-      success: true,
-      message: '开始播放'
+    ).catch((error) => {
+      console.error('❌ TTS speak 失败:', error);
+      // 通知前端错误
+      chrome.runtime.sendMessage({
+        type: 'TTS_PLAYBACK_ERROR',
+        error: error.message
+      }).catch(() => {});
     });
 
   } catch (error) {
@@ -2066,7 +2081,7 @@ async function handleDownloadDictionary(request, sendResponse) {
     console.log(`✅ ${tier} 下载完成:`, result);
 
     // 重新初始化词典管理器以加载新数据
-    await localDictManager.initialize();
+    await localDictManager.init();
     console.log('✅ 词典管理器已重新初始化');
 
     // 通知所有 content scripts 词典已更新
@@ -2112,7 +2127,7 @@ async function handleDeleteDictionary(request, sendResponse) {
     console.log(`✅ ${tier} 已删除`);
 
     // 重新初始化词典管理器
-    await localDictManager.initialize();
+    await localDictManager.init();
     console.log('✅ 词典管理器已重新初始化');
 
     sendResponse({
